@@ -9,7 +9,7 @@ Also supports particular enhancements used by Blockchain Commons from our fork o
 ## Build
 
 ```
-$ git clone https://github.com/blockchaincommons/bc-libwally-swift.git
+$ git clone https://github.com/blockchaincommons/BCLibWallySwift.git
 $ cd bc-libwally-swift
 $ git submodule update --init
 $ ./build.sh
