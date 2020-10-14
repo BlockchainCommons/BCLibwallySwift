@@ -24,15 +24,6 @@
 		030A640C250382A300A1D27E /* PSBTTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6405250382A300A1D27E /* PSBTTests.swift */; };
 		030A640D250382A300A1D27E /* BIP32Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6406250382A300A1D27E /* BIP32Tests.swift */; };
 		030A640E250382A300A1D27E /* ScriptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6407250382A300A1D27E /* ScriptTests.swift */; };
-		030A643B250392C200A1D27E /* wally_transaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6436250392B900A1D27E /* wally_transaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A643C250392C200A1D27E /* wally_address.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A643A250392B900A1D27E /* wally_address.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A643D250392C200A1D27E /* wally_bip32.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6437250392B900A1D27E /* wally_bip32.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A643E250392C200A1D27E /* wally_core.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6438250392B900A1D27E /* wally_core.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A643F250392C200A1D27E /* wally_psbt.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6432250392B900A1D27E /* wally_psbt.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A6440250392C200A1D27E /* wally_script.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6435250392B900A1D27E /* wally_script.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A6441250392C200A1D27E /* wally_crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6439250392B900A1D27E /* wally_crypto.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A6442250392C200A1D27E /* wally_bip39.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6434250392B900A1D27E /* wally_bip39.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A6443250392C200A1D27E /* wally_bip38.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A6433250392B900A1D27E /* wally_bip38.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,15 +57,6 @@
 		030A6405250382A300A1D27E /* PSBTTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PSBTTests.swift; sourceTree = "<group>"; };
 		030A6406250382A300A1D27E /* BIP32Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP32Tests.swift; sourceTree = "<group>"; };
 		030A6407250382A300A1D27E /* ScriptTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScriptTests.swift; sourceTree = "<group>"; };
-		030A6432250392B900A1D27E /* wally_psbt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_psbt.h; sourceTree = "<group>"; };
-		030A6433250392B900A1D27E /* wally_bip38.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_bip38.h; sourceTree = "<group>"; };
-		030A6434250392B900A1D27E /* wally_bip39.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_bip39.h; sourceTree = "<group>"; };
-		030A6435250392B900A1D27E /* wally_script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_script.h; sourceTree = "<group>"; };
-		030A6436250392B900A1D27E /* wally_transaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_transaction.h; sourceTree = "<group>"; };
-		030A6437250392B900A1D27E /* wally_bip32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_bip32.h; sourceTree = "<group>"; };
-		030A6438250392B900A1D27E /* wally_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_core.h; sourceTree = "<group>"; };
-		030A6439250392B900A1D27E /* wally_crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_crypto.h; sourceTree = "<group>"; };
-		030A643A250392B900A1D27E /* wally_address.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wally_address.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,7 +82,6 @@
 		030A63C825035ED900A1D27E = {
 			isa = PBXGroup;
 			children = (
-				030A64302503923100A1D27E /* libwally-core */,
 				030A63D425035ED900A1D27E /* LibWally */,
 				030A63DF25035EDA00A1D27E /* LibWallyTests */,
 				030A63D325035ED900A1D27E /* Products */,
@@ -156,31 +137,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		030A64302503923100A1D27E /* libwally-core */ = {
-			isa = PBXGroup;
-			children = (
-				030A64312503927400A1D27E /* include */,
-			);
-			name = "libwally-core";
-			path = "../libwally-core";
-			sourceTree = "<group>";
-		};
-		030A64312503927400A1D27E /* include */ = {
-			isa = PBXGroup;
-			children = (
-				030A643A250392B900A1D27E /* wally_address.h */,
-				030A6437250392B900A1D27E /* wally_bip32.h */,
-				030A6433250392B900A1D27E /* wally_bip38.h */,
-				030A6434250392B900A1D27E /* wally_bip39.h */,
-				030A6438250392B900A1D27E /* wally_core.h */,
-				030A6439250392B900A1D27E /* wally_crypto.h */,
-				030A6432250392B900A1D27E /* wally_psbt.h */,
-				030A6435250392B900A1D27E /* wally_script.h */,
-				030A6436250392B900A1D27E /* wally_transaction.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -189,15 +145,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				030A63E325035EDA00A1D27E /* LibWally.h in Headers */,
-				030A643F250392C200A1D27E /* wally_psbt.h in Headers */,
-				030A6442250392C200A1D27E /* wally_bip39.h in Headers */,
-				030A6443250392C200A1D27E /* wally_bip38.h in Headers */,
-				030A643E250392C200A1D27E /* wally_core.h in Headers */,
-				030A643C250392C200A1D27E /* wally_address.h in Headers */,
-				030A643B250392C200A1D27E /* wally_transaction.h in Headers */,
-				030A6441250392C200A1D27E /* wally_crypto.h in Headers */,
-				030A643D250392C200A1D27E /* wally_bip32.h in Headers */,
-				030A6440250392C200A1D27E /* wally_script.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -461,9 +408,7 @@
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = YZHG975W3A;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -477,9 +422,10 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MODULEMAP_FILE = LibWally/LibWally.modulemap;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
 				PRODUCT_BUNDLE_IDENTIFIER = blockchaincommons.LibWally;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -492,9 +438,7 @@
 			buildSettings = {
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = YZHG975W3A;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -508,9 +452,10 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MODULEMAP_FILE = LibWally/LibWally.modulemap;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
 				PRODUCT_BUNDLE_IDENTIFIER = blockchaincommons.LibWally;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";

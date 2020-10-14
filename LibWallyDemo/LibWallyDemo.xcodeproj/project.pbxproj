@@ -13,6 +13,15 @@
 		030A642225038A4500A1D27E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 030A642125038A4500A1D27E /* Assets.xcassets */; };
 		030A642525038A4500A1D27E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 030A642425038A4500A1D27E /* Preview Assets.xcassets */; };
 		030A642825038A4500A1D27E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 030A642625038A4500A1D27E /* LaunchScreen.storyboard */; };
+		0329398325377C2000E52AD5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0329398225377C2000E52AD5 /* AppDelegate.swift */; };
+		0329398525377C2000E52AD5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0329398425377C2000E52AD5 /* ContentView.swift */; };
+		0329398725377C2100E52AD5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0329398625377C2100E52AD5 /* Assets.xcassets */; };
+		0329398A25377C2100E52AD5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0329398925377C2100E52AD5 /* Preview Assets.xcassets */; };
+		0329398D25377C2200E52AD5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0329398B25377C2100E52AD5 /* Main.storyboard */; };
+		0329399725377C4500E52AD5 /* CLibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; };
+		0329399825377C4500E52AD5 /* CLibWally.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0329399A25377C4700E52AD5 /* LibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E632503B6C9005BA9A7 /* LibWally.xcframework */; };
+		0329399B25377C4700E52AD5 /* LibWally.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E632503B6C9005BA9A7 /* LibWally.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		03D92E612503B46A005BA9A7 /* CLibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; };
 		03D92E622503B46A005BA9A7 /* CLibWally.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		03D92E642503B6C9005BA9A7 /* LibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E632503B6C9005BA9A7 /* LibWally.xcframework */; };
@@ -32,6 +41,18 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0329399925377C4500E52AD5 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				0329399825377C4500E52AD5 /* CLibWally.xcframework in Embed Frameworks */,
+				0329399B25377C4700E52AD5 /* LibWally.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +65,14 @@
 		030A642725038A4500A1D27E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		030A642925038A4500A1D27E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		030A642F25038A5500A1D27E /* LibWallyDemo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibWallyDemo.entitlements; sourceTree = "<group>"; };
+		0329398025377C2000E52AD5 /* LibWallyDemo-Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LibWallyDemo-Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0329398225377C2000E52AD5 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		0329398425377C2000E52AD5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0329398625377C2100E52AD5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0329398925377C2100E52AD5 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		0329398C25377C2200E52AD5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		0329398E25377C2200E52AD5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0329398F25377C2200E52AD5 /* LibWallyDemo_Mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibWallyDemo_Mac.entitlements; sourceTree = "<group>"; };
 		03D92E602503B46A005BA9A7 /* CLibWally.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CLibWally.xcframework; path = ../build/CLibWally.xcframework; sourceTree = "<group>"; };
 		03D92E632503B6C9005BA9A7 /* LibWally.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = LibWally.xcframework; path = ../build/LibWally.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -58,6 +87,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0329397D25377C2000E52AD5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0329399725377C4500E52AD5 /* CLibWally.xcframework in Frameworks */,
+				0329399A25377C4700E52AD5 /* LibWally.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -65,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				030A641A25038A4300A1D27E /* LibWallyDemo */,
+				0329398125377C2000E52AD5 /* LibWallyDemo-Mac */,
 				030A641925038A4300A1D27E /* Products */,
 				030A64442503968C00A1D27E /* Frameworks */,
 			);
@@ -74,6 +113,7 @@
 			isa = PBXGroup;
 			children = (
 				030A641825038A4300A1D27E /* LibWallyDemo.app */,
+				0329398025377C2000E52AD5 /* LibWallyDemo-Mac.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -110,6 +150,28 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		0329398125377C2000E52AD5 /* LibWallyDemo-Mac */ = {
+			isa = PBXGroup;
+			children = (
+				0329398225377C2000E52AD5 /* AppDelegate.swift */,
+				0329398425377C2000E52AD5 /* ContentView.swift */,
+				0329398625377C2100E52AD5 /* Assets.xcassets */,
+				0329398B25377C2100E52AD5 /* Main.storyboard */,
+				0329398E25377C2200E52AD5 /* Info.plist */,
+				0329398F25377C2200E52AD5 /* LibWallyDemo_Mac.entitlements */,
+				0329398825377C2100E52AD5 /* Preview Content */,
+			);
+			path = "LibWallyDemo-Mac";
+			sourceTree = "<group>";
+		};
+		0329398825377C2100E52AD5 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				0329398925377C2100E52AD5 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -131,6 +193,24 @@
 			productReference = 030A641825038A4300A1D27E /* LibWallyDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		0329397F25377C2000E52AD5 /* LibWallyDemo-Mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0329399225377C2200E52AD5 /* Build configuration list for PBXNativeTarget "LibWallyDemo-Mac" */;
+			buildPhases = (
+				0329397C25377C2000E52AD5 /* Sources */,
+				0329397D25377C2000E52AD5 /* Frameworks */,
+				0329397E25377C2000E52AD5 /* Resources */,
+				0329399925377C4500E52AD5 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "LibWallyDemo-Mac";
+			productName = "LibWallyDemo-Mac";
+			productReference = 0329398025377C2000E52AD5 /* LibWallyDemo-Mac.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -142,6 +222,9 @@
 				TargetAttributes = {
 					030A641725038A4300A1D27E = {
 						CreatedOnToolsVersion = 12.0;
+					};
+					0329397F25377C2000E52AD5 = {
+						CreatedOnToolsVersion = 12.0.1;
 					};
 				};
 			};
@@ -159,6 +242,7 @@
 			projectRoot = "";
 			targets = (
 				030A641725038A4300A1D27E /* LibWallyDemo */,
+				0329397F25377C2000E52AD5 /* LibWallyDemo-Mac */,
 			);
 		};
 /* End PBXProject section */
@@ -171,6 +255,16 @@
 				030A642825038A4500A1D27E /* LaunchScreen.storyboard in Resources */,
 				030A642525038A4500A1D27E /* Preview Assets.xcassets in Resources */,
 				030A642225038A4500A1D27E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0329397E25377C2000E52AD5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0329398D25377C2200E52AD5 /* Main.storyboard in Resources */,
+				0329398A25377C2100E52AD5 /* Preview Assets.xcassets in Resources */,
+				0329398725377C2100E52AD5 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,6 +281,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0329397C25377C2000E52AD5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0329398525377C2000E52AD5 /* ContentView.swift in Sources */,
+				0329398325377C2000E52AD5 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
@@ -196,6 +299,14 @@
 				030A642725038A4500A1D27E /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		0329398B25377C2100E52AD5 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0329398C25377C2200E52AD5 /* Base */,
+			);
+			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -367,6 +478,62 @@
 			};
 			name = Release;
 		};
+		0329399025377C2200E52AD5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "LibWallyDemo-Mac/LibWallyDemo_Mac.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"LibWallyDemo-Mac/Preview Content\"";
+				DEVELOPMENT_TEAM = YZHG975W3A;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "LibWallyDemo-Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				OTHER_CODE_SIGN_FLAGS = "--deep";
+				PRODUCT_BUNDLE_IDENTIFIER = "arciem.LibWallyDemo-Mac";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		0329399125377C2200E52AD5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "LibWallyDemo-Mac/LibWallyDemo_Mac.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"LibWallyDemo-Mac/Preview Content\"";
+				DEVELOPMENT_TEAM = YZHG975W3A;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = "LibWallyDemo-Mac/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				OTHER_CODE_SIGN_FLAGS = "--deep";
+				PRODUCT_BUNDLE_IDENTIFIER = "arciem.LibWallyDemo-Mac";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -384,6 +551,15 @@
 			buildConfigurations = (
 				030A642D25038A4500A1D27E /* Debug */,
 				030A642E25038A4500A1D27E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0329399225377C2200E52AD5 /* Build configuration list for PBXNativeTarget "LibWallyDemo-Mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0329399025377C2200E52AD5 /* Debug */,
+				0329399125377C2200E52AD5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
