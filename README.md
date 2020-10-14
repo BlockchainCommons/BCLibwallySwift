@@ -2,7 +2,7 @@
 
 Opinionated Swift wrapper around [LibWally](https://github.com/ElementsProject/libwally-core), a collection of useful primitives for cryptocurrency wallets.
 
-This is a fork of [LibWally Swift](https://github.com/blockchain/libwally-swift). It has a new build system for building XCFrameworks for use with Mac Catalyst, iOS devices, and the iOS simulator.
+This is a fork of [LibWally Swift](https://github.com/blockchain/libwally-swift). It has a new build system for building XCFrameworks for use with MacOSX, Mac Catalyst, iOS devices, and the iOS simulator.
 
 Also supports particular enhancements used by Blockchain Commons from our fork of libwally-core: [bc-libwally-core](https://github.com/blockchaincommons/bc-libwally-core), in the [bc-maintenance](https://github.com/BlockchainCommons/bc-libwally-core/tree/bc-maintenance) branch.
 
