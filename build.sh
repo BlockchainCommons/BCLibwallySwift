@@ -43,7 +43,7 @@ finish_build_clibwally()
 
 build_clibwally()
 (
-  build_init libwally $@
+  build_init wallycore $@
 
   pushd ${DEPS_ROOT}/libwally-core
 
@@ -67,61 +67,37 @@ build_clibwally()
   finish_build_clibwally
 )
 
-build_clibwally_native()
-(
-  LIB_NAME=libwally
-  PLATFORM=$1
-  ARCH=$2
-  BITCODE=$3
-  VERSION=$4
-  PREFIX=${BUILD_ROOT}/${PLATFORM}-${ARCH}/${LIB_NAME}
-
-  export CFLAGS="-O3 ${BITCODE} ${VERSION} -Wno-overriding-t-option"
-  export CXXFLAGS="-O3 ${BITCODE} ${VERSION} -Wno-overriding-t-option"
-  export LDFLAGS="${BITCODE}"
-
-  pushd ${DEPS_ROOT}/libwally-core
-
-  cp ${PROJ_ROOT}/CLibWally.modulemap include/module.modulemap
-
-  ./tools/autogen.sh
-  PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig \
-  ./configure \
-    --disable-shared \
-    --enable-static \
-    --prefix=${PREFIX}
-
-  make clean
-  make install
-  make clean
-
-  popd
-
-  finish_build_clibwally
-)
-
  build_c_libraries()
 (
-  IOS_ARM64_PARAMS=("ios" "arm64" "aarch64-apple-ios" "arm-apple-darwin" "iphoneos" "-fembed-bitcode" "-mios-version-min=${MIN_IOS_VERSION}")
-  MAC_CATALYST_X86_64_PARAMS=("mac-catalyst" "x86_64" "x86_64-apple-ios13.0-macabi" "x86_64-apple-darwin" "macosx" "-fembed-bitcode" "-mmacosx-version-min=${MIN_MAC_VERSION}")
-  IOS_SIMULATOR_X86_64_PARAMS=("ios-simulator" "x86_64" "x86_64-apple-ios" "x86_64-apple-darwin" "iphonesimulator" "-fembed-bitcode-marker" "-mios-simulator-version-min=${MIN_IOS_VERSION}")
-  MACOSX_X86_64_PARAMS=("macosx" "x86_64" "-fembed-bitcode" "-mmacosx-version-min=${MIN_MAC_VERSION}")
+  #                            PLATFORM        ARCH     TARGET                        HOST                  SDK               BITCODE                  VERSION
+  IOS_ARM64_PARAMS=(           "ios"           "arm64"  "aarch64-apple-ios"           "arm-apple-darwin"    "iphoneos"        "-fembed-bitcode"        "-mios-version-min=${MIN_IOS_VERSION}")
+  MAC_CATALYST_X86_64_PARAMS=( "mac-catalyst"  "x86_64" "x86_64-apple-ios13.0-macabi" "x86_64-apple-darwin" "macosx"          "-fembed-bitcode"        "-mmacosx-version-min=${MIN_MAC_VERSION}")
+  IOS_SIMULATOR_X86_64_PARAMS=("ios-simulator" "x86_64" "x86_64-apple-ios"            "x86_64-apple-darwin" "iphonesimulator" "-fembed-bitcode-marker" "-mios-simulator-version-min=${MIN_IOS_VERSION}")
+  MACOSX_X86_64_PARAMS=(       "macosx"        "x86_64" "x86_64-apple-darwin10"       "x86_64-apple-darwin" "macosx"          "-fembed-bitcode"        "-mmacosx-version-min=${MIN_MAC_VERSION}")
 
   build_clibwally ${IOS_ARM64_PARAMS[@]}
   build_clibwally ${MAC_CATALYST_X86_64_PARAMS[@]}
   build_clibwally ${IOS_SIMULATOR_X86_64_PARAMS[@]}
-  build_clibwally_native ${MACOSX_X86_64_PARAMS[@]}
+  build_clibwally ${MACOSX_X86_64_PARAMS[@]}
 )
 
-build_c_framework()
+build_c_xcframework()
 {
+  XC_FRAMEWORK=$1
+  LIB_NAME=$2
+
   rm -rf "${BUILD_ROOT}/CLibWally.xcframework"
   xcodebuild -create-xcframework \
-    -library "${BUILD_ROOT}/ios-arm64/libwally/lib/libwallycore.a" -headers "${BUILD_ROOT}/ios-arm64/libwally/include/" \
-    -library "${BUILD_ROOT}/mac-catalyst-x86_64/libwally/lib/libwallycore.a" -headers "${BUILD_ROOT}/mac-catalyst-x86_64/libwally/include/" \
-    -library "${BUILD_ROOT}/ios-simulator-x86_64/libwally/lib/libwallycore.a" -headers "${BUILD_ROOT}/ios-simulator-x86_64/libwally/include/" \
-    -library "${BUILD_ROOT}/macosx-x86_64/libwally/lib/libwallycore.a" -headers "${BUILD_ROOT}/macosx-x86_64/libwally/include/" \
+    -library "${BUILD_ROOT}/ios-arm64/${LIB_NAME}/lib/lib${LIB_NAME}.a" -headers "${BUILD_ROOT}/ios-arm64/${LIB_NAME}/include/" \
+    -library "${BUILD_ROOT}/mac-catalyst-x86_64/${LIB_NAME}/lib/lib${LIB_NAME}.a" -headers "${BUILD_ROOT}/mac-catalyst-x86_64/${LIB_NAME}/include/" \
+    -library "${BUILD_ROOT}/ios-simulator-x86_64/${LIB_NAME}/lib/lib${LIB_NAME}.a" -headers "${BUILD_ROOT}/ios-simulator-x86_64/${LIB_NAME}/include/" \
+    -library "${BUILD_ROOT}/macosx-x86_64/${LIB_NAME}/lib/lib${LIB_NAME}.a" -headers "${BUILD_ROOT}/macosx-x86_64/${LIB_NAME}/include/" \
     -output "${BUILD_ROOT}/CLibWally.xcframework"
+}
+
+build_c_xcframeworks()
+{
+  build_c_xcframework LibWally wallycore
 }
 
 build_swift_framework()
@@ -177,10 +153,11 @@ build_swift_framework()
 
 build_swift_frameworks()
 (
-  IOS_ARM64_PARAMS=("arm64" "ios-arm64" "iphoneos" "iphoneos" "NO" "IPHONEOS_DEPLOYMENT_TARGET=${MIN_IOS_VERSION}")
-  MAC_CATALYST_X86_64_PARAMS=("x86_64" "mac-catalyst-x86_64" "macosx" "maccatalyst" "YES" "MACOSX_DEPLOYMENT_TARGET=${MIN_MAC_VERSION}")
-  IOS_SIMULATOR_X86_64_PARAMS=("x86_64" "ios-simulator-x86_64" "iphonesimulator" "iphonesimulator" "NO" "IPHONEOS_DEPLOYMENT_TARGET=${MIN_IOS_VERSION}")
-  MACOSX_X86_64_PARAMS=("x86_64" "macosx-x86_64" "macosx" "NONE" "NO" "MACOSX_DEPLOYMENT_TARGET=${MIN_MAC_VERSION}")
+  #                            ARCH     BUILD_DIR_NAME         SDK               PLATFORM_DIR      CATALYST  VERSION
+  IOS_ARM64_PARAMS=(           "arm64"  "ios-arm64"            "iphoneos"        "iphoneos"        "NO"      "IPHONEOS_DEPLOYMENT_TARGET=${MIN_IOS_VERSION}")
+  MAC_CATALYST_X86_64_PARAMS=( "x86_64" "mac-catalyst-x86_64"  "macosx"          "maccatalyst"     "YES"     "MACOSX_DEPLOYMENT_TARGET=${MIN_MAC_VERSION}")
+  IOS_SIMULATOR_X86_64_PARAMS=("x86_64" "ios-simulator-x86_64" "iphonesimulator" "iphonesimulator" "NO"      "IPHONEOS_DEPLOYMENT_TARGET=${MIN_IOS_VERSION}")
+  MACOSX_X86_64_PARAMS=(       "x86_64" "macosx-x86_64"        "macosx"          "NONE"            "NO"      "MACOSX_DEPLOYMENT_TARGET=${MIN_MAC_VERSION}")
 
   build_swift_framework LibWally ${IOS_ARM64_PARAMS[@]}
   build_swift_framework LibWally ${MAC_CATALYST_X86_64_PARAMS[@]}
@@ -227,6 +204,6 @@ build_swift_xcframeworks()
 )
 
 build_c_libraries
-build_c_framework
+build_c_xcframeworks
 build_swift_frameworks
 build_swift_xcframeworks
