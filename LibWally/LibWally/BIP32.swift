@@ -245,19 +245,18 @@ public struct HDKey {
     }
     
     public var pubKey: PubKey {
-        var tmp = self.wally_ext_key.pub_key
-        let pub_key = [UInt8](UnsafeBufferPointer(start: &tmp.0, count: Int(EC_PUBLIC_KEY_LEN)))
-        return PubKey(Data(pub_key), self.network, compressed: true)!
+        let data = withUnsafeBytes(of: self.wally_ext_key.pub_key) { Data($0) }
+        return PubKey(data, self.network, compressed: true)!
     }
     
-    public var privKey: Key? {
+    var privKey: Key? {
         if self.isNeutered {
-           return nil
+            return nil
         }
-        var tmp = self.wally_ext_key.priv_key
+        var data = withUnsafeBytes(of: self.wally_ext_key.priv_key) { Data($0) }
         // skip prefix byte 0
-        let priv_key = [UInt8](UnsafeBufferPointer(start: &tmp.1, count: Int(EC_PRIVATE_KEY_LEN)))
-        return Key(Data(priv_key), self.network, compressed: true)
+        precondition(data.popFirst() != nil)
+        return Key(data, self.network, compressed: true)
     }
     
     public var xpriv: String? {
@@ -284,16 +283,16 @@ public struct HDKey {
             hdkey.deallocate()
         }
         hdkey.initialize(to: self.wally_ext_key)
-        
-        let fingerprint_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(FINGERPRINT_LEN))
+
+        let fingerprint_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(BIP32_KEY_FINGERPRINT_LEN))
         defer {
             fingerprint_bytes.deallocate()
         }
         
-        precondition(bip32_key_get_fingerprint(hdkey, fingerprint_bytes, Int(FINGERPRINT_LEN)) == WALLY_OK)
-        return Data(bytes: fingerprint_bytes, count: Int(FINGERPRINT_LEN))
+        precondition(bip32_key_get_fingerprint(hdkey, fingerprint_bytes, Int(BIP32_KEY_FINGERPRINT_LEN)) == WALLY_OK)
+        return Data(bytes: fingerprint_bytes, count: Int(BIP32_KEY_FINGERPRINT_LEN))
     }
-    
+
     public func derive (_ path: BIP32Path) throws -> HDKey {
         let depth = self.wally_ext_key.depth
         var tmpPath = path
