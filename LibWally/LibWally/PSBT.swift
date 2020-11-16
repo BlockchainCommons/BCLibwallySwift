@@ -35,9 +35,21 @@ func getOrigins (keypaths: wally_map, network: Network) -> [PubKey: KeyOrigin] {
     return origins
 }
 
+func getSignatures(signatures: wally_map, network: Network) -> [PubKey: Data] {
+    var result: [PubKey: Data] = [:]
+    for i in 0 ..< signatures.num_items {
+        let item = signatures.items[i]
+        let pubKey = PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)!
+        let sig = Data(bytes: item.value, count: Int(item.value_len))
+        result[pubKey] = sig
+    }
+    return result
+}
+
 public struct PSBTInput {
     let wally_psbt_input: wally_psbt_input
     let origins: [PubKey: KeyOrigin]?
+    public let signatures: [PubKey: Data]?
 
     init(_ wally_psbt_input: wally_psbt_input, network: Network) {
         self.wally_psbt_input = wally_psbt_input
@@ -45,6 +57,12 @@ public struct PSBTInput {
             self.origins = getOrigins(keypaths: wally_psbt_input.keypaths, network: network)
         } else {
             self.origins = nil
+        }
+
+        if(wally_psbt_input.signatures.num_items > 0) {
+            self.signatures = getSignatures(signatures: wally_psbt_input.signatures, network: network)
+        } else {
+            self.signatures = nil
         }
     }
 
