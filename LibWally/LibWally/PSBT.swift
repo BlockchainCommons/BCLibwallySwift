@@ -10,7 +10,7 @@ import Foundation
 import CLibWally
 
 public struct KeyOrigin : Equatable {
-    let fingerprint: Data
+    public let fingerprint: Data
     public let path: BIP32Path
 }
 
@@ -48,7 +48,7 @@ func getSignatures(signatures: wally_map, network: Network) -> [PubKey: Data] {
 
 public struct PSBTInput {
     let wally_psbt_input: wally_psbt_input
-    let origins: [PubKey: KeyOrigin]?
+    public let origins: [PubKey: KeyOrigin]?
     public let signatures: [PubKey: Data]?
 
     init(_ wally_psbt_input: wally_psbt_input, network: Network) {
