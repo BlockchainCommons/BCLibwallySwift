@@ -50,6 +50,7 @@ public struct PSBTInput {
     let wally_psbt_input: wally_psbt_input
     public let origins: [PubKey: KeyOrigin]?
     public let signatures: [PubKey: Data]?
+    public let witnessScript: Data?
 
     init(_ wally_psbt_input: wally_psbt_input, network: Network) {
         self.wally_psbt_input = wally_psbt_input
@@ -63,6 +64,12 @@ public struct PSBTInput {
             self.signatures = getSignatures(signatures: wally_psbt_input.signatures, network: network)
         } else {
             self.signatures = nil
+        }
+
+        if let witnessScript = wally_psbt_input.witness_script {
+            self.witnessScript = Data(bytes: witnessScript, count: wally_psbt_input.witness_script_len)
+        } else {
+            self.witnessScript = nil
         }
     }
 
