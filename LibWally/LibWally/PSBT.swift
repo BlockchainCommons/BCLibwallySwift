@@ -14,13 +14,13 @@ public struct KeyOrigin : Equatable {
     public let path: BIP32Path
 }
 
-func getOrigins (keypaths: wally_map, network: Network) -> [PubKey: KeyOrigin] {
+func getOrigins(keypaths: wally_map, network: Network) throws -> [PubKey: KeyOrigin] {
     var origins: [PubKey: KeyOrigin] = [:]
     for i in 0..<keypaths.num_items {
         // TOOD: simplify after https://github.com/ElementsProject/libwally-core/issues/241
         let item: wally_map_item = keypaths.items[i]
 
-        let pubKey = PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)!
+        let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)
         let fingerprint = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
         let keyPath = Data(bytes: item.value + Int(BIP32_KEY_FINGERPRINT_LEN), count: Int(item.value_len) - Int(BIP32_KEY_FINGERPRINT_LEN))
 
@@ -35,11 +35,11 @@ func getOrigins (keypaths: wally_map, network: Network) -> [PubKey: KeyOrigin] {
     return origins
 }
 
-func getSignatures(signatures: wally_map, network: Network) -> [PubKey: Data] {
+func getSignatures(signatures: wally_map, network: Network) throws -> [PubKey: Data] {
     var result: [PubKey: Data] = [:]
     for i in 0 ..< signatures.num_items {
         let item = signatures.items[i]
-        let pubKey = PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)!
+        let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)
         let sig = Data(bytes: item.value, count: Int(item.value_len))
         result[pubKey] = sig
     }
@@ -52,16 +52,16 @@ public struct PSBTInput {
     public let signatures: [PubKey: Data]?
     public let witnessScript: Data?
 
-    init(_ wally_psbt_input: wally_psbt_input, network: Network) {
+    init(_ wally_psbt_input: wally_psbt_input, network: Network) throws {
         self.wally_psbt_input = wally_psbt_input
         if (wally_psbt_input.keypaths.num_items > 0) {
-            self.origins = getOrigins(keypaths: wally_psbt_input.keypaths, network: network)
+            self.origins = try getOrigins(keypaths: wally_psbt_input.keypaths, network: network)
         } else {
             self.origins = nil
         }
 
         if(wally_psbt_input.signatures.num_items > 0) {
-            self.signatures = getSignatures(signatures: wally_psbt_input.signatures, network: network)
+            self.signatures = try getSignatures(signatures: wally_psbt_input.signatures, network: network)
         } else {
             self.signatures = nil
         }
@@ -119,12 +119,12 @@ public struct PSBTOutput : Identifiable {
         return self.txOutput.address! + String(self.txOutput.amount)
     }
 
-    init(_ wally_psbt_outputs: UnsafeMutablePointer<wally_psbt_output>, tx: wally_tx, index: Int, network: Network) {
+    init(_ wally_psbt_outputs: UnsafeMutablePointer<wally_psbt_output>, tx: wally_tx, index: Int, network: Network) throws {
         precondition(index >= 0 && index < tx.num_outputs)
         precondition(tx.num_outputs != 0 )
         self.wally_psbt_output = wally_psbt_outputs[index]
         if (wally_psbt_output.keypaths.num_items > 0) {
-            self.origins = getOrigins(keypaths: wally_psbt_output.keypaths, network: network)
+            self.origins = try getOrigins(keypaths: wally_psbt_output.keypaths, network: network)
         } else {
             self.origins = nil
         }
@@ -268,13 +268,6 @@ public struct PSBT : Equatable {
         lhs.network == rhs.network && lhs.data == rhs.data
     }
 
-
-    enum ParseError: Error {
-        case tooShort
-        case invalidBase64
-        case invalid
-    }
-
     public let network: Network
     public let inputs: [PSBTInput]
     public let outputs: [PSBTOutput]
@@ -294,30 +287,30 @@ public struct PSBT : Equatable {
         }
         guard wally_psbt_from_bytes(psbt_bytes, psbt_bytes_len, &output) == WALLY_OK else {
             // libwally-core returns WALLY_EINVAL regardless of why parsing fails
-            throw ParseError.invalid
+            throw LibWallyError("Invalid PSBT.")
         }
         precondition(output != nil)
         precondition(output!.pointee.tx != nil)
         self.wally_psbt = output!.pointee
         var inputs: [PSBTInput] = []
         for i in 0..<self.wally_psbt.inputs_allocation_len {
-            inputs.append(PSBTInput(self.wally_psbt.inputs![i], network: network))
+            try inputs.append(PSBTInput(self.wally_psbt.inputs![i], network: network))
         }
         self.inputs = inputs
         var outputs: [PSBTOutput] = []
         for i in 0..<self.wally_psbt.outputs_allocation_len {
-            outputs.append(PSBTOutput(self.wally_psbt.outputs, tx: self.wally_psbt.tx!.pointee, index: i, network: network))
+            try outputs.append(PSBTOutput(self.wally_psbt.outputs, tx: self.wally_psbt.tx!.pointee, index: i, network: network))
         }
         self.outputs = outputs
     }
 
     public init (_ psbt: String, _ network: Network) throws {
         guard psbt.count != 0 else {
-            throw ParseError.tooShort
+            throw LibWallyError("Invalid PSBT.")
         }
 
-        guard let psbtData = Data(base64Encoded:psbt) else {
-            throw ParseError.invalidBase64
+        guard let psbtData = Data(base64Encoded: psbt) else {
+            throw LibWallyError("Invalid PSBT.")
         }
 
         try self.init(psbtData, network)

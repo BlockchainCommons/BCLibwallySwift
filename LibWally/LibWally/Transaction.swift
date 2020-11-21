@@ -19,10 +19,7 @@ public struct TxOutput {
     }
     public let scriptPubKey: ScriptPubKey
     public var address: String? {
-        if let address = Address(self.scriptPubKey, self.network) {
-            return address.description
-        }
-        return nil
+        try? Address(self.scriptPubKey, self.network).description
     }
 
     public init (_ scriptPubKey: ScriptPubKey, _ amount: Satoshi, _ network: Network) {
@@ -67,9 +64,9 @@ public struct TxInput {
     public var amount: Satoshi
 
     // For P2SH wrapped SegWit, we set scriptSig automatically
-    public init? (_ tx: Transaction, _ vout: UInt32, _ amount: Satoshi, _ scriptSig: ScriptSig?, _ witness: Witness?, _ scriptPubKey: ScriptPubKey) {
+    public init(_ tx: Transaction, _ vout: UInt32, _ amount: Satoshi, _ scriptSig: ScriptSig?, _ witness: Witness?, _ scriptPubKey: ScriptPubKey) throws {
         if tx.hash == nil {
-            return nil
+            throw LibWallyError("Invalid transaction.")
         }
 
         self.witness = witness
@@ -117,30 +114,29 @@ public struct Transaction {
     public var inputs: [TxInput]? = nil
     var outputs: [TxOutput]? = nil
     
-    init (_ wally_tx: wally_tx) {
+    init(_ wally_tx: wally_tx) {
         self.wally_tx = UnsafeMutablePointer<wally_tx>.allocate(capacity: 1)
         self.wally_tx!.initialize(to: wally_tx)
     }
 
-    public init? (_ description: String) {
-        if let hex = Data(description) {
-            if hex.count != SHA256_LEN { // Not a transaction hash
-                let tx_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: hex.count)
-                hex.copyBytes(to: tx_bytes, count: hex.count)
-                defer {
-                    tx_bytes.deallocate()
-                }
-                if (wally_tx_from_bytes(tx_bytes, hex.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &self.wally_tx) == WALLY_OK) {
-                    precondition(self.wally_tx != nil)
-                    return
-                }
+    public init(hex: String) throws {
+        let data = try Data(hex: hex)
+        if data.count != SHA256_LEN { // Not a transaction hash
+            let tx_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count)
+            data.copyBytes(to: tx_bytes, count: data.count)
+            defer {
+                tx_bytes.deallocate()
             }
-            if hex.count == SHA256_LEN { // 32 bytes, but not a valid transaction, so treat as a hash
-                self.hash = Data(hex.reversed())
+            if (wally_tx_from_bytes(tx_bytes, data.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &self.wally_tx) == WALLY_OK) {
+                precondition(self.wally_tx != nil)
                 return
             }
         }
-        return nil
+        if data.count == SHA256_LEN { // 32 bytes, but not a valid transaction, so treat as a hash
+            self.hash = Data(data.reversed())
+            return
+        }
+        throw LibWallyError("Invalid transaction.")
     }
     
     public init (_ inputs: [TxInput], _ outputs: [TxOutput]) {

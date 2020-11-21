@@ -14,13 +14,6 @@ public enum Network : Equatable {
     case testnet
 }
 
-public enum BIP32Error: Error {
-    case invalidIndex
-    case hardenedDerivationWithoutPrivateKey
-    case incompatibleNetwork
-    case invalidDepth
-}
-
 public enum BIP32Derivation : Equatable {
     // max 2^^31 - 1: enforced by the BIP32Path initializer
     case normal(UInt32)
@@ -36,7 +29,7 @@ public enum BIP32Derivation : Equatable {
     }
 }
 
-public struct BIP32Path : LosslessStringConvertible, Equatable {
+public struct BIP32Path : Equatable {
     public let components: [BIP32Derivation]
     let rawPath: [UInt32]
     let relative: Bool
@@ -61,12 +54,12 @@ public struct BIP32Path : LosslessStringConvertible, Equatable {
             switch component {
             case .normal(let index):
                 if index >= BIP32_INITIAL_HARDENED_CHILD {
-                    throw BIP32Error.invalidIndex
+                    throw LibWallyError("Invalid index in path.")
                 }
                 rawPath.append(index)
             case .hardened(let index):
                 if index >= BIP32_INITIAL_HARDENED_CHILD {
-                    throw BIP32Error.invalidIndex
+                    throw LibWallyError("Invalid index in path.")
                 }
                 rawPath.append(BIP32_INITIAL_HARDENED_CHILD + index)
             }
@@ -83,10 +76,9 @@ public struct BIP32Path : LosslessStringConvertible, Equatable {
         try self.init([.normal(UInt32(index))], relative: relative)
     }
     
-    // LosslessStringConvertible does not permit this initializer to throw
-    public init?(_ description: String) {
+    public init(_ description: String) throws {
         guard description.count > 0 else {
-            return nil
+            throw LibWallyError("Invalid path.")
         }
         let relative = description.prefix(2) != "m/"
         var tmpComponents: [BIP32Derivation] = []
@@ -101,20 +93,20 @@ public struct BIP32Path : LosslessStringConvertible, Equatable {
                 if let i = indexHardened {
                     tmpComponents.append(.hardened(i))
                 } else {
-                    return nil
+                    throw LibWallyError("Invalid path.")
                 }
             } else {
-                return nil
+                throw LibWallyError("Invalid path.")
             }
         }
         
         guard tmpComponents.count > 0 else {
-            return nil
+            throw LibWallyError("Invalid path.")
         }
         do {
             try self.init(tmpComponents, relative: relative)
         } catch {
-            return nil
+            throw LibWallyError("Invalid path.")
         }
     }
     
@@ -136,7 +128,7 @@ public struct BIP32Path : LosslessStringConvertible, Equatable {
     
     public func chop(_ depth: Int) throws -> BIP32Path {
         if depth > components.count {
-            throw BIP32Error.invalidDepth
+            throw LibWallyError("Invalid depth.")
         }
         var newComponents = self.components
         newComponents.removeFirst(Int(depth))
@@ -154,7 +146,7 @@ public struct HDKey {
         self.masterKeyFingerprint = masterKeyFingerprint
     }
 
-    public init?(_ description: String, masterKeyFingerprint: Data? = nil) {
+    public init(_ description: String, masterKeyFingerprint: Data? = nil) throws {
         var output: UnsafeMutablePointer<ext_key>?
         defer {
             if let wally_ext_key = output {
@@ -166,21 +158,21 @@ public struct HDKey {
             precondition(output != nil)
             self.init(output!.pointee, masterKeyFingerprint: masterKeyFingerprint)
         } else {
-            return nil
+            throw LibWallyError("Invalid HD key.")
         }
         if self.wally_ext_key.depth == 0 {
             if self.masterKeyFingerprint == nil {
                 self.masterKeyFingerprint = self.fingerprint
             } else {
                 guard self.masterKeyFingerprint == self.fingerprint else {
-                    return nil
+                    throw LibWallyError("Invalid HD key.")
                 }
             }
         }
 
     }
 
-    public init?(_ seed: BIP39Seed, _ network: Network = .mainnet) {
+    public init(_ seed: BIP39Seed, _ network: Network = .mainnet) throws {
         let bytes_in = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(BIP39_SEED_LEN_512))
         var output: UnsafeMutablePointer<ext_key>?
         defer {
@@ -205,7 +197,7 @@ public struct HDKey {
             // From libwally-core docs:
             // The entropy passed in may produce an invalid key. If this happens, WALLY_ERROR will be returned
             // and the caller should retry with new entropy.
-            return nil
+            throw LibWallyError("Invalid HD key.")
         }
         self.masterKeyFingerprint = self.fingerprint
     }
@@ -246,7 +238,7 @@ public struct HDKey {
     
     public var pubKey: PubKey {
         let data = withUnsafeBytes(of: self.wally_ext_key.pub_key) { Data($0) }
-        return PubKey(data, self.network, compressed: true)!
+        return try! PubKey(data, self.network, compressed: true)
     }
     
     public var privKey: Key? {
@@ -256,7 +248,7 @@ public struct HDKey {
         var data = withUnsafeBytes(of: self.wally_ext_key.priv_key) { Data($0) }
         // skip prefix byte 0
         precondition(data.popFirst() != nil)
-        return Key(data, self.network, compressed: true)
+        return try! Key(data, self.network, compressed: true)
     }
     
     public var xpriv: String? {
@@ -301,7 +293,7 @@ public struct HDKey {
         }
 
         if self.isNeutered && tmpPath.components.first(where: { $0.isHardened }) != nil {
-            throw BIP32Error.hardenedDerivationWithoutPrivateKey
+            throw LibWallyError("Hardened derivation without private key.")
         }
         
         let hdkey = UnsafeMutablePointer<ext_key>.allocate(capacity: 1)

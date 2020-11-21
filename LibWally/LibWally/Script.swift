@@ -37,7 +37,7 @@ public enum WitnessType {
     case payToScriptHashPayToWitnessPubKeyHash(PubKey) // P2SH-P2WPKH (wrapped SegWit)
 }
 
-public struct ScriptPubKey : LosslessStringConvertible, Equatable {
+public struct ScriptPubKey : Equatable {
     var bytes: Data
 
     public var type: ScriptType? {
@@ -68,12 +68,8 @@ public struct ScriptPubKey : LosslessStringConvertible, Equatable {
         }
     }
 
-    public init?(_ description: String) {
-        if let data = Data(description) {
-            self.bytes = data
-        } else {
-            return nil
-        }
+    public init(hex: String) throws {
+        self.bytes = try Data(hex: hex)
     }
     
     public init(multisig pubKeys:[PubKey], threshold: UInt, bip67: Bool = true) {
@@ -98,7 +94,7 @@ public struct ScriptPubKey : LosslessStringConvertible, Equatable {
     }
 
     public var description: String {
-        return self.bytes.hexString
+        return self.bytes.hex
     }
 
 
@@ -167,7 +163,7 @@ public struct ScriptSig : Equatable {
                 pubkey_hash_bytes.deallocate()
             }
             precondition(wally_hash160(pubkey_bytes, pubKey.data.count, pubkey_hash_bytes, Int(HASH160_LEN)) == WALLY_OK)
-            let redeemScript = Data("0014")! + Data(bytes: pubkey_hash_bytes, count: Int(HASH160_LEN))
+            let redeemScript = try! Data(hex: "0014") + Data(bytes: pubkey_hash_bytes, count: Int(HASH160_LEN))
             return Data([UInt8(redeemScript.count)]) + redeemScript
         }
     }
@@ -226,7 +222,7 @@ public struct Witness {
                 pubkey_hash_bytes.deallocate()
             }
             precondition(wally_hash160(pubkey_bytes, pubKey.data.count, pubkey_hash_bytes, Int(HASH160_LEN)) == WALLY_OK)
-            return Data("76a914")! + Data(bytes: pubkey_hash_bytes, count: Int(HASH160_LEN)) + Data("88ac")!
+            return try! Data(hex: "76a914") + Data(bytes: pubkey_hash_bytes, count: Int(HASH160_LEN)) + Data(hex: "88ac")
         }
     }
 

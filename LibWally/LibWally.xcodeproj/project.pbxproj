@@ -24,6 +24,7 @@
 		030A640C250382A300A1D27E /* PSBTTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6405250382A300A1D27E /* PSBTTests.swift */; };
 		030A640D250382A300A1D27E /* BIP32Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6406250382A300A1D27E /* BIP32Tests.swift */; };
 		030A640E250382A300A1D27E /* ScriptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6407250382A300A1D27E /* ScriptTests.swift */; };
+		03A560E72568ED7B00181CB8 /* LibWallyError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560E62568ED7B00181CB8 /* LibWallyError.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 		030A6405250382A300A1D27E /* PSBTTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PSBTTests.swift; sourceTree = "<group>"; };
 		030A6406250382A300A1D27E /* BIP32Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP32Tests.swift; sourceTree = "<group>"; };
 		030A6407250382A300A1D27E /* ScriptTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScriptTests.swift; sourceTree = "<group>"; };
+		03A560E62568ED7B00181CB8 /* LibWallyError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibWallyError.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +112,7 @@
 				030A63F72503702700A1D27E /* PSBT.swift */,
 				030A63F42503702700A1D27E /* Script.swift */,
 				030A63F32503702700A1D27E /* Transaction.swift */,
+				03A560E62568ED7B00181CB8 /* LibWallyError.swift */,
 			);
 			path = LibWally;
 			sourceTree = "<group>";
@@ -246,6 +249,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03A560E72568ED7B00181CB8 /* LibWallyError.swift in Sources */,
 				030A63FA2503702700A1D27E /* Transaction.swift in Sources */,
 				030A63FC2503702700A1D27E /* DataExtension.swift in Sources */,
 				030A63FE2503702700A1D27E /* PSBT.swift in Sources */,

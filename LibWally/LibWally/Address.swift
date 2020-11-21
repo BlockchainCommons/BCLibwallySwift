@@ -15,7 +15,7 @@ public enum AddressType {
     case payToWitnessPubKeyHash // P2WPKH (native SegWit)
 }
 
-public protocol AddressProtocol : LosslessStringConvertible {
+public protocol AddressProtocol {
     var scriptPubKey: ScriptPubKey { get }
 }
 
@@ -24,7 +24,7 @@ public struct Address : AddressProtocol {
     public var scriptPubKey: ScriptPubKey
     var address: String
     
-    public init?(_ description: String) {
+    public init(_ description: String) throws {
         self.address = description
 
         // base58 and bech32 use more bytes in string form, so description.count should be safe:
@@ -60,13 +60,13 @@ public struct Address : AddressProtocol {
         }
         
         if (result != WALLY_OK) {
-            return nil
+            throw LibWallyError("Invalid address.")
         }
         
         self.scriptPubKey = ScriptPubKey(Data(bytes: bytes_out, count: written.pointee))
     }
     
-    init(_ hdKey: HDKey, _ type: AddressType) {
+    init(_ hdKey: HDKey, _ type: AddressType) throws {
         let wally_type: Int32 = {
             switch type {
             case .payToPubKeyHash:
@@ -112,10 +112,10 @@ public struct Address : AddressProtocol {
         let address = String(cString: output!)
         
         // TODO: get scriptPubKey directly from libwally (requires a new function) instead parsing the string
-        self.init(address)! // libwally generated this string, so it's safe to force unwrap
+        try self.init(address) // libwally generated this string, so it's safe to force unwrap
     }
     
-    public init?(_ scriptPubKey: ScriptPubKey, _ network: Network) {
+    public init(_ scriptPubKey: ScriptPubKey, _ network: Network) throws {
         self.network = network
         self.scriptPubKey = scriptPubKey
         switch self.scriptPubKey.type {
@@ -168,10 +168,10 @@ public struct Address : AddressProtocol {
             if let words_c_string = output {
                 self.address = String(cString: words_c_string)
             } else {
-                return nil
+                throw LibWallyError("Invalid address.")
             }
         default:
-            return nil
+            throw LibWallyError("Invalid address.")
         }
     }
     
@@ -195,7 +195,7 @@ public struct Key {
          }
     }
     
-    public init?(_ wif: String, _ network: Network, compressed: Bool = true) {
+    public init(_ wif: String, _ network: Network, compressed: Bool = true) throws {
         let bytes_out = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(EC_PRIVATE_KEY_LEN))
         defer {
           bytes_out.deallocate()
@@ -204,16 +204,16 @@ public struct Key {
         // TODO: autodetect compression with wally_wif_is_uncompressed
         let flags = UInt32(compressed ? WALLY_WIF_FLAG_COMPRESSED : WALLY_WIF_FLAG_UNCOMPRESSED)
         guard wally_wif_to_bytes(wif, Key.prefix(network), flags, bytes_out, Int(EC_PRIVATE_KEY_LEN)) == WALLY_OK else {
-            return nil
+            throw LibWallyError("Invalid key.")
         }
         self.compressed = compressed
         self.data = Data(bytes: bytes_out, count: Int(EC_PRIVATE_KEY_LEN))
         self.network = network
     }
     
-    public init?(_ data: Data, _ network: Network, compressed: Bool = true) {
+    public init(_ data: Data, _ network: Network, compressed: Bool = true) throws {
         guard data.count == Int(EC_PRIVATE_KEY_LEN) else {
-            return nil
+            throw LibWallyError("Invalid key.")
         }
         self.data = data
         self.network = network
@@ -249,9 +249,9 @@ public struct Key {
               bytes_out_uncompressed.deallocate()
             }
             precondition(wally_ec_public_key_decompress(bytes_out, Int(EC_PUBLIC_KEY_LEN), bytes_out_uncompressed, Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN)) == WALLY_OK)
-            return PubKey(Data(bytes: bytes_out_uncompressed, count: Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN)), network, compressed: false)!
+            return try! PubKey(Data(bytes: bytes_out_uncompressed, count: Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN)), network, compressed: false)
         } else {
-            return PubKey(Data(bytes: bytes_out, count: Int(EC_PUBLIC_KEY_LEN)), network, compressed: true)!
+            return try! PubKey(Data(bytes: bytes_out, count: Int(EC_PUBLIC_KEY_LEN)), network, compressed: true)
         }
     }
 }
@@ -261,9 +261,9 @@ public struct PubKey : Equatable, Hashable {
     public let data: Data
     public let network: Network
 
-    public init?(_ data: Data, _ network: Network, compressed: Bool = true) {
+    public init(_ data: Data, _ network: Network, compressed: Bool = true) throws {
         guard data.count == Int(compressed ? EC_PUBLIC_KEY_LEN : EC_PUBLIC_KEY_UNCOMPRESSED_LEN) else {
-            return nil
+            throw LibWallyError("Invalid public key.")
         }
         self.data = data
         self.network = network
@@ -272,7 +272,7 @@ public struct PubKey : Equatable, Hashable {
 }
 
 extension HDKey {
-    public func address (_ type: AddressType) -> Address {
-        return Address(self, type)
+    public func address(_ type: AddressType) -> Address {
+        return try! Address(self, type)
     }
 }

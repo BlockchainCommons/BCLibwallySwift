@@ -28,56 +28,50 @@ public var BIP39Words: [String] = {
     return words
 }()
 
-public struct BIP39Entropy : LosslessStringConvertible, Equatable {
+public struct BIP39Entropy : Equatable {
     public var data: Data
     
-    public init?(_ description: String) {
-        if let data = Data(description) {
-            self.data = data
-        } else {
-            return nil
-        }
+    public init(hex: String) throws {
+        self.data = try Data(hex: hex)
     }
     
     public init(_ data: Data) {
         self.data = data
     }
     
-    public var description: String { return data.hexString }
+    public var description: String { return data.hex }
 }
 
-public struct BIP39Seed : LosslessStringConvertible, Equatable {
+public struct BIP39Seed : Equatable {
     var data: Data
     
-    public init?(_ description: String) {
-        if let data = Data(description) {
-            self.data = data
-        } else {
-            return nil
-        }
+    public init(hex: String) throws {
+        self.data = try Data(hex: hex)
     }
     
     init(_ data: Data) {
         self.data = data
     }
     
-    public var description: String { return data.hexString }
+    public var description: String { return data.hex }
 }
 
-public struct BIP39Mnemonic : LosslessStringConvertible, Equatable {
+public struct BIP39Mnemonic : Equatable {
     public let words: [String]
     public var description: String { return words.joined(separator: " ") }
 
-    public init?(_ words: [String]) {
-        if (!BIP39Mnemonic.isValid(words)) { return nil }
+    public init(words: [String]) throws {
+        if (!BIP39Mnemonic.isValid(words)) {
+            throw LibWallyError("Invalid mnemonic.")
+        }
         self.words = words
     }
     
-    public init?(_ words: String) {
-        self.init(words.components(separatedBy: " "))
+    public init(words: String) throws {
+        try self.init(words: words.components(separatedBy: " "))
     }
     
-    public init?(_ entropy: BIP39Entropy) {
+    public init(entropy: BIP39Entropy) throws {
         precondition(entropy.data.count <= MAX_BYTES)
         let bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: MAX_BYTES)
         let bytes_len = entropy.data.count
@@ -92,9 +86,9 @@ public struct BIP39Mnemonic : LosslessStringConvertible, Equatable {
         
         if let words_c_string = output {
             let words = String(cString: words_c_string)
-            self.init(words)
+            try self.init(words: words)
         } else {
-            return nil
+            throw LibWallyError("Invalid mnemonic.")
         }
         
     }

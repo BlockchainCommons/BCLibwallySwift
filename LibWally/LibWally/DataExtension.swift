@@ -9,39 +9,39 @@
 import Foundation
 import CLibWally
 
-public extension Data {
+extension Data {
 
-    init?(_ hexString: String) {
-        let len = hexString.count / 2
+    init(hex: String) throws {
+        let len = hex.count / 2
         var data = Data(capacity: len)
         for i in 0..<len {
-            let j = hexString.index(hexString.startIndex, offsetBy: i*2)
-            let k = hexString.index(j, offsetBy: 2)
-            let bytes = hexString[j..<k]
+            let j = hex.index(hex.startIndex, offsetBy: i*2)
+            let k = hex.index(j, offsetBy: 2)
+            let bytes = hex[j..<k]
             if var num = UInt8(bytes, radix: 16) {
                 data.append(&num, count: 1)
             } else {
-                return nil
+                throw LibWallyError("Invalid hex format.")
             }
         }
         self = data
     }
 
-    init?(base58 strBase58: String) {
-        let len = strBase58.count + Int(BASE58_CHECKSUM_LEN) // base58 has more characters than the number of bytes we need
+    init(base58: String) throws {
+        let len = base58.count + Int(BASE58_CHECKSUM_LEN) // base58 has more characters than the number of bytes we need
         let bytes_out = UnsafeMutablePointer<UInt8>.allocate(capacity: len)
         let written = UnsafeMutablePointer<Int>.allocate(capacity: 1)
         defer {
             bytes_out.deallocate()
             written.deallocate()
         }
-        guard wally_base58_to_bytes(strBase58, UInt32(BASE58_FLAG_CHECKSUM), bytes_out, len, written) == WALLY_OK else {
-            return nil
+        guard wally_base58_to_bytes(base58, UInt32(BASE58_FLAG_CHECKSUM), bytes_out, len, written) == WALLY_OK else {
+            throw LibWallyError("Invalid base58 format.")
         }
         self = Data(bytes: bytes_out, count: written.pointee)
     }
 
-    var hexString: String {
+    var hex: String {
         return self.reduce("", { $0 + String(format: "%02x", $1) })
     }
 
