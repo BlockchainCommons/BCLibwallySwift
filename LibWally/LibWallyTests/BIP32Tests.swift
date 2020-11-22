@@ -124,7 +124,7 @@ class BIP32Tests: XCTestCase {
     
     func testAbsolutePathFromInt() {
         var path: BIP32Path
-        path = try! BIP32Path(0, relative: false)
+        path = try! BIP32Path(0, isRelative: false)
         XCTAssertEqual(path.description, "m/0")
         XCTAssertThrowsError(try BIP32Path(Int(UINT32_MAX)))
     }

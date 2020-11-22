@@ -47,7 +47,7 @@ class TransactionTests: XCTestCase {
         XCTAssertEqual(input.vout, 0)
         XCTAssertEqual(input.sequence, 0xFFFFFFFF)
         XCTAssertEqual(input.scriptSig, scriptSig)
-        XCTAssertEqual(input.signed, false)
+        XCTAssertEqual(input.isSigned, false)
     }
 
     func testComposeTransaction() throws {
@@ -62,7 +62,7 @@ class TransactionTests: XCTestCase {
         let txOutput = TxOutput(scriptPubKey, 1000, .mainnet)
 
         // Transaction
-        let tx = Transaction([txInput], [txOutput])
+        let tx = Transaction(inputs: [txInput], outputs: [txOutput])
         XCTAssertNil(tx.hash)
         let wtx = tx.wally_tx!.pointee
         XCTAssertEqual(wtx.version, 1)
@@ -82,7 +82,7 @@ class TransactionInstanceTests: XCTestCase {
     let legacyInputBytes: Int = 192
     let nativeSegWitInputBytes: Int = 113
     let wrappedSegWitInputBytes: Int = 136
-    
+
     // From: legacy P2PKH address 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
     // To: legacy P2PKH address 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
     let scriptPubKey1 = try! ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
@@ -116,13 +116,13 @@ class TransactionInstanceTests: XCTestCase {
         let txOutput = TxOutput(scriptPubKey1, 1000, .mainnet)
         
         // Transaction spending legacy
-        tx1 = Transaction([txInput1], [txOutput])
+        tx1 = Transaction(inputs: [txInput1], outputs: [txOutput])
         
         // Transaction spending native SegWit
-        tx2 = Transaction([txInput2], [txOutput])
+        tx2 = Transaction(inputs: [txInput2], outputs: [txOutput])
         
         // Transaction spending wrapped SegWit
-        tx3 = Transaction([txInput3], [txOutput])
+        tx3 = Transaction(inputs: [txInput3], outputs: [txOutput])
         
         // Corresponding private key
        hdKey = try! HDKey("xprv9wTYmMFdV23N2TdNG573QoEsfRrWKQgWeibmLntzniatZvR9BmLnvSxqu53Kw1UmYPxLgboyZQaXwTCg8MSY3H2EU4pWcQDnRnrVA1xe8fs")
@@ -151,7 +151,7 @@ class TransactionInstanceTests: XCTestCase {
     }
     
     func testFunded() {
-        XCTAssertEqual(tx1.funded, true)
+        XCTAssertEqual(tx1.isFunded, true)
     }
     
     func testSize() throws {
@@ -174,26 +174,28 @@ class TransactionInstanceTests: XCTestCase {
         XCTAssertEqual(tx3.feeRate, 1.0)
     }
     
-    func testSign() {
-        XCTAssertTrue(tx1.sign([hdKey]))
-        XCTAssertEqual(tx1.inputs![0].signed, true)
-        XCTAssertEqual(tx1.description, "01000000010000000000000000000000000000000000000000000000000000000000000000000000006a47304402203d274300310c06582d0186fc197106120c4838fa5d686fe3aa0478033c35b97802205379758b11b869ede2f5ab13a738493a93571268d66b2a875ae148625bd20578012103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711cffffffff01e8030000000000001976a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac00000000")
-        
-        XCTAssertEqual(tx1.vbytes, legacyInputBytes - 1)
+    func testSign() throws {
+        let signedTx = try tx1.signed([hdKey])
+        XCTAssertTrue(signedTx.inputs![0].isSigned)
+        XCTAssertEqual(signedTx.description, "01000000010000000000000000000000000000000000000000000000000000000000000000000000006a47304402203d274300310c06582d0186fc197106120c4838fa5d686fe3aa0478033c35b97802205379758b11b869ede2f5ab13a738493a93571268d66b2a875ae148625bd20578012103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711cffffffff01e8030000000000001976a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac00000000")
+
+        XCTAssertEqual(signedTx.vbytes, legacyInputBytes - 1)
     }
     
-    func testSignNativeSegWit() {
-        XCTAssertTrue(tx2.sign([hdKey]))
-        XCTAssertEqual(tx2.inputs![0].signed, true)
-        XCTAssertEqual(tx2.description, "0100000000010100000000000000000000000000000000000000000000000000000000000000000000000000ffffffff01e8030000000000001976a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac0247304402204094361e267c39fb942b3d30c6efb96de32ea0f81e87fc36c53e00de2c24555c022069f368ac9cacea21be7b5e7a7c1dad01aa244e437161d000408343a4d6f5da0e012103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c00000000")
-        XCTAssertEqual(tx2.vbytes, nativeSegWitInputBytes)
+    func testSignNativeSegWit() throws {
+        let signedTx = try tx2.signed([hdKey])
+        XCTAssertTrue(signedTx.inputs![0].isSigned)
+        XCTAssertEqual(signedTx.description, "0100000000010100000000000000000000000000000000000000000000000000000000000000000000000000ffffffff01e8030000000000001976a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac0247304402204094361e267c39fb942b3d30c6efb96de32ea0f81e87fc36c53e00de2c24555c022069f368ac9cacea21be7b5e7a7c1dad01aa244e437161d000408343a4d6f5da0e012103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c00000000")
+
+        XCTAssertEqual(signedTx.vbytes, nativeSegWitInputBytes)
     }
 
-    func testSignWrappedSegWit() {
-        XCTAssertTrue(tx3.sign([hdKey]))
-        XCTAssertEqual(tx3.inputs![0].signed, true)
-        XCTAssertEqual(tx3.description, "0100000000010100000000000000000000000000000000000000000000000000000000000000000000000017160014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbeffffffff01e8030000000000001976a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac024730440220514e02e6d4aff5e1bfcf72a98eab3a415176c757e2bf6feb7ccb893f8ffcf09b022048fe33e6a1dc80585f30aac20f58442d711739ac07d192a3a7867a1dbef6b38d012103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c00000000")
-        XCTAssertEqual(tx3.vbytes, wrappedSegWitInputBytes)
+    func testSignWrappedSegWit() throws {
+        let signedTx = try tx3.signed([hdKey])
+        XCTAssertTrue(signedTx.inputs![0].isSigned)
+        XCTAssertEqual(signedTx.description, "0100000000010100000000000000000000000000000000000000000000000000000000000000000000000017160014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbeffffffff01e8030000000000001976a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac024730440220514e02e6d4aff5e1bfcf72a98eab3a415176c757e2bf6feb7ccb893f8ffcf09b022048fe33e6a1dc80585f30aac20f58442d711739ac07d192a3a7867a1dbef6b38d012103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c00000000")
+
+        XCTAssertEqual(signedTx.vbytes, wrappedSegWitInputBytes)
     }
 
 }

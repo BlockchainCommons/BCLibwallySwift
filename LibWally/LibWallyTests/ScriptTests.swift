@@ -43,14 +43,14 @@ class ScriptTests: XCTestCase {
     func testScriptSigP2PKH() throws {
         let pubKey = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"), .mainnet)
         var scriptSig = ScriptSig(.payToPubKeyHash(pubKey))
-        XCTAssertEqual(scriptSig.type, ScriptSigType.payToPubKeyHash(pubKey))
+        XCTAssertEqual(scriptSig.type, ScriptSig.ScriptSigType.payToPubKeyHash(pubKey))
         XCTAssertEqual(scriptSig.render(.signed), nil)
 
         XCTAssertEqual(scriptSig.signature, nil)
 
         XCTAssertEqual(scriptSig.render(.feeWorstCase)?.count, 2 + Int(EC_SIGNATURE_DER_MAX_LOW_R_LEN) + 1 + pubKey.data.count)
 
-        scriptSig.signature = try Signature(hex: "01")
+        scriptSig.signature = try ScriptSig.Signature(hex: "01")
         let sigHashByte = try Data(hex: "01") // SIGHASH_ALL
         let signaturePush = try Data(hex: "02") + scriptSig.signature! + sigHashByte
         let pubKeyPush = Data([UInt8(pubKey.data.count)]) + pubKey.data
@@ -60,10 +60,10 @@ class ScriptTests: XCTestCase {
     func testWitnessP2WPKH() throws {
         let pubKey = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"), .mainnet)
         let witness = Witness(.payToWitnessPubKeyHash(pubKey))
-        XCTAssertEqual(witness.dummy, true)
+        XCTAssertEqual(witness.isDummy, true)
         XCTAssertEqual(witness.stack?.pointee.num_items, 2)
         XCTAssertEqual(witness.scriptCode.hex, "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
-        let signedWitness = try Witness(.payToWitnessPubKeyHash(pubKey), Signature(hex: "01"))
+        let signedWitness = try Witness(.payToWitnessPubKeyHash(pubKey), ScriptSig.Signature(hex: "01"))
         XCTAssertEqual(signedWitness.stack?.pointee.num_items, 2)
 
     }

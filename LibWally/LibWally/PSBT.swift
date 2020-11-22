@@ -9,302 +9,58 @@
 import Foundation
 import CLibWally
 
-public struct KeyOrigin : Equatable {
-    public let fingerprint: Data
-    public let path: BIP32Path
-}
+public final class PSBT : Equatable {
+    public let network: Network
+    public let inputs: [PSBTInput]
+    public let outputs: [PSBTOutput]
+    public let wally_psbt: UnsafeMutablePointer<wally_psbt>
 
-func getOrigins(keypaths: wally_map, network: Network) throws -> [PubKey: KeyOrigin] {
-    var origins: [PubKey: KeyOrigin] = [:]
-    for i in 0..<keypaths.num_items {
-        // TOOD: simplify after https://github.com/ElementsProject/libwally-core/issues/241
-        let item: wally_map_item = keypaths.items[i]
-
-        let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)
-        let fingerprint = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
-        let keyPath = Data(bytes: item.value + Int(BIP32_KEY_FINGERPRINT_LEN), count: Int(item.value_len) - Int(BIP32_KEY_FINGERPRINT_LEN))
-
-        var components: [UInt32] = []
-        for j in 0..<keyPath.count / 4 {
-            let data = keyPath.subdata(in: (j * 4)..<((j + 1) * 4)).withUnsafeBytes{ $0.load(as: UInt32.self)}
-            components.append(data)
-        }
-        let path = try! BIP32Path(components, relative: false)
-        origins[pubKey] = KeyOrigin(fingerprint: fingerprint, path: path)
-    }
-    return origins
-}
-
-func getSignatures(signatures: wally_map, network: Network) throws -> [PubKey: Data] {
-    var result: [PubKey: Data] = [:]
-    for i in 0 ..< signatures.num_items {
-        let item = signatures.items[i]
-        let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)
-        let sig = Data(bytes: item.value, count: Int(item.value_len))
-        result[pubKey] = sig
-    }
-    return result
-}
-
-public struct PSBTInput {
-    let wally_psbt_input: wally_psbt_input
-    public let origins: [PubKey: KeyOrigin]?
-    public let signatures: [PubKey: Data]?
-    public let witnessScript: Data?
-
-    init(_ wally_psbt_input: wally_psbt_input, network: Network) throws {
-        self.wally_psbt_input = wally_psbt_input
-        if (wally_psbt_input.keypaths.num_items > 0) {
-            self.origins = try getOrigins(keypaths: wally_psbt_input.keypaths, network: network)
-        } else {
-            self.origins = nil
-        }
-
-        if(wally_psbt_input.signatures.num_items > 0) {
-            self.signatures = try getSignatures(signatures: wally_psbt_input.signatures, network: network)
-        } else {
-            self.signatures = nil
-        }
-
-        if let witnessScript = wally_psbt_input.witness_script {
-            self.witnessScript = Data(bytes: witnessScript, count: wally_psbt_input.witness_script_len)
-        } else {
-            self.witnessScript = nil
-        }
+    deinit {
+        wally_psbt_free(wally_psbt)
     }
 
-    // Can we provide at least one signature, assuming we have the private key?
-    public func canSign(_ hdKey: HDKey) -> [PubKey: KeyOrigin]? {
-        var result: [PubKey: KeyOrigin] = [:]
-        if let origins = self.origins {
-            for origin in origins {
-                guard let masterKeyFingerprint = hdKey.masterKeyFingerprint else {
-                    break
-                }
-                if masterKeyFingerprint == origin.value.fingerprint {
-                    if let childKey = try? hdKey.derive(origin.value.path) {
-                        if childKey.pubKey == origin.key {
-                            result[origin.key] = origin.value
-                        }
-                    }
-                }
-            }
-        }
-        if result.count == 0 { return nil }
-        return result
+    private static func clone(psbt: UnsafeMutablePointer<wally_psbt>) -> UnsafeMutablePointer<wally_psbt> {
+        var new_psbt: UnsafeMutablePointer<wally_psbt>!
+        precondition(wally_psbt_clone_alloc(psbt, 0, &new_psbt) == WALLY_OK)
+        return new_psbt
     }
 
-    public func canSign(_ hdKey: HDKey) -> Bool {
-        return canSign(hdKey) != nil
-    }
-
-    public var isSegWit: Bool {
-        return self.wally_psbt_input.witness_utxo != nil
-    }
-
-    public var amount: Satoshi? {
-        if let witness_utxo = self.wally_psbt_input.witness_utxo {
-            return witness_utxo.pointee.satoshi
-        }
-        return nil
-    }
-}
-
-public struct PSBTOutput : Identifiable {
-    let wally_psbt_output: wally_psbt_output
-    public let txOutput: TxOutput
-    public let origins: [PubKey: KeyOrigin]?
-
-    public var id: String {
-        return self.txOutput.address! + String(self.txOutput.amount)
-    }
-
-    init(_ wally_psbt_outputs: UnsafeMutablePointer<wally_psbt_output>, tx: wally_tx, index: Int, network: Network) throws {
-        precondition(index >= 0 && index < tx.num_outputs)
-        precondition(tx.num_outputs != 0 )
-        self.wally_psbt_output = wally_psbt_outputs[index]
-        if (wally_psbt_output.keypaths.num_items > 0) {
-            self.origins = try getOrigins(keypaths: wally_psbt_output.keypaths, network: network)
-        } else {
-            self.origins = nil
-        }
-        let output = tx.outputs![index]
-        let scriptPubKey: ScriptPubKey
-        if let scriptPubKeyBytes = self.wally_psbt_output.witness_script {
-            scriptPubKey = ScriptPubKey(Data(bytes: scriptPubKeyBytes, count: self.wally_psbt_output.witness_script_len))
-        } else {
-            scriptPubKey = ScriptPubKey(Data(bytes: output.script, count: output.script_len))
-        }
-
-        self.txOutput = TxOutput(tx_output: output, scriptPubKey: scriptPubKey, network: network)
-    }
-
-    static func commonOriginChecks(origin: KeyOrigin, rootPathLength: Int, pubKey: PubKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
-        // Check that origin ends with 0/* or 1/*
-        let components = origin.path.components
-        if (
-            components.count < 2 ||
-                !(components.reversed()[1] == .normal(0) || components.reversed()[1] == .normal(1)) ||
-            components.reversed()[0].isHardened
-        ) {
-            return false
-        }
-
-        // Find matching HDKey
-        var hdKey: HDKey? = nil
-        guard let signerMasterKeyFingerprint = signer.masterKeyFingerprint else {
-            return false
-        }
-        if (signerMasterKeyFingerprint == origin.fingerprint) {
-            hdKey = signer
-        } else {
-            for cosigner in cosigners {
-                guard let cosignerMasterKeyFingerprint = cosigner.masterKeyFingerprint else {
-                    return false
-                }
-                if (cosignerMasterKeyFingerprint == origin.fingerprint) {
-                    hdKey = cosigner
-                }
-            }
-        }
-
-        guard hdKey != nil else {
-            return false
-        }
-
-        // Check that origin pubkey is correct
-        guard let childKey = try? hdKey!.derive(origin.path) else {
-            return false
-        }
-
-        if childKey.pubKey != pubKey {
-            return false
-        }
-
-        return true
-    }
-
-    public func isChange(signer: HDKey, inputs:[PSBTInput], cosigners: [HDKey], threshold: UInt) -> Bool {
-        // Transaction must have at least one input
-        if inputs.count < 1 {
-            return false
-        }
-
-        // All inputs must have origin info
-        for input in inputs {
-            if input.origins == nil {
-                return false
-            }
-        }
-
-        // Skip key deriviation root
-        let keyPath = inputs[0].origins!.first!.value.path
-        if (keyPath.components.count < 2) {
-            return false
-        }
-        let keyPathRootLength = keyPath.components.count - 2
-
-        for input in inputs {
-            // Check that we can sign all inputs (TODO: relax assumption for e.g. coinjoin)
-            if !input.canSign(signer) {
-                return false
-            }
-            guard let origins = input.origins else {
-                return false
-            }
-
-            for origin in origins {
-                if !(PSBTOutput.commonOriginChecks(origin: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
-                    return false
-                }
-            }
-        }
-
-        // Check outputs
-        guard let origins = self.origins else {
-            return false
-        }
-
-        var changeIndex: UInt32? = nil
-        for origin in origins {
-            if !(PSBTOutput.commonOriginChecks(origin: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
-                return false
-            }
-            // Check that the output index is reasonable
-            // When combined with the above constraints, change "hijacked" to an extreme index can
-            // be covered by importing keys using Bitcoin Core's maximum range [0,999999].
-            // This needs less than 1 GB of RAM, but is fairly slow.
-            if case let .normal(i) = origin.value.path.components.reversed()[0] {
-                if i > 999999 {
-                    return false
-                }
-                // Change index must be the same for all origins
-                if changeIndex != nil && i != changeIndex {
-                    return false
-                } else {
-                    changeIndex = i
-                }
-            }
-        }
-
-        // Check scriptPubKey
-        switch self.txOutput.scriptPubKey.type {
-        case .multiSig:
-
-
-            let expectedScriptPubKey = ScriptPubKey(multisig: Array(origins.keys), threshold: threshold)
-            if self.txOutput.scriptPubKey != expectedScriptPubKey {
-                return false
-            }
-        default:
-            return false
-        }
-        return true
-    }
-}
-
-public struct PSBT : Equatable {
     public static func == (lhs: PSBT, rhs: PSBT) -> Bool {
         lhs.network == rhs.network && lhs.data == rhs.data
     }
 
-    public let network: Network
-    public let inputs: [PSBTInput]
-    public let outputs: [PSBTOutput]
-
-    public let wally_psbt: wally_psbt
-
-    public init (_ psbt: Data, _ network: Network) throws {
+    public init(psbt: UnsafeMutablePointer<wally_psbt>, network: Network) throws {
         self.network = network
-        let psbt_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: psbt.count)
-        let psbt_bytes_len = psbt.count
-        psbt.copyBytes(to: psbt_bytes, count: psbt_bytes_len)
-        var output: UnsafeMutablePointer<wally_psbt>?
-        defer {
-            if let wally_psbt = output {
-                wally_psbt.deallocate()
-            }
-        }
-        guard wally_psbt_from_bytes(psbt_bytes, psbt_bytes_len, &output) == WALLY_OK else {
-            // libwally-core returns WALLY_EINVAL regardless of why parsing fails
-            throw LibWallyError("Invalid PSBT.")
-        }
-        precondition(output != nil)
-        precondition(output!.pointee.tx != nil)
-        self.wally_psbt = output!.pointee
+        self.wally_psbt = Self.clone(psbt: psbt)
         var inputs: [PSBTInput] = []
-        for i in 0..<self.wally_psbt.inputs_allocation_len {
-            try inputs.append(PSBTInput(self.wally_psbt.inputs![i], network: network))
+        for i in 0 ..< wally_psbt.pointee.inputs_allocation_len {
+            try inputs.append(PSBTInput(wally_psbt.pointee.inputs![i], network: network))
         }
         self.inputs = inputs
         var outputs: [PSBTOutput] = []
-        for i in 0..<self.wally_psbt.outputs_allocation_len {
-            try outputs.append(PSBTOutput(self.wally_psbt.outputs, tx: self.wally_psbt.tx!.pointee, index: i, network: network))
+        for i in 0..<wally_psbt.pointee.outputs_allocation_len {
+            try outputs.append(PSBTOutput(wally_psbt.pointee.outputs, tx: wally_psbt.pointee.tx!.pointee, index: i, network: network))
         }
         self.outputs = outputs
     }
 
-    public init (_ psbt: String, _ network: Network) throws {
+    public convenience init (psbt: Data, network: Network) throws {
+        var output: UnsafeMutablePointer<wally_psbt>?
+        defer {
+            wally_psbt_free(output)
+        }
+        try psbt.withUnsafeByteBuffer { buf in
+            guard wally_psbt_from_bytes(buf.baseAddress, buf.count, &output) == WALLY_OK else {
+                // libwally-core returns WALLY_EINVAL regardless of why parsing fails
+                throw LibWallyError("Invalid PSBT.")
+            }
+        }
+        precondition(output != nil)
+        precondition(output!.pointee.tx != nil)
+        try self.init(psbt: output!, network: network)
+    }
+
+    public convenience init (psbt: String, network: Network) throws {
         guard psbt.count != 0 else {
             throw LibWallyError("Invalid PSBT.")
         }
@@ -313,38 +69,32 @@ public struct PSBT : Equatable {
             throw LibWallyError("Invalid PSBT.")
         }
 
-        try self.init(psbtData, network)
+        try self.init(psbt: psbtData, network: network)
     }
 
     public var data: Data {
-        let psbt = UnsafeMutablePointer<wally_psbt>.allocate(capacity: 1)
-        psbt.initialize(to: self.wally_psbt)
-        let len = UnsafeMutablePointer<Int>.allocate(capacity: 1)
-        precondition(wally_psbt_get_length(psbt, 0, len) == WALLY_OK)
-        let bytes_out = UnsafeMutablePointer<UInt8>.allocate(capacity: len.pointee)
-        let written = UnsafeMutablePointer<Int>.allocate(capacity: 1)
-        defer {
-            psbt.deallocate()
-            bytes_out.deallocate()
-            written.deallocate()
+        var len = 0
+        precondition(wally_psbt_get_length(wally_psbt, 0, &len) == WALLY_OK)
+        var result = Data(repeating: 0, count: len)
+        result.withUnsafeMutableBytes { resultBuffer in
+            var written = 0
+            precondition(wally_psbt_to_bytes(wally_psbt, 0, resultBuffer.bindMemory(to: UInt8.self).baseAddress, resultBuffer.count, &written) == WALLY_OK)
         }
-
-        precondition(wally_psbt_to_bytes(psbt, 0, bytes_out, len.pointee, written) == WALLY_OK)
-        return Data(bytes: bytes_out, count: written.pointee)
+        return result
     }
 
     public var description: String {
         return data.base64EncodedString()
     }
 
-    public var complete: Bool {
+    public var isComplete: Bool {
         // TODO: add function to libwally-core to check this directly
         return self.transactionFinal != nil
     }
 
     public var transaction: Transaction {
-        precondition(self.wally_psbt.tx != nil)
-        return Transaction(self.wally_psbt.tx!.pointee)
+        precondition(self.wally_psbt.pointee.tx != nil)
+        return Transaction(tx: self.wally_psbt.pointee.tx!)
     }
 
     public var fee: Satoshi? {
@@ -366,60 +116,57 @@ public struct PSBT : Equatable {
     }
 
     public var transactionFinal: Transaction? {
-        let psbt = UnsafeMutablePointer<wally_psbt>.allocate(capacity: 1)
-        psbt.initialize(to: self.wally_psbt)
         var output: UnsafeMutablePointer<wally_tx>?
         defer {
-            psbt.deallocate()
-            if let wally_tx = output {
-                wally_tx.deallocate()
+            if let output = output {
+                wally_tx_free(output)
             }
         }
 
-        guard wally_psbt_extract(psbt, &output) == WALLY_OK else {
+        guard wally_psbt_extract(wally_psbt, &output) == WALLY_OK else {
             return nil
         }
-        precondition(output != nil)
-        return Transaction(output!.pointee)
+        return Transaction(tx: output!)
     }
 
-    public mutating func sign(_ privKey: Key) {
-        let psbt = UnsafeMutablePointer<wally_psbt>.allocate(capacity: 1)
-        psbt.initialize(to: self.wally_psbt)
-        let key_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity:Int(EC_PRIVATE_KEY_LEN))
-        privKey.data.copyBytes(to: key_bytes, count: Int(EC_PRIVATE_KEY_LEN))
-        defer {
-           psbt.deallocate()
-        }
+    public func signed(_ privKey: Key) throws -> PSBT {
         // TODO: sanity key for network
-        precondition(wally_psbt_sign(psbt, key_bytes, Int(EC_PRIVATE_KEY_LEN), 0) == WALLY_OK)
+        let psbt = Self.clone(psbt: wally_psbt)
+        defer {
+            wally_psbt_free(psbt)
+        }
+        privKey.data.withUnsafeByteBuffer { buf in
+            precondition(wally_psbt_sign(psbt, buf.baseAddress, buf.count, 0) == WALLY_OK)
+        }
+        return try PSBT(psbt: psbt, network: network)
     }
 
-    public mutating func sign(_ hdKey: HDKey) {
+    public func signed(_ hdKey: HDKey) throws -> PSBT {
+        var psbt = self
         for input in self.inputs {
             if let origins: [PubKey : KeyOrigin] = input.canSign(hdKey) {
                 for origin in origins {
                     if let childKey = try? hdKey.derive(origin.value.path) {
                         if let privKey = childKey.privKey {
                             precondition(privKey.pubKey == origin.key)
-                            self.sign(privKey)
+                            psbt = try psbt.signed(privKey)
                         }
                     }
                 }
             }
         }
+        return psbt
     }
 
-    public mutating func finalize() -> Bool {
-        let psbt = UnsafeMutablePointer<wally_psbt>.allocate(capacity: 1)
-        psbt.initialize(to: self.wally_psbt)
+    public func finalized() throws -> PSBT {
+        let psbt = Self.clone(psbt: wally_psbt)
         defer {
-            psbt.deallocate()
+            wally_psbt_free(psbt)
         }
         guard wally_psbt_finalize(psbt) == WALLY_OK else {
-            return false
+            throw LibWallyError("Unable to finalize.")
         }
-        return true
+        return try PSBT(psbt: psbt, network: network)
     }
 
 }

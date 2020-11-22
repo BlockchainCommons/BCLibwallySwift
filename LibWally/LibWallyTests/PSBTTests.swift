@@ -83,7 +83,7 @@ class PSBTTests: XCTestCase {
     }
     
     func testInvalidPSBT(_ psbt: String) {
-        XCTAssertThrowsError(try PSBT(psbt, .testnet))
+        XCTAssertThrowsError(try PSBT(psbt: psbt, network: .testnet))
     }
     
     func testParseTooShortPSBT() {
@@ -95,13 +95,13 @@ class PSBTTests: XCTestCase {
     }
 
     func testParseBase64() throws {
-        let psbt = try PSBT(validPSBT, .testnet)
+        let psbt = try PSBT(psbt: validPSBT, network: .testnet)
         XCTAssertEqual(psbt.description, validPSBT)
     }
     
     func testParseBinary() throws {
         let psbtData = Data(base64Encoded: validPSBT)!
-        let psbt = try PSBT(psbtData, .testnet)
+        let psbt = try PSBT(psbt: psbtData, network: .testnet)
         XCTAssertEqual(psbt.description, validPSBT)
         XCTAssertEqual(psbt.data, psbtData)
     }
@@ -111,19 +111,19 @@ class PSBTTests: XCTestCase {
     }
     
     func testComplete() throws {
-        let incompletePSBT = try PSBT(validPSBT, .testnet)
-        let completePSBT = try PSBT(finalizedPSBT, .testnet)
-        XCTAssertFalse(incompletePSBT.complete)
-        XCTAssertFalse(try PSBT(unsignedPSBT, .testnet).complete)
-        XCTAssertFalse(try PSBT(signedPSBT_0_2, .testnet).complete)
-        XCTAssertTrue(completePSBT.complete)
+        let incompletePSBT = try PSBT(psbt: validPSBT, network: .testnet)
+        let completePSBT = try PSBT(psbt: finalizedPSBT, network: .testnet)
+        XCTAssertFalse(incompletePSBT.isComplete)
+        XCTAssertFalse(try PSBT(psbt: unsignedPSBT, network: .testnet).isComplete)
+        XCTAssertFalse(try PSBT(psbt: signedPSBT_0_2, network: .testnet).isComplete)
+        XCTAssertTrue(completePSBT.isComplete)
     }
     
     func testExtractTransaction() throws {
-        let incompletePSBT = try PSBT(validPSBT, .testnet)
+        let incompletePSBT = try PSBT(psbt: validPSBT, network: .testnet)
         XCTAssertNil(incompletePSBT.transactionFinal)
         
-        let completePSBT = try PSBT(finalizedPSBT, .testnet)
+        let completePSBT = try PSBT(psbt: finalizedPSBT, network: .testnet)
         if let transaction = completePSBT.transactionFinal {
             XCTAssertEqual(transaction.description, "0200000000010258e87a21b56daf0c23be8e7070456c336f7cbaa5c8757924f545887bb2abdd7500000000da00473044022074018ad4180097b873323c0015720b3684cc8123891048e7dbcd9b55ad679c99022073d369b740e3eb53dcefa33823c8070514ca55a7dd9544f157c167913261118c01483045022100f61038b308dc1da865a34852746f015772934208c6d24454393cd99bdf2217770220056e675a675a6d0a02b85b14e5e29074d8a25a9b5760bea2816f661910a006ea01475221029583bf39ae0a609747ad199addd634fa6108559d6c5cd39b4c2183f1ab96e07f2102dab61ff49a14db6a7d02b0cd1fbb78fc4b18312b5b4e54dae4dba2fbfef536d752aeffffffff838d0427d0ec650a68aa46bb0b098aea4422c071b2ca78352a077959d07cea1d01000000232200208c2353173743b595dfb4a07b72ba8e42e3797da74e87fe7d9d7497e3b2028903ffffffff0270aaf00800000000160014d85c2b71d0060b09c9886aeb815e50991dda124d00e1f5050000000016001400aea9a2e5f0f876a588df5546e8742d1d87008f000400473044022062eb7a556107a7c73f45ac4ab5a1dddf6f7075fb1275969a7f383efff784bcb202200c05dbb7470dbf2f08557dd356c7325c1ed30913e996cd3840945db12228da5f01473044022065f45ba5998b59a27ffe1a7bed016af1f1f90d54b3aa8f7450aa5f56a25103bd02207f724703ad1edb96680b284b56d4ffcb88f7fb759eabbe08aa30f29b851383d20147522103089dc10c7ac6db54f91329af617333db388cead0c231f723379d1b99030b02dc21023add904f3d6dcf59ddb906b0dee23529b7ffb9ed50e5e86151926860221f0e7352ae00000000")
         } else { XCTFail() }
@@ -135,26 +135,25 @@ class PSBTTests: XCTestCase {
         let privKey1 = try Key(WIF_1, .testnet)
         let privKey2 = try Key(WIF_2, .testnet)
         let privKey3 = try Key(WIF_3, .testnet)
-        var psbt1 = try PSBT(unsignedPSBT, .testnet)
-        var psbt2 = try PSBT(unsignedPSBT, .testnet)
-        let expectedPSBT_0_2 = try PSBT(signedPSBT_0_2, .testnet)
-        let expectedPSBT_1_3 = try PSBT(signedPSBT_1_3, .testnet)
+        let psbt1 = try PSBT(psbt: unsignedPSBT, network: .testnet)
+        let psbt2 = try PSBT(psbt: unsignedPSBT, network: .testnet)
+        let expectedPSBT_0_2 = try PSBT(psbt: signedPSBT_0_2, network: .testnet)
+        let expectedPSBT_1_3 = try PSBT(psbt: signedPSBT_1_3, network: .testnet)
 
-        psbt1.sign(privKey0)
-        psbt1.sign(privKey2)
-        XCTAssertEqual(psbt1.description, expectedPSBT_0_2.description)
-        psbt2.sign(privKey1)
-        psbt2.sign(privKey3)
-        XCTAssertEqual(psbt2.description, expectedPSBT_1_3.description)
+        let p102 = try psbt1.signed(privKey0).signed(privKey2)
+        XCTAssertEqual(p102.description, expectedPSBT_0_2.description)
+
+        let p213 = try psbt2.signed(privKey1).signed(privKey3)
+        XCTAssertEqual(p213.description, expectedPSBT_1_3.description)
     }
     
     func testInputs() throws {
-        let psbt = try PSBT(unsignedPSBT, .testnet)
+        let psbt = try PSBT(psbt: unsignedPSBT, network: .testnet)
         XCTAssertEqual(psbt.inputs.count, 2)
     }
     
     func testOutput() throws {
-        let psbt = try PSBT(unsignedPSBT, .testnet)
+        let psbt = try PSBT(psbt: unsignedPSBT, network: .testnet)
         XCTAssertEqual(psbt.outputs.count, 2)
     }
     
@@ -165,7 +164,7 @@ class PSBTTests: XCTestCase {
         let expectedOrigin3 = KeyOrigin(fingerprint: fingerprint, path: path3)
         let expectedOrigin4 = KeyOrigin(fingerprint: fingerprint, path: path4)
         let expectedOrigin5 = KeyOrigin(fingerprint: fingerprint, path: path5)
-        let psbt = try PSBT(unsignedPSBT, .testnet)
+        let psbt = try PSBT(psbt: unsignedPSBT, network: .testnet)
         // Check inputs
         XCTAssertEqual(psbt.inputs.count, 2)
         let inOrigins0 = psbt.inputs[0].origins!
@@ -188,25 +187,25 @@ class PSBTTests: XCTestCase {
    
     func testCanSign() throws {
         let masterKey = try HDKey(masterKeyXpriv)
-        let psbt = try PSBT(unsignedPSBT, .testnet)
+        let psbt = try PSBT(psbt: unsignedPSBT, network: .testnet)
         for input in psbt.inputs {
             XCTAssertTrue(input.canSign(masterKey))
         }
     }
 
     func testFinalize() throws {
-        var psbt = try PSBT(signedPSBT, .testnet)
-        let expected = try PSBT(finalizedPSBT, .testnet)
-        XCTAssertTrue(psbt.finalize())
-        XCTAssertEqual(psbt, expected)
+        let psbt = try PSBT(psbt: signedPSBT, network: .testnet)
+        let expected = try PSBT(psbt: finalizedPSBT, network: .testnet)
+        let finalized = try psbt.finalized()
+        XCTAssertEqual(finalized, expected)
     }
     
     func testSignWithHDKey() throws {
-        var psbt = try PSBT(unsignedPSBT, .testnet)
+        let psbt = try PSBT(psbt: unsignedPSBT, network: .testnet)
         let masterKey = try HDKey(masterKeyXpriv)
-        psbt.sign(masterKey)
-        XCTAssertTrue(psbt.finalize())
-        XCTAssertTrue(psbt.complete)
+        let signed = try psbt.signed(masterKey)
+        let finalized = try signed.finalized()
+        XCTAssertTrue(finalized.isComplete)
     }
     
     // In the previous example all inputs were part of the same BIP32 master key.
@@ -214,7 +213,7 @@ class PSBTTests: XCTestCase {
     // setup with multiple wallets.
     func testCanSignNeutered() throws {
         let us = try HDKey("xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi", masterKeyFingerprint:Data(hex: "3442193e"))
-        let psbt = try PSBT(multiUnsignedPSBTWithChange, .mainnet)
+        let psbt = try PSBT(psbt: multiUnsignedPSBTWithChange, network: .mainnet)
         for input in psbt.inputs {
             XCTAssertTrue(input.canSign(us))
         }
@@ -223,43 +222,40 @@ class PSBTTests: XCTestCase {
     func testSignRealMultisigWithHDKey() throws {
         let keySigner1 = try HDKey(master1)
         let keySigner2 = try HDKey(master2)
-        var psbtWithoutChange = try PSBT(multiUnsignedPSBTWithoutChange, .mainnet)
-        var psbtWithChange = try PSBT(multiUnsignedPSBTWithChange, .mainnet)
+        let psbtWithoutChange = try PSBT(psbt: multiUnsignedPSBTWithoutChange, network: .mainnet)
+        let psbtWithChange = try PSBT(psbt: multiUnsignedPSBTWithChange, network: .mainnet)
         
-        psbtWithoutChange.sign(keySigner1)
-        psbtWithoutChange.sign(keySigner2)
-        XCTAssertTrue(psbtWithoutChange.finalize())
-        XCTAssertTrue(psbtWithoutChange.complete)
-        XCTAssertEqual(psbtWithoutChange.transactionFinal!.description, multiPSBTWithoutChangeHex)
-        
-        psbtWithChange.sign(keySigner1)
-        psbtWithChange.sign(keySigner2)
-        XCTAssertEqual(psbtWithChange.description, multiSignedPSBTWithChange)
-        XCTAssertTrue(psbtWithChange.finalize())
-        XCTAssertEqual(psbtWithChange.transactionFinal!.description, multiPSBTWithChangeHex)
-        
-        XCTAssertEqual(psbtWithChange.outputs[0].txOutput.amount, 4000)
-        XCTAssertEqual(psbtWithChange.outputs[0].txOutput.address, "bc1qmysp4826gh7tc7nnhx352hd39l0yltv83mty40kgg3xeaepe5qtq4c50qe")
+        let psbtWithoutChangedSigned = try psbtWithoutChange.signed(keySigner1).signed(keySigner2)
+        let psbtWithoutChangedFinalized = try psbtWithoutChangedSigned.finalized()
+        XCTAssertTrue(psbtWithoutChangedFinalized.isComplete)
+        XCTAssertEqual(psbtWithoutChangedFinalized.transactionFinal!.description, multiPSBTWithoutChangeHex)
 
-        XCTAssertEqual(psbtWithChange.outputs[1].txOutput.amount, 819)
-        XCTAssertEqual(psbtWithChange.outputs[1].txOutput.address, "bc1qsrufxljkjttj8kven90pta82ah6nqayxfr8p9h")
+        let psbtWithChangeSigned = try psbtWithChange.signed(keySigner1).signed(keySigner2)
+        XCTAssertEqual(psbtWithChangeSigned.description, multiSignedPSBTWithChange)
+        let psbtWithChangedFinalized = try psbtWithChangeSigned.finalized()
+        XCTAssertEqual(psbtWithChangedFinalized.transactionFinal!.description, multiPSBTWithChangeHex)
+        
+        XCTAssertEqual(psbtWithChangedFinalized.outputs[0].txOutput.amount, 4000)
+        XCTAssertEqual(psbtWithChangedFinalized.outputs[0].txOutput.address, "bc1qmysp4826gh7tc7nnhx352hd39l0yltv83mty40kgg3xeaepe5qtq4c50qe")
 
+        XCTAssertEqual(psbtWithChangedFinalized.outputs[1].txOutput.amount, 819)
+        XCTAssertEqual(psbtWithChangedFinalized.outputs[1].txOutput.address, "bc1qsrufxljkjttj8kven90pta82ah6nqayxfr8p9h")
     }
     
     func testIsChange() throws {
         let us = try HDKey(master1)
         let cosigner = try HDKey(master2)
-        var psbt = try PSBT(multiUnsignedPSBTWithChange, .mainnet)
+        var psbt = try PSBT(psbt: multiUnsignedPSBTWithChange, network: .mainnet)
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         
         // Test maximum permitted change index
-        psbt = try PSBT(changeIndex999999, .mainnet)
+        psbt = try PSBT(psbt: changeIndex999999, network: .mainnet)
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
 
         // Test out of bounds change index
-        psbt = try PSBT(changeIndex1000000, .mainnet)
+        psbt = try PSBT(psbt: changeIndex1000000, network: .mainnet)
         XCTAssertFalse(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
     }
@@ -267,7 +263,7 @@ class PSBTTests: XCTestCase {
     func testIsChangeWithNeuteredCosignerKey() throws {
         let us = try HDKey(master1)
         let cosigner = try HDKey("xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a", masterKeyFingerprint:Data(hex: "bd16bee5"))
-        let psbt = try PSBT(multiUnsignedPSBTWithChange, .mainnet)
+        let psbt = try PSBT(psbt: multiUnsignedPSBTWithChange, network: .mainnet)
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
     }
@@ -275,13 +271,13 @@ class PSBTTests: XCTestCase {
     func testIsChangeWithNeuteredAllKeys() throws {
         let us = try HDKey("xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi", masterKeyFingerprint:Data(hex: "3442193e"))
         let cosigner = try HDKey("xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a", masterKeyFingerprint:Data(hex: "bd16bee5"))
-        let psbt = try PSBT(multiUnsignedPSBTWithChange, .mainnet)
+        let psbt = try PSBT(psbt: multiUnsignedPSBTWithChange, network: .mainnet)
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
     }
     
     func testGetTransactionFee() throws {
-        let psbt = try PSBT(multiUnsignedPSBTWithChange, .mainnet)
+        let psbt = try PSBT(psbt: multiUnsignedPSBTWithChange, network: .mainnet)
         XCTAssertEqual(psbt.fee, 181)
     }
 

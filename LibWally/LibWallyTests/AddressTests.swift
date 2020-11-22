@@ -72,16 +72,16 @@ class AddressTests: XCTestCase {
     func testParseWIF() throws {
         // https://en.bitcoin.it/wiki/Wallet_import_format
         let wif = "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ"
-        let key = try Key(wif, .mainnet, compressed: false)
+        let key = try Key(wif, .mainnet, isCompressed: false)
         XCTAssertEqual(key.data.hex, "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d")
         XCTAssertEqual(key.network, .mainnet)
-        XCTAssertEqual(key.compressed, false)
+        XCTAssertEqual(key.isCompressed, false)
     }
 
     func testToWIF() throws {
         // https://en.bitcoin.it/wiki/Wallet_import_format
         let data = try Data(hex: "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d")
-        let key = try Key(data, .mainnet, compressed: false)
+        let key = try Key(data, .mainnet, isCompressed: false)
         XCTAssertEqual(key.wif, "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ")
     }
 
