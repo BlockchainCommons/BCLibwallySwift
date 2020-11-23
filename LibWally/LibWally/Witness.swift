@@ -29,24 +29,24 @@ public struct Witness {
         switch type {
         case .payToWitnessPubKeyHash(let pubKey):
             precondition(wally_tx_witness_stack_init_alloc(2, &newStack) == WALLY_OK)
-            let sigHashByte = Data([UInt8(WALLY_SIGHASH_ALL)])
-            let signature_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: signature.count + 1)
-            (signature + sigHashByte).copyBytes(to: signature_bytes, count: signature.count + 1)
-            let pubkey_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: pubKey.data.count)
-            pubKey.data.copyBytes(to: pubkey_bytes, count: pubKey.data.count)
 
-            precondition(wally_tx_witness_stack_set(newStack!, 0, signature_bytes, signature.count + 1) == WALLY_OK)
-            precondition(wally_tx_witness_stack_set(newStack!, 1, pubkey_bytes, pubKey.data.count) == WALLY_OK)
+            let sigHashByte = Data([UInt8(WALLY_SIGHASH_ALL)])
+            (signature + sigHashByte).withUnsafeByteBuffer { buf in
+                precondition(wally_tx_witness_stack_set(newStack!, 0, buf.baseAddress, buf.count) == WALLY_OK)
+            }
+            pubKey.data.withUnsafeByteBuffer { buf in
+                precondition(wally_tx_witness_stack_set(newStack!, 1, buf.baseAddress, buf.count) == WALLY_OK)
+            }
         case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
             precondition(wally_tx_witness_stack_init_alloc(2, &newStack) == WALLY_OK)
-            let sigHashByte = Data([UInt8(WALLY_SIGHASH_ALL)])
-            let signature_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: signature.count + 1)
-            (signature + sigHashByte).copyBytes(to: signature_bytes, count: signature.count + 1)
-            let pubkey_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: pubKey.data.count)
-            pubKey.data.copyBytes(to: pubkey_bytes, count: pubKey.data.count)
 
-            precondition(wally_tx_witness_stack_set(newStack!, 0, signature_bytes, signature.count + 1) == WALLY_OK)
-            precondition(wally_tx_witness_stack_set(newStack!, 1, pubkey_bytes, pubKey.data.count) == WALLY_OK)
+            let sigHashByte = Data([UInt8(WALLY_SIGHASH_ALL)])
+            (signature + sigHashByte).withUnsafeByteBuffer { buf in
+                precondition(wally_tx_witness_stack_set(newStack!, 0, buf.baseAddress, buf.count) == WALLY_OK)
+            }
+            pubKey.data.withUnsafeByteBuffer { buf in
+                precondition(wally_tx_witness_stack_set(newStack!, 1, buf.baseAddress, buf.count) == WALLY_OK)
+            }
         }
         return newStack
     }

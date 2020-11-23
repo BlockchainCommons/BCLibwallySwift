@@ -53,14 +53,11 @@ public struct ScriptSig {
                 }
             }
         case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
-            let pubkey_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: pubKey.data.count)
-            pubKey.data.copyBytes(to: pubkey_bytes, count: pubKey.data.count)
-            let pubkey_hash_bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(HASH160_LEN))
-            defer {
-                pubkey_hash_bytes.deallocate()
+            var pubkey_hash_bytes = [UInt8](repeating: 0, count: Int(HASH160_LEN))
+            pubKey.data.withUnsafeByteBuffer { buf in
+                precondition(wally_hash160(buf.baseAddress, buf.count, &pubkey_hash_bytes, Int(HASH160_LEN)) == WALLY_OK)
             }
-            precondition(wally_hash160(pubkey_bytes, pubKey.data.count, pubkey_hash_bytes, Int(HASH160_LEN)) == WALLY_OK)
-            let redeemScript = try! Data(hex: "0014") + Data(bytes: pubkey_hash_bytes, count: Int(HASH160_LEN))
+            let redeemScript = try! Data(hex: "0014") + Data(pubkey_hash_bytes)
             return Data([UInt8(redeemScript.count)]) + redeemScript
         }
     }
