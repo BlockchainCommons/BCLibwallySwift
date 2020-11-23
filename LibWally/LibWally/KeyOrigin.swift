@@ -18,7 +18,7 @@ public struct KeyOrigin : Equatable {
             // TOOD: simplify after https://github.com/ElementsProject/libwally-core/issues/241
             let item: wally_map_item = keypaths.items[i]
 
-            let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network)
+            let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network: network)
             let fingerprint = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
             let keyPath = Data(bytes: item.value + Int(BIP32_KEY_FINGERPRINT_LEN), count: Int(item.value_len) - Int(BIP32_KEY_FINGERPRINT_LEN))
 
@@ -27,7 +27,7 @@ public struct KeyOrigin : Equatable {
                 let data = keyPath.subdata(in: (j * 4)..<((j + 1) * 4)).withUnsafeBytes{ $0.load(as: UInt32.self) }
                 components.append(data)
             }
-            let path = try! BIP32Path(components, isRelative: false)
+            let path = try! BIP32Path(rawPath: components, isRelative: false)
             origins[pubKey] = KeyOrigin(fingerprint: fingerprint, path: path)
         }
         return origins

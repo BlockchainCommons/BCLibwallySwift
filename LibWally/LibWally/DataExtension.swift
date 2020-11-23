@@ -10,7 +10,6 @@ import Foundation
 import CLibWally
 
 extension Data {
-
     init(hex: String) throws {
         let len = hex.count / 2
         var data = Data(capacity: len)
@@ -38,7 +37,7 @@ extension Data {
     }
 
     var hex: String {
-        return self.reduce("", { $0 + String(format: "%02x", $1) })
+        self.reduce("", { $0 + String(format: "%02x", $1) })
     }
 
     var base58: String {

@@ -9,29 +9,51 @@
 import Foundation
 import CLibWally
 
-public final class Transaction {
-    let hash: Data?
-    let wally_tx: UnsafeMutablePointer<wally_tx>?
-    let inputs: [TxInput]?
-    let outputs: [TxOutput]?
+public struct Transaction {
+    public let hash: Data?
+    public let inputs: [TxInput]?
+    public let outputs: [TxOutput]?
 
-    deinit {
-        if let wally_tx = wally_tx {
-            wally_tx_free(wally_tx)
+    private var storage: Storage
+
+    private final class Storage {
+        var tx: UnsafeMutablePointer<wally_tx>?
+
+        init(tx: UnsafeMutablePointer<wally_tx>) {
+            self.tx = tx
+        }
+
+        init() {
+            self.tx = nil
+        }
+
+        deinit {
+            wally_tx_free(tx)
         }
     }
 
+    var tx: UnsafeMutablePointer<wally_tx>? {
+        storage.tx
+    }
+
     private static func clone(tx: UnsafeMutablePointer<wally_tx>) -> UnsafeMutablePointer<wally_tx> {
-        var new_tx: UnsafeMutablePointer<wally_tx>!
-        precondition(wally_tx_clone_alloc(tx, 0, &new_tx) == WALLY_OK)
-        return new_tx
+        var newTx: UnsafeMutablePointer<wally_tx>!
+        precondition(wally_tx_clone_alloc(tx, 0, &newTx) == WALLY_OK)
+        return newTx
+    }
+
+    private mutating func prepareForWrite() {
+        if !isKnownUniquelyReferenced(&storage),
+           let tx = storage.tx {
+            storage.tx = Self.clone(tx: tx)
+        }
     }
 
     init(tx: UnsafeMutablePointer<wally_tx>) {
         hash = nil
         inputs = nil
         outputs = nil
-        wally_tx = Self.clone(tx: tx)
+        storage = Storage(tx: Self.clone(tx: tx))
     }
 
     public init(hex: String) throws {
@@ -39,20 +61,21 @@ public final class Transaction {
         outputs = nil
         let data = try Data(hex: hex)
         if data.count != SHA256_LEN { // Not a transaction hash
-            hash = nil
-            wally_tx = try data.withUnsafeByteBuffer { buf in
-                var tx: UnsafeMutablePointer<wally_tx>?
-                guard wally_tx_from_bytes(buf.baseAddress, buf.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &tx) == WALLY_OK else {
+            let tx: UnsafeMutablePointer<wally_tx> = try data.withUnsafeByteBuffer { buf in
+                var newTx: UnsafeMutablePointer<wally_tx>!
+                guard wally_tx_from_bytes(buf.baseAddress, buf.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &newTx) == WALLY_OK else {
                     throw LibWallyError("Invalid transaction.")
                 }
-                return tx!
+                return newTx
             }
+            storage = Storage(tx: tx)
+            hash = nil
         } else { // 32 bytes, but not a valid transaction, so treat as a hash
             hash = Data(data.reversed())
-            wally_tx = nil
+            storage = Storage()
         }
     }
-    
+
     public init(inputs: [TxInput], outputs: [TxOutput]) {
         self.hash = nil
 
@@ -61,33 +84,31 @@ public final class Transaction {
         
         let version: UInt32 = 1
         let lockTime: UInt32 = 0
-        
-        var wtx: UnsafeMutablePointer<wally_tx>?
+
+        var wtx: UnsafeMutablePointer<wally_tx>!
         precondition(wally_tx_init_alloc(version, lockTime, inputs.count, outputs.count, &wtx) == WALLY_OK)
-        precondition(wtx != nil)
-        
+
         for input in inputs {
-            precondition(wally_tx_add_input(wtx, input.wally_tx_input) == WALLY_OK)
-        }
-        
-        for output in outputs {
-            precondition(wally_tx_add_output(wtx, output.wally_tx_output) == WALLY_OK)
+            precondition(wally_tx_add_input(wtx, input.createWallyInput()) == WALLY_OK)
         }
 
-        self.wally_tx = wtx
+        for output in outputs {
+            precondition(wally_tx_add_output(wtx, output.createWallyOutput()) == WALLY_OK)
+        }
+
+        storage = Storage(tx: wtx)
     }
 
     private init(inputs: [TxInput]?, outputs: [TxOutput]?, tx: UnsafeMutablePointer<wally_tx>) {
         self.hash = nil
         self.inputs = inputs
         self.outputs = outputs
-        self.wally_tx = tx
+        self.storage = Storage(tx: tx)
     }
-    
+
     public var description: String? {
-        if wally_tx == nil {
-            return nil
-        }
+        guard let tx = tx else { return nil }
+
         // If we have TxInput objects, make sure they're all signed. Otherwise we've been initialized
         // from a hex string, so we'll just try to reserialize what we have.
         if inputs != nil {
@@ -98,57 +119,42 @@ public final class Transaction {
             }
         }
         
-        var output: UnsafeMutablePointer<Int8>?
+        var output: UnsafeMutablePointer<Int8>!
         defer {
             wally_free_string(output)
         }
         
-        precondition(wally_tx_to_hex(wally_tx, UInt32(WALLY_TX_FLAG_USE_WITNESS), &output) == WALLY_OK)
-        precondition(output != nil)
+        precondition(wally_tx_to_hex(tx, UInt32(WALLY_TX_FLAG_USE_WITNESS), &output) == WALLY_OK)
         return String(cString: output!)
     }
 
     var totalIn: Satoshi? {
-        var tally: Satoshi = 0
-        if let inputs = inputs {
-            for input in inputs {
-                tally += input.amount
-            }
-        } else {
-            return nil
+        guard let inputs = inputs else { return nil }
+        return inputs.reduce(0) {
+            $0 + $1.amount
         }
-        
-        return tally
     }
     
     var totalOut: Satoshi? {
-        if wally_tx == nil {
-            return nil
-        }
+        guard let tx = tx else { return nil }
 
         var value_out: UInt64 = 0
-        precondition(wally_tx_get_total_output_satoshi(wally_tx, &value_out) == WALLY_OK)
+        precondition(wally_tx_get_total_output_satoshi(tx, &value_out) == WALLY_OK)
         
         return value_out;
     }
     
     var isFunded: Bool? {
-        if let totalOut = totalOut {
-            if let totalIn = totalIn {
-                return totalOut <= totalIn
-            }
-        }
-        return nil
+        guard let totalOut = totalOut, let totalIn = totalIn else { return nil }
+        return totalOut <= totalIn
     }
     
     public var vbytes: Int? {
-        if wally_tx == nil {
-            return nil
-        }
-        
+        guard let tx = tx else { return nil }
+
         precondition(inputs != nil)
 
-        let cloned_tx = Self.clone(tx: wally_tx!)
+        let cloned_tx = Self.clone(tx: tx)
         defer {
             wally_tx_free(cloned_tx)
         }
@@ -157,7 +163,7 @@ public final class Transaction {
         for (index, input) in inputs!.enumerated() {
             if !input.isSigned {
                 if let scriptSig = input.scriptSig {
-                    let scriptSigWorstCase = scriptSig.render(.feeWorstCase)!
+                    let scriptSigWorstCase = scriptSig.render(purpose: .feeWorstCase)!
                     scriptSigWorstCase.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_set_input_script(cloned_tx, index, buf.baseAddress, buf.count) == WALLY_OK)
                     }
@@ -171,28 +177,18 @@ public final class Transaction {
     }
     
     public var fee: Satoshi? {
-        if let totalOut = totalOut {
-            if let totalIn = totalIn {
-                if totalIn >= totalOut {
-                    return totalIn - totalOut
-                }
-            }
-        }
-        return nil
+        guard let totalOut = totalOut, let totalIn = totalIn, totalIn >= totalOut else { return nil }
+        return totalIn - totalOut
     }
     
     public var feeRate: Float64? {
-        if let fee = fee {
-            if let vbytes = vbytes {
-                precondition(vbytes > 0)
-                return Float64(fee) / Float64(vbytes)
-            }
-        }
-        return nil
+        guard let fee = fee, let vbytes = vbytes else { return nil }
+        precondition(vbytes > 0)
+        return Float64(fee) / Float64(vbytes)
     }
     
-    public func signed(_ privKeys: [HDKey]) throws -> Transaction {
-        if wally_tx == nil {
+    public func signed(with privKeys: [HDKey]) throws -> Transaction {
+        guard let tx = tx else {
             throw LibWallyError("No transaction to sign.")
         }
         precondition(inputs != nil)
@@ -200,9 +196,9 @@ public final class Transaction {
             throw LibWallyError("Wrong number of keys to sign.")
         }
 
-        let cloned_tx = Self.clone(tx: wally_tx!)
+        let cloned_tx = Self.clone(tx: tx)
 
-        let updatedInputs = inputs!
+        var updatedInputs = inputs!
 
         // Loop through inputs to sign:
         for i in 0 ..< inputs!.count {
@@ -213,7 +209,7 @@ public final class Transaction {
             if hasWitness {
                 switch inputs![i].witness!.type {
                 case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
-                    let scriptSig = inputs![i].scriptSig!.render(.signed)!
+                    let scriptSig = inputs![i].scriptSig!.render(purpose: .signed)!
                     scriptSig.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
                     }
@@ -231,7 +227,7 @@ public final class Transaction {
                 }
             } else {
                 // Prep input for signing:
-                let scriptPubKey = inputs![i].scriptPubKey.bytes
+                let scriptPubKey = inputs![i].scriptPubKey.data
                 scriptPubKey.withUnsafeByteBuffer { buf in
                     // Create hash for signing
                     precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, 0, UInt32(WALLY_SIGHASH_ALL), 0, &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
@@ -270,14 +266,14 @@ public final class Transaction {
             // Store signature in TxInput
             let signature =  Data(bytes: sig_bytes, count: sig_bytes_written)
             if hasWitness {
-                let witness = inputs![i].witness!.signed(signature)
+                let witness = inputs![i].witness!.signed(signature: signature)
                 updatedInputs[i].witness = witness
-                precondition(wally_tx_set_input_witness(cloned_tx, i, witness.stack!) == WALLY_OK)
+                precondition(wally_tx_set_input_witness(cloned_tx, i, witness.createWallyStack()) == WALLY_OK)
             } else {
                 updatedInputs[i].scriptSig!.signature = signature
                 
                 // Update scriptSig:
-                let signedScriptSig = updatedInputs[i].scriptSig!.render(.signed)!
+                let signedScriptSig = updatedInputs[i].scriptSig!.render(purpose: .signed)!
                 signedScriptSig.withUnsafeByteBuffer { buf in
                     precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
                 }

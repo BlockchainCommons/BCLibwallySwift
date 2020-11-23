@@ -14,27 +14,19 @@ class BIP39Tests: XCTestCase {
     let validMnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
     let validMnemonic24 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art"
 
-    override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
     func testGetWordList() {
         // Check length
-        XCTAssertEqual(BIP39Words.count, 2048)
+        XCTAssertEqual(BIP39Mnemonic.allWords.count, 2048)
         
         // Check first word
-        XCTAssertEqual(BIP39Words.first, "abandon")
+        XCTAssertEqual(BIP39Mnemonic.allWords.first, "abandon")
     }
     
     func testMnemonicIsValid() {
-        XCTAssertTrue(BIP39Mnemonic.isValid(validMnemonic))
-        XCTAssertFalse(BIP39Mnemonic.isValid("notavalidword"))
-        XCTAssertFalse(BIP39Mnemonic.isValid("abandon"))
-        XCTAssertFalse(BIP39Mnemonic.isValid(["abandon", "abandon"]))
+        XCTAssertTrue(BIP39Mnemonic.isValid(words: validMnemonic))
+        XCTAssertFalse(BIP39Mnemonic.isValid(words: "notavalidword"))
+        XCTAssertFalse(BIP39Mnemonic.isValid(words: "abandon"))
+        XCTAssertFalse(BIP39Mnemonic.isValid(words: ["abandon", "abandon"]))
     }
     
     func testInitializeMnemonic() throws {
@@ -44,7 +36,7 @@ class BIP39Tests: XCTestCase {
     
     func testInitializeMnemonicFromBytes() throws {
         let bytes = [Int8](repeating: 0, count: 32)
-        let entropy = BIP39Entropy(Data(bytes: bytes, count: 32))
+        let entropy = BIP39Mnemonic.Entropy(Data(bytes: bytes, count: 32))
         let mnemonic = try BIP39Mnemonic(entropy: entropy)
         XCTAssertEqual(mnemonic.words, validMnemonic24.components(separatedBy: " "))
     }
@@ -67,28 +59,28 @@ class BIP39Tests: XCTestCase {
     
     func testEntropyToMnemonic() throws {
         let expectedMnemonic = try BIP39Mnemonic(words: "legal winner thank year wave sausage worth useful legal winner thank yellow")
-        let entropy = try BIP39Entropy(hex: "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f")
+        let entropy = try BIP39Mnemonic.Entropy(hex: "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f")
         let mnemonic = try BIP39Mnemonic(entropy: entropy)
         XCTAssertEqual(mnemonic, expectedMnemonic)
     }
     
     
     func testEntropyLosslessStringConvertible() throws {
-        let entropy = try BIP39Entropy(hex: "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f")
+        let entropy = try BIP39Mnemonic.Entropy(hex: "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f")
         XCTAssertEqual(entropy.description, "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f")
     }
     
     func testMnemonicToSeedHexString() throws {
         let mnemonic = try BIP39Mnemonic(words: validMnemonic)
-        XCTAssertEqual(mnemonic.seedHex("TREZOR").description, "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")
+        XCTAssertEqual(mnemonic.seedHex(passphrase: "TREZOR").description, "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")
         XCTAssertEqual(mnemonic.seedHex().description, "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4")
-        XCTAssertEqual(mnemonic.seedHex("").description, "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4")
+        XCTAssertEqual(mnemonic.seedHex(passphrase: "").description, "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4")
     }
     
     func testSeedLosslessStringConvertible() throws {
         let mnemonic = try BIP39Mnemonic(words: validMnemonic)
-        let expectedSeed = mnemonic.seedHex("TREZOR")
-        let parsedSeed = try BIP39Seed(hex: "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")
+        let expectedSeed = mnemonic.seedHex(passphrase: "TREZOR")
+        let parsedSeed = try BIP39Mnemonic.Seed(hex: "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")
         XCTAssertEqual(parsedSeed, expectedSeed)
     }
 

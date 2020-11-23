@@ -20,40 +20,42 @@ public protocol AddressProtocol {
 }
 
 public struct Address : AddressProtocol {
-    public var network: Network
-    public var scriptPubKey: ScriptPubKey
-    var address: String
+    public let network: Network
+    public let scriptPubKey: ScriptPubKey
+    let address: String
     
-    public init(_ description: String) throws {
-        self.address = description
+    public init(string: String) throws {
+        self.address = string
 
         // base58 and bech32 use more bytes in string form, so description.count should be safe:
-        var bytes_out = [UInt8](repeating: 0, count: description.count)
+        var bytes_out = [UInt8](repeating: 0, count: string.count)
         var written = 0
 
         // Try if this is a bech32 Bitcoin mainnet address:
         var family: String = "bc"
-        var result = wally_addr_segwit_to_bytes(description, family, 0, &bytes_out, description.count, &written)
-        self.network = .mainnet
+        var result = wally_addr_segwit_to_bytes(string, family, 0, &bytes_out, string.count, &written)
+        var network: Network = .mainnet
 
         if result != WALLY_OK {
             // Try if this is a bech32 Bitcoin testnet address:
             family = "tb"
-            result = wally_addr_segwit_to_bytes(description, family, 0, &bytes_out, description.count, &written)
-            self.network = .testnet
+            result = wally_addr_segwit_to_bytes(string, family, 0, &bytes_out, string.count, &written)
+            network = .testnet
         }
         
         if result != WALLY_OK {
             // Try if this is a base58 addresses (P2PKH or P2SH)
-            result = wally_address_to_scriptpubkey(description, UInt32(WALLY_NETWORK_BITCOIN_MAINNET), &bytes_out, description.count, &written)
-            self.network = .mainnet
+            result = wally_address_to_scriptpubkey(string, UInt32(WALLY_NETWORK_BITCOIN_MAINNET), &bytes_out, string.count, &written)
+            network = .mainnet
         }
         
         if result != WALLY_OK {
             // Try if this is a testnet base58 addresses (P2PKH or P2SH)
-            result = wally_address_to_scriptpubkey(description, UInt32(WALLY_NETWORK_BITCOIN_TESTNET), &bytes_out, description.count, &written)
-            self.network = .testnet
+            result = wally_address_to_scriptpubkey(string, UInt32(WALLY_NETWORK_BITCOIN_TESTNET), &bytes_out, string.count, &written)
+            network = .testnet
         }
+
+        self.network = network
         
         if result != WALLY_OK {
             throw LibWallyError("Invalid address.")
@@ -62,7 +64,7 @@ public struct Address : AddressProtocol {
         self.scriptPubKey = ScriptPubKey(Data(bytes: bytes_out, count: written))
     }
     
-    init(_ hdKey: HDKey, _ type: AddressType) throws {
+    init(hdKey: HDKey, type: AddressType) throws {
         let wally_type: Int32 = {
             switch type {
             case .payToPubKeyHash:
@@ -106,10 +108,10 @@ public struct Address : AddressProtocol {
         let address = String(cString: output!)
         
         // TODO: get scriptPubKey directly from libwally (requires a new function) instead parsing the string
-        try self.init(address) // libwally generated this string, so it's safe to force unwrap
+        try self.init(string: address) // libwally generated this string, so it's safe to force unwrap
     }
     
-    public init(_ scriptPubKey: ScriptPubKey, _ network: Network) throws {
+    public init(scriptPubKey: ScriptPubKey, network: Network) throws {
         self.network = network
         self.scriptPubKey = scriptPubKey
         switch scriptPubKey.type {
@@ -118,7 +120,7 @@ public struct Address : AddressProtocol {
             defer {
                 wally_free_string(output)
             }
-            scriptPubKey.bytes.withUnsafeByteBuffer { buf in
+            scriptPubKey.data.withUnsafeByteBuffer { buf in
                 precondition(wally_scriptpubkey_to_address(buf.baseAddress, buf.count, UInt32(network == .mainnet ? WALLY_NETWORK_BITCOIN_MAINNET : WALLY_NETWORK_BITCOIN_TESTNET), &output) == WALLY_OK)
             }
             precondition(output != nil)
@@ -135,7 +137,7 @@ public struct Address : AddressProtocol {
             defer {
                 wally_free_string(output)
             }
-            scriptPubKey.bytes.withUnsafeByteBuffer { buf in
+            scriptPubKey.data.withUnsafeByteBuffer { buf in
                 precondition(wally_addr_segwit_from_bytes(buf.baseAddress, buf.count, family, 0, &output) == WALLY_OK)
             }
             precondition(output != nil)
@@ -168,6 +170,6 @@ public struct Address : AddressProtocol {
     }
     
     public var description: String {
-        return address
+        address
     }
 }

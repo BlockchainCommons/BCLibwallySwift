@@ -15,6 +15,6 @@ public struct LibWallyError: LocalizedError {
     }
     
     public var errorDescription: String? {
-        return description
+        description
     }
 }

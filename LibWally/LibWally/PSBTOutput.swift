@@ -9,32 +9,27 @@ import Foundation
 import CLibWally
 
 public struct PSBTOutput : Identifiable {
-    let wally_psbt_output: wally_psbt_output
     public let txOutput: TxOutput
     public let origins: [PubKey: KeyOrigin]?
 
     public var id: String {
-        return self.txOutput.address! + String(self.txOutput.amount)
+        self.txOutput.address! + String(self.txOutput.amount)
     }
 
-    init(_ wally_psbt_outputs: UnsafeMutablePointer<wally_psbt_output>, tx: wally_tx, index: Int, network: Network) throws {
-        precondition(index >= 0 && index < tx.num_outputs)
-        precondition(tx.num_outputs != 0 )
-        self.wally_psbt_output = wally_psbt_outputs[index]
-        if wally_psbt_output.keypaths.num_items > 0 {
-            self.origins = try KeyOrigin.getOrigins(keypaths: wally_psbt_output.keypaths, network: network)
+    init(wallyPSBTOutput: wally_psbt_output, wallyTxOutput: wally_tx_output, network: Network) throws {
+        if wallyPSBTOutput.keypaths.num_items > 0 {
+            self.origins = try KeyOrigin.getOrigins(keypaths: wallyPSBTOutput.keypaths, network: network)
         } else {
             self.origins = nil
         }
-        var output = tx.outputs![index]
         let scriptPubKey: ScriptPubKey
-        if let scriptPubKeyBytes = self.wally_psbt_output.witness_script {
-            scriptPubKey = ScriptPubKey(Data(bytes: scriptPubKeyBytes, count: self.wally_psbt_output.witness_script_len))
+        if let scriptPubKeyBytes = wallyPSBTOutput.witness_script {
+            scriptPubKey = ScriptPubKey(Data(bytes: scriptPubKeyBytes, count: wallyPSBTOutput.witness_script_len))
         } else {
-            scriptPubKey = ScriptPubKey(Data(bytes: output.script, count: output.script_len))
+            scriptPubKey = ScriptPubKey(Data(bytes: wallyTxOutput.script, count: wallyTxOutput.script_len))
         }
 
-        self.txOutput = TxOutput(tx_output: &output, scriptPubKey: scriptPubKey, network: network)
+        self.txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: wallyTxOutput.satoshi, network: network)
     }
 
     static func commonOriginChecks(origin: KeyOrigin, rootPathLength: Int, pubKey: PubKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
@@ -70,7 +65,7 @@ public struct PSBTOutput : Identifiable {
         }
 
         // Check that origin pubkey is correct
-        guard let childKey = try? hdKey!.derive(origin.path) else {
+        guard let childKey = try? hdKey!.derive(using: origin.path) else {
             return false
         }
 
@@ -103,7 +98,7 @@ public struct PSBTOutput : Identifiable {
 
         for input in inputs {
             // Check that we can sign all inputs (TODO: relax assumption for e.g. coinjoin)
-            if !input.canSign(signer) {
+            if !input.canSign(with: signer) {
                 return false
             }
             guard let origins = input.origins else {
@@ -147,8 +142,6 @@ public struct PSBTOutput : Identifiable {
         // Check scriptPubKey
         switch self.txOutput.scriptPubKey.type {
         case .multiSig:
-
-
             let expectedScriptPubKey = ScriptPubKey(multisig: Array(origins.keys), threshold: threshold)
             if self.txOutput.scriptPubKey != expectedScriptPubKey {
                 return false

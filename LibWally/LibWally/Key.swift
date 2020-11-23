@@ -13,7 +13,7 @@ public struct Key {
     public let data: Data
     public let network: Network
 
-    static func prefix (_ network: Network) -> UInt32 {
+    static func prefix(for network: Network) -> UInt32 {
         switch network {
          case .mainnet:
              return UInt32(WALLY_ADDRESS_VERSION_WIF_MAINNET)
@@ -22,12 +22,12 @@ public struct Key {
          }
     }
 
-    public init(_ wif: String, _ network: Network, isCompressed: Bool = true) throws {
+    public init(wif: String, network: Network, isCompressed: Bool = true) throws {
         var bytes_out = [UInt8](repeating: 0, count: Int(EC_PRIVATE_KEY_LEN))
         // TODO: autodetect network by trying both
         // TODO: autodetect compression with wally_wif_is_uncompressed
         let flags = UInt32(isCompressed ? WALLY_WIF_FLAG_COMPRESSED : WALLY_WIF_FLAG_UNCOMPRESSED)
-        guard wally_wif_to_bytes(wif, Key.prefix(network), flags, &bytes_out, bytes_out.count) == WALLY_OK else {
+        guard wally_wif_to_bytes(wif, Key.prefix(for: network), flags, &bytes_out, bytes_out.count) == WALLY_OK else {
             throw LibWallyError("Invalid key.")
         }
         self.isCompressed = isCompressed
@@ -35,7 +35,7 @@ public struct Key {
         self.network = network
     }
 
-    public init(_ data: Data, _ network: Network, isCompressed: Bool = true) throws {
+    public init(_ data: Data, network: Network, isCompressed: Bool = true) throws {
         guard data.count == Int(EC_PRIVATE_KEY_LEN) else {
             throw LibWallyError("Invalid key.")
         }
@@ -52,7 +52,7 @@ public struct Key {
         }
         data.withUnsafeByteBuffer { buf in
             let flags = UInt32(isCompressed ? WALLY_WIF_FLAG_COMPRESSED : WALLY_WIF_FLAG_UNCOMPRESSED)
-            precondition(wally_wif_from_bytes(buf.baseAddress, buf.count, Key.prefix(network), flags, &output) == WALLY_OK)
+            precondition(wally_wif_from_bytes(buf.baseAddress, buf.count, Key.prefix(for: network), flags, &output) == WALLY_OK)
         }
         assert(output != nil)
         return String(cString: output!)
@@ -69,9 +69,9 @@ public struct Key {
         if !isCompressed {
             var bytes_out_uncompressed = [UInt8](repeating: 0, count: Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN))
             precondition(wally_ec_public_key_decompress(bytes_out, Int(EC_PUBLIC_KEY_LEN), &bytes_out_uncompressed, Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN)) == WALLY_OK)
-            return try! PubKey(Data(bytes_out_uncompressed), network, isCompressed: false)
+            return try! PubKey(Data(bytes_out_uncompressed), network: network, isCompressed: false)
         } else {
-            return try! PubKey(Data(bytes_out), network, isCompressed: true)
+            return try! PubKey(Data(bytes_out), network: network, isCompressed: true)
         }
     }
 }

@@ -10,7 +10,6 @@ import Foundation
 import CLibWally
 
 public struct BIP32Path : Equatable {
-
     public enum DerivationStep : Equatable {
         // max 2^^31 - 1: enforced by the BIP32Path initializer
         case normal(UInt32)
@@ -27,10 +26,10 @@ public struct BIP32Path : Equatable {
     }
 
     public let components: [DerivationStep]
-    let rawPath: [UInt32]
-    let isRelative: Bool
+    public let rawPath: [UInt32]
+    public let isRelative: Bool
     
-    public init(_ rawPath: [UInt32], isRelative: Bool) throws {
+    public init(rawPath: [UInt32], isRelative: Bool) throws {
         var components: [DerivationStep] = []
         for index in rawPath {
             if index < BIP32_INITIAL_HARDENED_CHILD {
@@ -39,10 +38,10 @@ public struct BIP32Path : Equatable {
                 components.append(DerivationStep.hardened(index - BIP32_INITIAL_HARDENED_CHILD))
             }
         }
-        try self.init(components, isRelative:isRelative)
+        try self.init(components: components, isRelative:isRelative)
     }
     
-    public init(_ components: [DerivationStep], isRelative: Bool) throws {
+    public init(components: [DerivationStep], isRelative: Bool) throws {
         var rawPath: [UInt32] = []
         self.isRelative = isRelative
 
@@ -64,22 +63,22 @@ public struct BIP32Path : Equatable {
         self.rawPath = rawPath
     }
     
-    public init(_ component: DerivationStep, isRelative: Bool = true) throws {
-        try self.init([component], isRelative: isRelative)
+    public init(component: DerivationStep, isRelative: Bool = true) throws {
+        try self.init(components: [component], isRelative: isRelative)
     }
     
-    public init(_ index: Int, isRelative: Bool = true) throws {
-        try self.init([.normal(UInt32(index))], isRelative: isRelative)
+    public init(index: Int, isRelative: Bool = true) throws {
+        try self.init(components: [.normal(UInt32(index))], isRelative: isRelative)
     }
     
-    public init(_ description: String) throws {
-        guard description.count > 0 else {
+    public init(string: String) throws {
+        guard string.count > 0 else {
             throw LibWallyError("Invalid path.")
         }
-        let isRelative = description.prefix(2) != "m/"
+        let isRelative = string.prefix(2) != "m/"
         var tmpComponents: [DerivationStep] = []
 
-        for component in description.split(separator: "/") {
+        for component in string.split(separator: "/") {
             if component == "m" { continue }
             let index: UInt32? = UInt32(component)
             if let i = index {
@@ -100,7 +99,7 @@ public struct BIP32Path : Equatable {
             throw LibWallyError("Invalid path.")
         }
         do {
-            try self.init(tmpComponents, isRelative: isRelative)
+            try self.init(components: tmpComponents, isRelative: isRelative)
         } catch {
             throw LibWallyError("Invalid path.")
         }
@@ -122,13 +121,12 @@ public struct BIP32Path : Equatable {
         return pathString
     }
     
-    public func chop(_ depth: Int) throws -> BIP32Path {
+    public func chop(depth: Int) throws -> BIP32Path {
         if depth > components.count {
             throw LibWallyError("Invalid depth.")
         }
         var newComponents = self.components
         newComponents.removeFirst(Int(depth))
-        return try BIP32Path(newComponents, isRelative: true)
+        return try BIP32Path(components: newComponents, isRelative: true)
     }
-    
 }

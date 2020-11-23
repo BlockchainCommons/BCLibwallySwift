@@ -15,7 +15,7 @@
 		030A63FC2503702700A1D27E /* DataExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F52503702700A1D27E /* DataExtension.swift */; };
 		030A63FD2503702700A1D27E /* BIP32Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F62503702700A1D27E /* BIP32Path.swift */; };
 		030A63FE2503702700A1D27E /* PSBT.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F72503702700A1D27E /* PSBT.swift */; };
-		030A63FF2503702700A1D27E /* BIP39.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F82503702700A1D27E /* BIP39.swift */; };
+		030A63FF2503702700A1D27E /* BIP39Mnemonic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F82503702700A1D27E /* BIP39Mnemonic.swift */; };
 		030A64002503702700A1D27E /* Address.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F92503702700A1D27E /* Address.swift */; };
 		030A6408250382A300A1D27E /* BIP39Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6401250382A200A1D27E /* BIP39Tests.swift */; };
 		030A6409250382A300A1D27E /* DataExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6402250382A200A1D27E /* DataExtensionTests.swift */; };
@@ -61,7 +61,7 @@
 		030A63F52503702700A1D27E /* DataExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataExtension.swift; sourceTree = "<group>"; };
 		030A63F62503702700A1D27E /* BIP32Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP32Path.swift; sourceTree = "<group>"; };
 		030A63F72503702700A1D27E /* PSBT.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PSBT.swift; sourceTree = "<group>"; };
-		030A63F82503702700A1D27E /* BIP39.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP39.swift; sourceTree = "<group>"; };
+		030A63F82503702700A1D27E /* BIP39Mnemonic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP39Mnemonic.swift; sourceTree = "<group>"; };
 		030A63F92503702700A1D27E /* Address.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Address.swift; sourceTree = "<group>"; };
 		030A6401250382A200A1D27E /* BIP39Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP39Tests.swift; sourceTree = "<group>"; };
 		030A6402250382A200A1D27E /* DataExtensionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataExtensionTests.swift; sourceTree = "<group>"; };
@@ -129,26 +129,26 @@
 			children = (
 				030A63D525035ED900A1D27E /* LibWally.h */,
 				030A63D625035ED900A1D27E /* Info.plist */,
-				030A63F92503702700A1D27E /* Address.swift */,
-				03A560F22568FE4600181CB8 /* PubKey.swift */,
-				03A560EE2568FE1E00181CB8 /* Key.swift */,
-				030A63F62503702700A1D27E /* BIP32Path.swift */,
-				03A560FC2568FEFD00181CB8 /* HDKey.swift */,
-				03A560F62568FE9D00181CB8 /* Network.swift */,
-				030A63F82503702700A1D27E /* BIP39.swift */,
-				030A63F52503702700A1D27E /* DataExtension.swift */,
-				030A63F72503702700A1D27E /* PSBT.swift */,
-				03A5610C256A395A00181CB8 /* KeyOrigin.swift */,
-				03A56110256A397600181CB8 /* PSBTInput.swift */,
-				03A56114256A399700181CB8 /* PSBTOutput.swift */,
 				030A63F42503702700A1D27E /* ScriptPubKey.swift */,
 				03A5611A256A802900181CB8 /* ScriptSig.swift */,
-				03A5611E256A805E00181CB8 /* Witness.swift */,
-				030A63F32503702700A1D27E /* Transaction.swift */,
-				03A5610425691F1600181CB8 /* TxOutput.swift */,
-				03A5610825691F3100181CB8 /* TxInput.swift */,
 				03A5610025691F0400181CB8 /* Satoshi.swift */,
+				03A560F62568FE9D00181CB8 /* Network.swift */,
+				03A560F22568FE4600181CB8 /* PubKey.swift */,
+				03A5611E256A805E00181CB8 /* Witness.swift */,
+				03A560EE2568FE1E00181CB8 /* Key.swift */,
+				030A63F62503702700A1D27E /* BIP32Path.swift */,
+				030A63F92503702700A1D27E /* Address.swift */,
+				030A63F82503702700A1D27E /* BIP39Mnemonic.swift */,
+				03A5610825691F3100181CB8 /* TxInput.swift */,
+				03A5610425691F1600181CB8 /* TxOutput.swift */,
+				03A5610C256A395A00181CB8 /* KeyOrigin.swift */,
 				03A560E62568ED7B00181CB8 /* LibWallyError.swift */,
+				030A63F52503702700A1D27E /* DataExtension.swift */,
+				03A56110256A397600181CB8 /* PSBTInput.swift */,
+				03A56114256A399700181CB8 /* PSBTOutput.swift */,
+				03A560FC2568FEFD00181CB8 /* HDKey.swift */,
+				030A63F32503702700A1D27E /* Transaction.swift */,
+				030A63F72503702700A1D27E /* PSBT.swift */,
 			);
 			path = LibWally;
 			sourceTree = "<group>";
@@ -301,7 +301,7 @@
 				03A5611F256A805E00181CB8 /* Witness.swift in Sources */,
 				03A5610D256A395A00181CB8 /* KeyOrigin.swift in Sources */,
 				03A560F32568FE4600181CB8 /* PubKey.swift in Sources */,
-				030A63FF2503702700A1D27E /* BIP39.swift in Sources */,
+				030A63FF2503702700A1D27E /* BIP39Mnemonic.swift in Sources */,
 				03A5610925691F3100181CB8 /* TxInput.swift in Sources */,
 				030A64002503702700A1D27E /* Address.swift in Sources */,
 				03A5611B256A802900181CB8 /* ScriptSig.swift in Sources */,

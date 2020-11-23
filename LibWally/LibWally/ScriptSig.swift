@@ -8,25 +8,22 @@
 import Foundation
 import CLibWally
 
-public struct ScriptSig : Equatable {
-    public static func == (lhs: ScriptSig, rhs: ScriptSig) -> Bool {
-        return lhs.type == rhs.type
-    }
+public struct ScriptSig {
+    public typealias Signature = Data
 
-    let type: ScriptSigType
+    public let type: ScriptSigType
+
+    // When used in a finalized transaction, scriptSig usually includes a signature:
+    public var signature: Signature?
 
     public enum ScriptSigType : Equatable {
         case payToPubKeyHash(PubKey) // P2PKH (legacy)
         case payToScriptHashPayToWitnessPubKeyHash(PubKey) // P2SH-P2WPKH (wrapped SegWit)
     }
 
-    public typealias Signature = Data
-
-    // When used in a finalized transaction, scriptSig usually includes a signature:
-    var signature: Signature?
-
-    public init (_ type: ScriptSigType) {
+    public init(type: ScriptSigType) {
         self.type = type
+        self.signature = nil
     }
 
     public enum ScriptSigPurpose {
@@ -34,8 +31,8 @@ public struct ScriptSig : Equatable {
         case feeWorstCase
     }
 
-    public func render(_ purpose: ScriptSigPurpose) -> Data? {
-        switch self.type {
+    public func render(purpose: ScriptSigPurpose) -> Data? {
+        switch type {
         case .payToPubKeyHash(let pubKey):
             switch purpose {
             case .feeWorstCase:
@@ -46,7 +43,7 @@ public struct ScriptSig : Equatable {
                 let lengthPushPubKey = Data([UInt8(pubKey.data.count)])
                 return lengthPushSignature + dummySignature + sigHashByte + lengthPushPubKey + pubKey.data
             case .signed:
-                if let signature = self.signature {
+                if let signature = signature {
                     let lengthPushSignature = Data([UInt8(signature.count + 1)]) // DER encoded signature + sighash byte
                     let sigHashByte = Data([UInt8(WALLY_SIGHASH_ALL)])
                     let lengthPushPubKey = Data([UInt8(pubKey.data.count)])
