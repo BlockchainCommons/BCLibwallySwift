@@ -49,6 +49,7 @@ build_clibwally()
 
   cp ${PROJ_ROOT}/CLibWally.modulemap include/module.modulemap
 
+  ./tools/cleanup.sh
   ./tools/autogen.sh
   PKG_CONFIG_ALLOW_CROSS=1 \
   PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig \
