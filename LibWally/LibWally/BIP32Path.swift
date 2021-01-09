@@ -7,7 +7,6 @@
 //  license, see the accompanying file LICENSE.md
 
 import Foundation
-import CLibWally
 
 public struct BIP32Path : Equatable {
     public enum DerivationStep : Equatable {

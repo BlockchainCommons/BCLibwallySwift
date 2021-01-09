@@ -8,7 +8,6 @@
 import Cocoa
 import SwiftUI
 
-import CLibWally
 import LibWally
 
 @NSApplicationMain
@@ -19,7 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         wally_init(0);
-        let hdKey = HDKey("xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ")!
+        let hdKey = try! HDKey(base58: "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ")
         print(hdKey)
 
         // Create the SwiftUI view that provides the window contents.

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct ScriptSig {
     public typealias Signature = Data

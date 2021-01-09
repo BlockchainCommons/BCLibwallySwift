@@ -3,13 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 50;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		030A63DC25035EDA00A1D27E /* LibWally.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 030A63D225035ED900A1D27E /* LibWally.framework */; };
 		030A63E325035EDA00A1D27E /* LibWally.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A63D525035ED900A1D27E /* LibWally.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		030A63F025036DDF00A1D27E /* CLibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 030A63EF25036DDF00A1D27E /* CLibWally.xcframework */; };
 		030A63FA2503702700A1D27E /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F32503702700A1D27E /* Transaction.swift */; };
 		030A63FB2503702700A1D27E /* ScriptPubKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F42503702700A1D27E /* ScriptPubKey.swift */; };
 		030A63FC2503702700A1D27E /* DataExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F52503702700A1D27E /* DataExtension.swift */; };
@@ -37,6 +36,16 @@
 		03A56115256A399700181CB8 /* PSBTOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A56114256A399700181CB8 /* PSBTOutput.swift */; };
 		03A5611B256A802900181CB8 /* ScriptSig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611A256A802900181CB8 /* ScriptSig.swift */; };
 		03A5611F256A805E00181CB8 /* Witness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611E256A805E00181CB8 /* Witness.swift */; };
+		797BB15E25A7E75900FD5140 /* wally_transaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15425A7E75900FD5140 /* wally_transaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB15F25A7E75900FD5140 /* wally_bip39.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15525A7E75900FD5140 /* wally_bip39.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16025A7E75900FD5140 /* wally_bip38.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15625A7E75900FD5140 /* wally_bip38.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16125A7E75900FD5140 /* wally_address.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15725A7E75900FD5140 /* wally_address.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16225A7E75900FD5140 /* wally_crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15825A7E75900FD5140 /* wally_crypto.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16325A7E75900FD5140 /* wally_psbt.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15925A7E75900FD5140 /* wally_psbt.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16425A7E75900FD5140 /* wally_symmetric.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15A25A7E75900FD5140 /* wally_symmetric.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16525A7E75900FD5140 /* wally_bip32.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15B25A7E75900FD5140 /* wally_bip32.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16625A7E75900FD5140 /* wally_script.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15C25A7E75900FD5140 /* wally_script.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		797BB16725A7E75900FD5140 /* wally_core.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15D25A7E75900FD5140 /* wally_core.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,6 +92,16 @@
 		03A56114256A399700181CB8 /* PSBTOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSBTOutput.swift; sourceTree = "<group>"; };
 		03A5611A256A802900181CB8 /* ScriptSig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptSig.swift; sourceTree = "<group>"; };
 		03A5611E256A805E00181CB8 /* Witness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Witness.swift; sourceTree = "<group>"; };
+		797BB15425A7E75900FD5140 /* wally_transaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_transaction.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_transaction.h"; sourceTree = "<group>"; };
+		797BB15525A7E75900FD5140 /* wally_bip39.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_bip39.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_bip39.h"; sourceTree = "<group>"; };
+		797BB15625A7E75900FD5140 /* wally_bip38.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_bip38.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_bip38.h"; sourceTree = "<group>"; };
+		797BB15725A7E75900FD5140 /* wally_address.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_address.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_address.h"; sourceTree = "<group>"; };
+		797BB15825A7E75900FD5140 /* wally_crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_crypto.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_crypto.h"; sourceTree = "<group>"; };
+		797BB15925A7E75900FD5140 /* wally_psbt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_psbt.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_psbt.h"; sourceTree = "<group>"; };
+		797BB15A25A7E75900FD5140 /* wally_symmetric.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_symmetric.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_symmetric.h"; sourceTree = "<group>"; };
+		797BB15B25A7E75900FD5140 /* wally_bip32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_bip32.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_bip32.h"; sourceTree = "<group>"; };
+		797BB15C25A7E75900FD5140 /* wally_script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_script.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_script.h"; sourceTree = "<group>"; };
+		797BB15D25A7E75900FD5140 /* wally_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_core.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_core.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,7 +109,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				030A63F025036DDF00A1D27E /* CLibWally.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,6 +126,7 @@
 		030A63C825035ED900A1D27E = {
 			isa = PBXGroup;
 			children = (
+				797BB15325A7E71F00FD5140 /* Headers */,
 				030A63D425035ED900A1D27E /* LibWally */,
 				030A63DF25035EDA00A1D27E /* LibWallyTests */,
 				030A63D325035ED900A1D27E /* Products */,
@@ -176,6 +195,23 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		797BB15325A7E71F00FD5140 /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				797BB15725A7E75900FD5140 /* wally_address.h */,
+				797BB15B25A7E75900FD5140 /* wally_bip32.h */,
+				797BB15625A7E75900FD5140 /* wally_bip38.h */,
+				797BB15525A7E75900FD5140 /* wally_bip39.h */,
+				797BB15D25A7E75900FD5140 /* wally_core.h */,
+				797BB15825A7E75900FD5140 /* wally_crypto.h */,
+				797BB15925A7E75900FD5140 /* wally_psbt.h */,
+				797BB15C25A7E75900FD5140 /* wally_script.h */,
+				797BB15A25A7E75900FD5140 /* wally_symmetric.h */,
+				797BB15425A7E75900FD5140 /* wally_transaction.h */,
+			);
+			path = Headers;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -183,7 +219,17 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				797BB16125A7E75900FD5140 /* wally_address.h in Headers */,
+				797BB16225A7E75900FD5140 /* wally_crypto.h in Headers */,
 				030A63E325035EDA00A1D27E /* LibWally.h in Headers */,
+				797BB16625A7E75900FD5140 /* wally_script.h in Headers */,
+				797BB16025A7E75900FD5140 /* wally_bip38.h in Headers */,
+				797BB16725A7E75900FD5140 /* wally_core.h in Headers */,
+				797BB16425A7E75900FD5140 /* wally_symmetric.h in Headers */,
+				797BB15E25A7E75900FD5140 /* wally_transaction.h in Headers */,
+				797BB15F25A7E75900FD5140 /* wally_bip39.h in Headers */,
+				797BB16325A7E75900FD5140 /* wally_psbt.h in Headers */,
+				797BB16525A7E75900FD5140 /* wally_bip32.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -466,18 +512,21 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LibWally/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../build/arm64-apple-ios-simulator/wallycore/lib\"";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MODULEMAP_FILE = LibWally/LibWally.modulemap;
+				OTHER_LDFLAGS = (
+					"-lwallycore",
+					"-lsecp256k1",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = blockchaincommons.LibWally;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -496,18 +545,21 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = LibWally/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "\"$(SRCROOT)/../build/arm64-apple-ios-simulator/wallycore/lib\"";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MODULEMAP_FILE = LibWally/LibWally.modulemap;
+				OTHER_LDFLAGS = (
+					"-lwallycore",
+					"-lsecp256k1",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = blockchaincommons.LibWally;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,6";

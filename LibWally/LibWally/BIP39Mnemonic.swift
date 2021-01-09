@@ -8,7 +8,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
     public let words: [String]

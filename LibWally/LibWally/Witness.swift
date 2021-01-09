@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct Witness {
     public let type: WitnessType

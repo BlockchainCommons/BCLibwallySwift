@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct KeyOrigin : Equatable {
     public let fingerprint: Data

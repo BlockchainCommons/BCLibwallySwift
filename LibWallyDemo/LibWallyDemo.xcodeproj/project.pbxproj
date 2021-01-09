@@ -18,12 +18,8 @@
 		0329398725377C2100E52AD5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0329398625377C2100E52AD5 /* Assets.xcassets */; };
 		0329398A25377C2100E52AD5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0329398925377C2100E52AD5 /* Preview Assets.xcassets */; };
 		0329398D25377C2200E52AD5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0329398B25377C2100E52AD5 /* Main.storyboard */; };
-		0329399725377C4500E52AD5 /* CLibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; };
-		0329399825377C4500E52AD5 /* CLibWally.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0329399A25377C4700E52AD5 /* LibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E632503B6C9005BA9A7 /* LibWally.xcframework */; };
 		0329399B25377C4700E52AD5 /* LibWally.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E632503B6C9005BA9A7 /* LibWally.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		03D92E612503B46A005BA9A7 /* CLibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; };
-		03D92E622503B46A005BA9A7 /* CLibWally.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E602503B46A005BA9A7 /* CLibWally.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		03D92E642503B6C9005BA9A7 /* LibWally.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E632503B6C9005BA9A7 /* LibWally.xcframework */; };
 		03D92E652503B6C9005BA9A7 /* LibWally.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 03D92E632503B6C9005BA9A7 /* LibWally.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
@@ -35,7 +31,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				03D92E622503B46A005BA9A7 /* CLibWally.xcframework in Embed Frameworks */,
 				03D92E652503B6C9005BA9A7 /* LibWally.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -47,7 +42,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				0329399825377C4500E52AD5 /* CLibWally.xcframework in Embed Frameworks */,
 				0329399B25377C4700E52AD5 /* LibWally.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -82,7 +76,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				03D92E612503B46A005BA9A7 /* CLibWally.xcframework in Frameworks */,
 				03D92E642503B6C9005BA9A7 /* LibWally.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -91,7 +84,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0329399725377C4500E52AD5 /* CLibWally.xcframework in Frameworks */,
 				0329399A25377C4700E52AD5 /* LibWally.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -439,7 +431,7 @@
 				DEVELOPMENT_TEAM = YZHG975W3A;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = LibWallyDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -464,7 +456,7 @@
 				DEVELOPMENT_TEAM = YZHG975W3A;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = LibWallyDemo/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

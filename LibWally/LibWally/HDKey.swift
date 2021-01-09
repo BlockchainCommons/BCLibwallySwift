@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct HDKey {
     var wally_ext_key: ext_key

@@ -7,7 +7,6 @@
 //  license, see the accompanying file LICENSE.md
 
 import Foundation
-import CLibWally
 
 public struct PSBT : Equatable {
     public let network: Network

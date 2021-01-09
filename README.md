@@ -2,13 +2,19 @@
 
 Opinionated Swift wrapper around [LibWally](https://github.com/ElementsProject/libwally-core), a collection of useful primitives for cryptocurrency wallets.
 
-This is a fork of [LibWally Swift](https://github.com/blockchain/libwally-swift). It has a new build system for building XCFrameworks for use with MacOSX, Mac Catalyst, iOS devices, and the iOS simulator.
+This is a fork of [LibWally Swift](https://github.com/blockchain/libwally-swift). It has a new build system for building a universal XCFramework for use with MacOSX, Mac Catalyst, iOS devices, and the iOS simulator across Intel and Apple Silicon (ARM).
 
 Also supports particular enhancements used by Blockchain Commons from our fork of libwally-core: [bc-libwally-core](https://github.com/blockchaincommons/bc-libwally-core), in the [bc-maintenance](https://github.com/BlockchainCommons/bc-libwally-core/tree/bc-maintenance) branch.
 
+## Dependencies
+
+```sh
+$ brew install autoconf autogen gsed
+```
+
 ## Build
 
-```
+```sh
 $ git clone https://github.com/blockchaincommons/BCLibWallySwift.git
 $ cd BCLibWallySwift
 $ ./build.sh
@@ -23,30 +29,30 @@ Derive address from a seed:
 ```swift
 import LibWally
 
-let mnemonic = BIP39Mnemonic("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about")
-let masterKey = HDKey(mnemonic.seedHex("bip39 passphrase"))!
-masterKey.fingerprint.hexString
-let path = BIP32Path("m/44'/0'/0'")!
-let account = try! masterKey.derive(path)
-account.xpub
-account.address(.payToWitnessPubKeyHash)
+let mnemonic = try! BIP39Mnemonic(words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about")
+let masterKey = try! HDKey(seed: mnemonic.seedHex(passphrase: "bip39 passphrase"))
+let path = try! BIP32Path(string: "m/44'/0'/0'")
+_ = masterKey.fingerprint
+let account = try! masterKey.derive(using: path)
+_ = account.xpub
+_ = account.address(type: .payToWitnessPubKeyHash)
 ```
 
 Derive address from an xpub:
 
 ```swift
-let account = HDKey("xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ")
-let receivePath = BIP32Path("0/0")!
-key = account.derive(receivePath)
-key.address(.payToPubKeyHash) # => 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
+let account = try! HDKey(base58: "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ")
+let receivePath = try! BIP32Path(string: "0/0")
+let key = try! account.derive(using: receivePath)
+_ = key.address(type: .payToPubKeyHash) // 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
 ```
 
 Parse an address:
 
 ```swift
-var address = Address("bc1q6zwjfmhdl4pvhvfpv8pchvtanlar8hrhqdyv0t")
-address?.scriptPubKey # => 0014d09d24eeedfd42cbb12161c38bb17d9ffa33dc77
-address?.scriptPubKey.type # => .payToWitnessPubKeyHash
+let address = try! Address(string: "bc1q6zwjfmhdl4pvhvfpv8pchvtanlar8hrhqdyv0t")
+_ = address.scriptPubKey // 0014d09d24eeedfd42cbb12161c38bb17d9ffa33dc77
+_ = address.scriptPubKey.type // .payToWitnessPubKeyHash
 ```
 
 Create and sign a transaction:

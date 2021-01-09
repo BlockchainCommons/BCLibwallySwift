@@ -6,7 +6,6 @@
 //  license, see the accompanying file LICENSE.md
 
 import Foundation
-import CLibWally
 
 public struct ScriptPubKey : Equatable {
     public let data: Data

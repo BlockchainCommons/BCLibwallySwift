@@ -7,7 +7,6 @@
 //  license, see the accompanying file LICENSE.md
 
 import Foundation
-import CLibWally
 
 extension Data {
     init(hex: String) throws {

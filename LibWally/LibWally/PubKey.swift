@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct PubKey : Equatable, Hashable {
     public let isCompressed: Bool

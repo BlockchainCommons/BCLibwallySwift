@@ -8,7 +8,6 @@
 
 import XCTest
 @testable import LibWally
-import CLibWally
 
 class PSBTTests: XCTestCase {
     // Test vectors from https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki

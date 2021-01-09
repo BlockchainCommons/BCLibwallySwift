@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct PSBTInput {
     public let origins: [PubKey: KeyOrigin]?

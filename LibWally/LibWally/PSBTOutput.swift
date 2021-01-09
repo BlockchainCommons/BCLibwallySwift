@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct PSBTOutput : Identifiable {
     public let txOutput: TxOutput

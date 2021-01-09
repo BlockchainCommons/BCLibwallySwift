@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CLibWally
 
 public struct Key {
     public let isCompressed: Bool
