@@ -1,7 +1,7 @@
 #!zsh
 set -e # abort if any command fails
 
-MIN_IOS_VERSION=14.2
+MIN_IOS_VERSION=13
 MIN_MAC_VERSION=11
 PROJ_ROOT=${PWD}
 DEPS_ROOT=${PROJ_ROOT}/deps
