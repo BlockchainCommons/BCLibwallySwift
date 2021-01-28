@@ -8,8 +8,8 @@
 import Foundation
 
 public struct HDKey {
-    var wally_ext_key: ext_key
-    var masterKeyFingerprint: Data? // TODO: https://github.com/ElementsProject/libwally-core/issues/164
+    public var wally_ext_key: ext_key
+    public var masterKeyFingerprint: Data? // TODO: https://github.com/ElementsProject/libwally-core/issues/164
 
     init(key: ext_key, masterKeyFingerprint: Data? = nil) {
         self.wally_ext_key = key
