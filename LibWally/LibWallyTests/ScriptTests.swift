@@ -31,7 +31,7 @@ class ScriptTests: XCTestCase {
     }
 
     func testScriptSigP2PKH() throws {
-        let pubKey = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"), network: .mainnet)
+        let pubKey = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"))
         var scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
         XCTAssertEqual(scriptSig.type, ScriptSig.ScriptSigType.payToPubKeyHash(pubKey))
         XCTAssertEqual(scriptSig.render(purpose: .signed), nil)
@@ -48,7 +48,7 @@ class ScriptTests: XCTestCase {
     }
 
     func testWitnessP2WPKH() throws {
-        let pubKey = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"), network: .mainnet)
+        let pubKey = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"))
         let witness = Witness(type: .payToWitnessPubKeyHash(pubKey))
         XCTAssertEqual(witness.isDummy, true)
 
@@ -64,8 +64,8 @@ class ScriptTests: XCTestCase {
     }
 
     func testMultisig() throws {
-        let pubKey1 = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"), network: .mainnet) // [3442193e/0'/1]
-        let pubKey2 = try PubKey(Data(hex: "022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a554737"), network: .mainnet) // [bd16bee5/0'/1]
+        let pubKey1 = try PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")) // [3442193e/0'/1]
+        let pubKey2 = try PubKey(Data(hex: "022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a554737")) // [bd16bee5/0'/1]
         let multisig = ScriptPubKey(multisig: [pubKey1, pubKey2], threshold: 2)
         XCTAssertEqual(multisig.type, .multiSig)
         XCTAssertEqual(multisig.data.hex, "5221022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a5547372103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c52ae")

@@ -14,26 +14,26 @@ public struct PSBTInput {
     public let isSegwit: Bool
     public let amount: Satoshi?
 
-    private static func getSignatures(signatures: wally_map, network: Network) throws -> [PubKey: Data] {
+    private static func getSignatures(signatures: wally_map) throws -> [PubKey: Data] {
         var result: [PubKey: Data] = [:]
         for i in 0 ..< signatures.num_items {
             let item = signatures.items[i]
-            let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)), network: network)
+            let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))
             let sig = Data(bytes: item.value, count: Int(item.value_len))
             result[pubKey] = sig
         }
         return result
     }
 
-    init(wallyInput: wally_psbt_input, network: Network) throws {
+    init(wallyInput: wally_psbt_input) throws {
         if wallyInput.keypaths.num_items > 0 {
-            self.origins = try KeyOrigin.getOrigins(keypaths: wallyInput.keypaths, network: network)
+            self.origins = try KeyOrigin.getOrigins(keypaths: wallyInput.keypaths)
         } else {
             self.origins = nil
         }
 
         if(wallyInput.signatures.num_items > 0) {
-            self.signatures = try Self.getSignatures(signatures: wallyInput.signatures, network: network)
+            self.signatures = try Self.getSignatures(signatures: wallyInput.signatures)
         } else {
             self.signatures = nil
         }

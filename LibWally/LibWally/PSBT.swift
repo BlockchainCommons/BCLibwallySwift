@@ -9,7 +9,6 @@
 import Foundation
 
 public struct PSBT : Equatable {
-    public let network: Network
     public let inputs: [PSBTInput]
     public let outputs: [PSBTOutput]
 
@@ -44,22 +43,21 @@ public struct PSBT : Equatable {
     }
 
     public static func == (lhs: PSBT, rhs: PSBT) -> Bool {
-        lhs.network == rhs.network && lhs.data == rhs.data
+        lhs.data == rhs.data
     }
 
-    private init(ownedPSBT: UnsafeMutablePointer<wally_psbt>, network: Network) throws {
-        self.network = network
+    private init(ownedPSBT: UnsafeMutablePointer<wally_psbt>) throws {
         self.storage = Storage(psbt: ownedPSBT)
 
         var inputs: [PSBTInput] = []
         for i in 0 ..< ownedPSBT.pointee.inputs_allocation_len {
-            try inputs.append(PSBTInput(wallyInput: ownedPSBT.pointee.inputs![i], network: network))
+            try inputs.append(PSBTInput(wallyInput: ownedPSBT.pointee.inputs![i]))
         }
         self.inputs = inputs
 
         var outputs: [PSBTOutput] = []
         for i in 0 ..< ownedPSBT.pointee.outputs_allocation_len {
-            try outputs.append(PSBTOutput(wallyPSBTOutput: ownedPSBT.pointee.outputs[i], wallyTxOutput: ownedPSBT.pointee.tx!.pointee.outputs[i], network: network))
+            try outputs.append(PSBTOutput(wallyPSBTOutput: ownedPSBT.pointee.outputs[i], wallyTxOutput: ownedPSBT.pointee.tx!.pointee.outputs[i]))
         }
         self.outputs = outputs
     }
@@ -73,7 +71,7 @@ public struct PSBT : Equatable {
             }
         }
         precondition(output.pointee.tx != nil)
-        try self.init(ownedPSBT: output, network: network)
+        try self.init(ownedPSBT: output)
     }
 
     public init(psbt string: String, network: Network) throws {
@@ -144,7 +142,7 @@ public struct PSBT : Equatable {
         privKey.data.withUnsafeByteBuffer { buf in
             precondition(wally_psbt_sign(clonedPSBT, buf.baseAddress, buf.count, 0) == WALLY_OK)
         }
-        return try PSBT(ownedPSBT: clonedPSBT, network: network)
+        return try PSBT(ownedPSBT: clonedPSBT)
     }
 
     public func signed(with hdKey: HDKey) throws -> PSBT {
@@ -169,6 +167,6 @@ public struct PSBT : Equatable {
         guard wally_psbt_finalize(clonedPSBT) == WALLY_OK else {
             throw LibWallyError("Unable to finalize.")
         }
-        return try PSBT(ownedPSBT: clonedPSBT, network: network)
+        return try PSBT(ownedPSBT: clonedPSBT)
     }
 }

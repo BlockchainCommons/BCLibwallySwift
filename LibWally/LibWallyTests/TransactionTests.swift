@@ -11,7 +11,7 @@ import XCTest
 
 class TransactionTests: XCTestCase {
     let scriptPubKey = try! ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
-    let pubKey = try! PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"), network: .mainnet)
+    let pubKey = try! PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"))
 
     func testFromHash() throws {
         let hash = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -22,7 +22,7 @@ class TransactionTests: XCTestCase {
     }
 
     func testOutput() {
-        let output = TxOutput(scriptPubKey: scriptPubKey, amount: 1000, network: .mainnet)
+        let output = TxOutput(scriptPubKey: scriptPubKey, amount: 1000)
         XCTAssertNotNil(output)
         XCTAssertEqual(output.amount, 1000)
         XCTAssertEqual(output.scriptPubKey, scriptPubKey)
@@ -51,7 +51,7 @@ class TransactionTests: XCTestCase {
         let txInput = try TxInput(txHash: prevTx.hash!, vout: vout, amount: amount, scriptSig: scriptSig, witness: nil, scriptPubKey: scriptPubKey)
 
         // Output:
-        let txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: 1000, network: .mainnet)
+        let txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: 1000)
 
         // Transaction
         let tx = Transaction(inputs: [txInput], outputs: [txOutput])
@@ -78,7 +78,7 @@ class TransactionInstanceTests: XCTestCase {
     // From: legacy P2PKH address 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
     // To: legacy P2PKH address 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
     let scriptPubKey1 = try! ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
-    let pubKey = try! PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"), network: .mainnet)
+    let pubKey = try! PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"))
     var tx1: Transaction! = nil
     var tx2: Transaction! = nil
     var tx3: Transaction! = nil
@@ -105,7 +105,7 @@ class TransactionInstanceTests: XCTestCase {
         let txInput3 = try! TxInput(txHash: prevTx.hash!, vout: vout, amount: amount3, scriptSig: nil, witness: witness3, scriptPubKey: scriptPubKey3)
         
         // Output:
-        let txOutput = TxOutput(scriptPubKey: scriptPubKey1, amount: 1000, network: .mainnet)
+        let txOutput = TxOutput(scriptPubKey: scriptPubKey1, amount: 1000)
         
         // Transaction spending legacy
         tx1 = Transaction(inputs: [txInput1], outputs: [txOutput])

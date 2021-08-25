@@ -92,7 +92,7 @@ public struct HDKey {
     }
 
     public var pubKey: PubKey {
-        try! PubKey(Data(of: wally_ext_key.pub_key), network: network, isCompressed: true)
+        try! PubKey(Data(of: wally_ext_key.pub_key), isCompressed: true)
     }
 
     public var privKey: Key? {
@@ -102,7 +102,7 @@ public struct HDKey {
         var data = Data(of: wally_ext_key.priv_key)
         // skip prefix byte 0
         precondition(data.popFirst() != nil)
-        return try! Key(data, network: network, isCompressed: true)
+        return try! Key(data, isCompressed: true)
     }
 
     public var xpriv: String? {

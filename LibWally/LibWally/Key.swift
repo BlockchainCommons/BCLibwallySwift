@@ -10,7 +10,6 @@ import Foundation
 public struct Key {
     public let isCompressed: Bool
     public let data: Data
-    public let network: Network
 
     static func prefix(for network: Network) -> UInt32 {
         switch network {
@@ -31,19 +30,17 @@ public struct Key {
         }
         self.isCompressed = isCompressed
         self.data = Data(bytes_out)
-        self.network = network
     }
 
-    public init(_ data: Data, network: Network, isCompressed: Bool = true) throws {
+    public init(_ data: Data, isCompressed: Bool = true) throws {
         guard data.count == Int(EC_PRIVATE_KEY_LEN) else {
             throw LibWallyError("Invalid key.")
         }
         self.data = data
-        self.network = network
         self.isCompressed = isCompressed
     }
 
-    public var wif: String {
+    public func wif(network: Network) -> String {
         precondition(data.count == Int(EC_PRIVATE_KEY_LEN))
         var output: UnsafeMutablePointer<Int8>?
         defer {
@@ -68,9 +65,9 @@ public struct Key {
         if !isCompressed {
             var bytes_out_uncompressed = [UInt8](repeating: 0, count: Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN))
             precondition(wally_ec_public_key_decompress(bytes_out, Int(EC_PUBLIC_KEY_LEN), &bytes_out_uncompressed, Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN)) == WALLY_OK)
-            return try! PubKey(Data(bytes_out_uncompressed), network: network, isCompressed: false)
+            return try! PubKey(Data(bytes_out_uncompressed), isCompressed: false)
         } else {
-            return try! PubKey(Data(bytes_out), network: network, isCompressed: true)
+            return try! PubKey(Data(bytes_out), isCompressed: true)
         }
     }
 }

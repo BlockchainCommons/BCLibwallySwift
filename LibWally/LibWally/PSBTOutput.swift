@@ -7,17 +7,17 @@
 
 import Foundation
 
-public struct PSBTOutput : Identifiable {
+public struct PSBTOutput {
     public let txOutput: TxOutput
     public let origins: [PubKey: KeyOrigin]?
 
-    public var id: String {
-        self.txOutput.address! + String(self.txOutput.amount)
+    public func id(network: Network) -> String {
+        self.txOutput.address(network: network)! + String(self.txOutput.amount)
     }
 
-    init(wallyPSBTOutput: wally_psbt_output, wallyTxOutput: wally_tx_output, network: Network) throws {
+    init(wallyPSBTOutput: wally_psbt_output, wallyTxOutput: wally_tx_output) throws {
         if wallyPSBTOutput.keypaths.num_items > 0 {
-            self.origins = try KeyOrigin.getOrigins(keypaths: wallyPSBTOutput.keypaths, network: network)
+            self.origins = try KeyOrigin.getOrigins(keypaths: wallyPSBTOutput.keypaths)
         } else {
             self.origins = nil
         }
@@ -28,7 +28,7 @@ public struct PSBTOutput : Identifiable {
             scriptPubKey = ScriptPubKey(Data(bytes: wallyTxOutput.script, count: wallyTxOutput.script_len))
         }
 
-        self.txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: wallyTxOutput.satoshi, network: network)
+        self.txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: wallyTxOutput.satoshi)
     }
 
     static func commonOriginChecks(origin: KeyOrigin, rootPathLength: Int, pubKey: PubKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
