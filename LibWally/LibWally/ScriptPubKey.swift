@@ -45,10 +45,13 @@ public struct ScriptPubKey : Equatable {
     }
 
     public init(hex: String) throws {
-        self.data = try Data(hex: hex)
+        guard let data = Data(hex: hex) else {
+            throw LibWallyError("Invalid ScriptPubKey.")
+        }
+        self.data = data
     }
     
-    public init(multisig pubKeys:[PubKey], threshold: UInt, isBIP67: Bool = true) {
+    public init(multisig pubKeys:[ECCompressedPublicKey], threshold: UInt, isBIP67: Bool = true) {
         var pubkeys_bytes = Data()
         for pubKey in pubKeys {
             pubkeys_bytes.append(pubKey.data)

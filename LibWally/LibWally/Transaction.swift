@@ -7,6 +7,7 @@
 //  license, see the accompanying file LICENSE.md
 
 import Foundation
+@_implementationOnly import WolfBase
 
 public struct Transaction {
     public let hash: Data?
@@ -58,7 +59,9 @@ public struct Transaction {
     public init(hex: String) throws {
         inputs = nil
         outputs = nil
-        let data = try Data(hex: hex)
+        guard let data = Data(hex: hex) else {
+            throw LibWallyError("Invalid transaction.")
+        }
         if data.count != SHA256_LEN { // Not a transaction hash
             let tx: UnsafeMutablePointer<wally_tx> = try data.withUnsafeByteBuffer { buf in
                 var newTx: UnsafeMutablePointer<wally_tx>!

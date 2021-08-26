@@ -9,7 +9,7 @@ import Foundation
 
 public struct PSBTOutput {
     public let txOutput: TxOutput
-    public let origins: [PubKey: KeyOrigin]?
+    public let origins: [ECCompressedPublicKey: KeyOrigin]?
 
     public func id(network: Network) -> String {
         self.txOutput.address(network: network)! + String(self.txOutput.amount)
@@ -31,7 +31,7 @@ public struct PSBTOutput {
         self.txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: wallyTxOutput.satoshi)
     }
 
-    static func commonOriginChecks(origin: KeyOrigin, rootPathLength: Int, pubKey: PubKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
+    static func commonOriginChecks(origin: KeyOrigin, rootPathLength: Int, pubKey: ECCompressedPublicKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
         // Check that origin ends with 0/* or 1/*
         let components = origin.path.components
         if components.count < 2 ||

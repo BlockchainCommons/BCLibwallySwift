@@ -16,8 +16,8 @@ public struct ScriptSig {
     public var signature: Signature?
 
     public enum ScriptSigType : Equatable {
-        case payToPubKeyHash(PubKey) // P2PKH (legacy)
-        case payToScriptHashPayToWitnessPubKeyHash(PubKey) // P2SH-P2WPKH (wrapped SegWit)
+        case payToPubKeyHash(ECCompressedPublicKey) // P2PKH (legacy)
+        case payToScriptHashPayToWitnessPubKeyHash(ECCompressedPublicKey) // P2SH-P2WPKH (wrapped SegWit)
     }
 
     public init(type: ScriptSigType) {
@@ -56,7 +56,7 @@ public struct ScriptSig {
             pubKey.data.withUnsafeByteBuffer { buf in
                 precondition(wally_hash160(buf.baseAddress, buf.count, &pubkey_hash_bytes, Int(HASH160_LEN)) == WALLY_OK)
             }
-            let redeemScript = try! Data(hex: "0014") + Data(pubkey_hash_bytes)
+            let redeemScript = Data(hex: "0014")! + Data(pubkey_hash_bytes)
             return Data([UInt8(redeemScript.count)]) + redeemScript
         }
     }

@@ -8,6 +8,7 @@
 //
 
 import Foundation
+@_implementationOnly import WolfBase
 
 public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
     public let words: [String]
@@ -21,7 +22,10 @@ public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
         public let data: Data
 
         public init(hex: String) throws {
-            self.data = try Data(hex: hex)
+            guard let data = Data(hex: hex) else {
+                throw LibWallyError("Invalid BIP39 mnemonic.")
+            }
+            self.data = data
         }
 
         public init(_ data: Data) {
@@ -37,7 +41,10 @@ public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
         let data: Data
 
         public init(hex: String) throws {
-            self.data = try Data(hex: hex)
+            guard let data = Data(hex: hex) else {
+                throw LibWallyError("Invalid BIP39 mnemonic.")
+            }
+            self.data = data
         }
 
         init(_ data: Data) {

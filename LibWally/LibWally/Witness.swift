@@ -13,8 +13,8 @@ public struct Witness {
     public let isDummy: Bool
 
     public enum WitnessType {
-        case payToWitnessPubKeyHash(PubKey) // P2WPKH (native SegWit)
-        case payToScriptHashPayToWitnessPubKeyHash(PubKey) // P2SH-P2WPKH (wrapped SegWit)
+        case payToWitnessPubKeyHash(ECCompressedPublicKey) // P2WPKH (native SegWit)
+        case payToScriptHashPayToWitnessPubKeyHash(ECCompressedPublicKey) // P2SH-P2WPKH (wrapped SegWit)
     }
 
     public init(type: WitnessType, signature: Data, isDummy: Bool = false) {
@@ -67,7 +67,7 @@ public struct Witness {
             pubKey.data.withUnsafeByteBuffer { buf in
                 precondition(wally_hash160(buf.baseAddress, buf.count, &pubkey_hash_bytes, pubkey_hash_bytes.count) == WALLY_OK)
             }
-            return try! Data(hex: "76a914") + Data(pubkey_hash_bytes) + Data(hex: "88ac")
+            return Data(hex: "76a914")! + Data(pubkey_hash_bytes) + Data(hex: "88ac")!
         }
     }
 }

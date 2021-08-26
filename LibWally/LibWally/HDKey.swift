@@ -91,18 +91,18 @@ public struct HDKey {
         return String(cString: output!)
     }
 
-    public var pubKey: PubKey {
-        try! PubKey(Data(of: wally_ext_key.pub_key), isCompressed: true)
+    public var pubKey: ECCompressedPublicKey {
+        try! ECCompressedPublicKey(Data(of: wally_ext_key.pub_key))
     }
 
-    public var privKey: Key? {
+    public var privKey: ECPrivateKey? {
         if isNeutered {
             return nil
         }
         var data = Data(of: wally_ext_key.priv_key)
         // skip prefix byte 0
         precondition(data.popFirst() != nil)
-        return try! Key(data, isCompressed: true)
+        return try! ECPrivateKey(data)
     }
 
     public var xpriv: String? {

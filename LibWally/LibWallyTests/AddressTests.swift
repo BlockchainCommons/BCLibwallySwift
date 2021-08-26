@@ -8,6 +8,7 @@
 
 import XCTest
 @testable import LibWally
+import WolfBase
 
 class AddressTests: XCTestCase {
     let hdKey = try! HDKey(base58: "xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ")
@@ -63,16 +64,14 @@ class AddressTests: XCTestCase {
     func testParseWIF() throws {
         // https://en.bitcoin.it/wiki/Wallet_import_format
         let wif = "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ"
-        let key = try Key(wif: wif, network: .mainnet, isCompressed: false)
+        let key = try ECPrivateKey(wif: wif, network: .mainnet, isCompressed: false)
         XCTAssertEqual(key.data.hex, "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d")
-        XCTAssertEqual(key.isCompressed, false)
     }
 
     func testToWIF() throws {
         // https://en.bitcoin.it/wiki/Wallet_import_format
-        let data = try Data(hex: "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d")
-        let key = try Key(data, isCompressed: false)
-        XCTAssertEqual(key.wif(network: .mainnet), "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ")
+        let data = Data(hex: "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d")!
+        let key = try ECPrivateKey(data)
+        XCTAssertEqual(key.wif(network: .mainnet, isCompressed: false), "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ")
     }
-
 }

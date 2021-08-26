@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct PSBT : Equatable {
+public struct PSBT : Equatable, CustomStringConvertible {
     public let inputs: [PSBTInput]
     public let outputs: [PSBTOutput]
 
@@ -26,7 +26,7 @@ public struct PSBT : Equatable {
         }
     }
 
-    var psbt: UnsafeMutablePointer<wally_psbt> {
+    private var _psbt: UnsafeMutablePointer<wally_psbt> {
         storage.psbt
     }
 
@@ -62,7 +62,7 @@ public struct PSBT : Equatable {
         self.outputs = outputs
     }
 
-    public init(psbt data: Data, network: Network) throws {
+    public init(_ data: Data) throws {
         var output: UnsafeMutablePointer<wally_psbt>!
         try data.withUnsafeByteBuffer { buf in
             guard wally_psbt_from_bytes(buf.baseAddress, buf.count, &output) == WALLY_OK else {
@@ -74,7 +74,7 @@ public struct PSBT : Equatable {
         try self.init(ownedPSBT: output)
     }
 
-    public init(psbt string: String, network: Network) throws {
+    public init(base64 string: String) throws {
         guard string.count != 0 else {
             throw LibWallyError("Invalid PSBT.")
         }
@@ -83,32 +83,48 @@ public struct PSBT : Equatable {
             throw LibWallyError("Invalid PSBT.")
         }
 
-        try self.init(psbt: psbtData, network: network)
+        try self.init(psbtData)
+    }
+
+    public init(hex: String) throws {
+        guard let data = Data(hex: hex) else {
+            throw LibWallyError("Invalid PSBT.")
+        }
+        try self.init(data)
     }
 
     public var data: Data {
         var len = 0
-        precondition(wally_psbt_get_length(psbt, 0, &len) == WALLY_OK)
+        precondition(wally_psbt_get_length(_psbt, 0, &len) == WALLY_OK)
         var result = Data(repeating: 0, count: len)
         result.withUnsafeMutableBytes { resultBuffer in
             var written = 0
-            precondition(wally_psbt_to_bytes(psbt, 0, resultBuffer.bindMemory(to: UInt8.self).baseAddress, resultBuffer.count, &written) == WALLY_OK)
+            precondition(wally_psbt_to_bytes(_psbt, 0, resultBuffer.bindMemory(to: UInt8.self).baseAddress, resultBuffer.count, &written) == WALLY_OK)
         }
         return result
     }
-
-    public var description: String {
+    
+    public var base64: String {
         data.base64EncodedString()
     }
+    
+    public var hex: String {
+        data.hex
+    }
 
-    public var isComplete: Bool {
-        // TODO: add function to libwally-core to check this directly
-        self.transactionFinal != nil
+    public var description: String {
+        base64
+    }
+
+    public var isFinalized: Bool {
+        var result = 0
+        precondition(wally_psbt_is_finalized(_psbt, &result) == WALLY_OK)
+        return result != 0
     }
 
     public var transaction: Transaction {
-        precondition(psbt.pointee.tx != nil)
-        return Transaction(tx: psbt.pointee.tx!)
+        precondition(_psbt.pointee.tx != nil)
+        return Transaction(tx: _psbt.pointee.tx!)
     }
 
     public var fee: Satoshi? {
@@ -124,21 +140,21 @@ public struct PSBT : Equatable {
         return tally - valueOut
     }
 
-    public var transactionFinal: Transaction? {
+    public func finalizedTransaction() throws -> Transaction {
         var output: UnsafeMutablePointer<wally_tx>!
         defer {
             wally_tx_free(output)
         }
 
-        guard wally_psbt_extract(psbt, &output) == WALLY_OK else {
-            return nil
+        guard wally_psbt_extract(_psbt, &output) == WALLY_OK else {
+            throw LibWallyError("Could not finalize PSBT.")
         }
         return Transaction(tx: output)
     }
 
-    public func signed(with privKey: Key) throws -> PSBT {
+    public func signed(with privKey: ECPrivateKey) throws -> PSBT {
         // TODO: sanity key for network
-        let clonedPSBT = Self.clone(psbt: self.psbt)
+        let clonedPSBT = Self.clone(psbt: self._psbt)
         privKey.data.withUnsafeByteBuffer { buf in
             precondition(wally_psbt_sign(clonedPSBT, buf.baseAddress, buf.count, 0) == WALLY_OK)
         }
@@ -148,11 +164,11 @@ public struct PSBT : Equatable {
     public func signed(with hdKey: HDKey) throws -> PSBT {
         var psbt = self
         for input in self.inputs {
-            if let origins: [PubKey : KeyOrigin] = input.canSignOrigins(with: hdKey) {
+            if let origins: [ECCompressedPublicKey : KeyOrigin] = input.canSignOrigins(with: hdKey) {
                 for origin in origins {
                     if let childKey = try? hdKey.derive(using: origin.value.path) {
                         if let privKey = childKey.privKey {
-                            precondition(privKey.pubKey == origin.key)
+                            precondition(privKey.public == origin.key)
                             psbt = try psbt.signed(with: privKey)
                         }
                     }
@@ -163,7 +179,7 @@ public struct PSBT : Equatable {
     }
 
     public func finalized() throws -> PSBT {
-        let clonedPSBT = Self.clone(psbt: psbt)
+        let clonedPSBT = Self.clone(psbt: _psbt)
         guard wally_psbt_finalize(clonedPSBT) == WALLY_OK else {
             throw LibWallyError("Unable to finalize.")
         }

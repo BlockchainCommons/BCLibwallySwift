@@ -8,17 +8,17 @@
 import Foundation
 
 public struct PSBTInput {
-    public let origins: [PubKey: KeyOrigin]?
-    public let signatures: [PubKey: Data]?
+    public let origins: [ECCompressedPublicKey: KeyOrigin]?
+    public let signatures: [ECCompressedPublicKey: Data]?
     public let witnessScript: Data?
     public let isSegwit: Bool
     public let amount: Satoshi?
 
-    private static func getSignatures(signatures: wally_map) throws -> [PubKey: Data] {
-        var result: [PubKey: Data] = [:]
+    private static func getSignatures(signatures: wally_map) throws -> [ECCompressedPublicKey: Data] {
+        var result: [ECCompressedPublicKey: Data] = [:]
         for i in 0 ..< signatures.num_items {
             let item = signatures.items[i]
-            let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))
+            let pubKey = try ECCompressedPublicKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))
             let sig = Data(bytes: item.value, count: Int(item.value_len))
             result[pubKey] = sig
         }
@@ -54,8 +54,8 @@ public struct PSBTInput {
     }
 
     // Can we provide at least one signature, assuming we have the private key?
-    public func canSignOrigins(with hdKey: HDKey) -> [PubKey: KeyOrigin]? {
-        var result: [PubKey: KeyOrigin] = [:]
+    public func canSignOrigins(with hdKey: HDKey) -> [ECCompressedPublicKey: KeyOrigin]? {
+        var result: [ECCompressedPublicKey: KeyOrigin] = [:]
         if let origins = self.origins {
             for origin in origins {
                 guard let masterKeyFingerprint = hdKey.masterKeyFingerprint else {

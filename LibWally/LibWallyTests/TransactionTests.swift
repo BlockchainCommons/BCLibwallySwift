@@ -11,7 +11,7 @@ import XCTest
 
 class TransactionTests: XCTestCase {
     let scriptPubKey = try! ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
-    let pubKey = try! PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"))
+    let pubKey = try! ECCompressedPublicKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!)
 
     func testFromHash() throws {
         let hash = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -78,7 +78,7 @@ class TransactionInstanceTests: XCTestCase {
     // From: legacy P2PKH address 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
     // To: legacy P2PKH address 1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj
     let scriptPubKey1 = try! ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
-    let pubKey = try! PubKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c"))
+    let pubKey = try! ECCompressedPublicKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!)
     var tx1: Transaction! = nil
     var tx2: Transaction! = nil
     var tx3: Transaction! = nil

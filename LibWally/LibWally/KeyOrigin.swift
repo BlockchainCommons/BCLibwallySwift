@@ -11,13 +11,13 @@ public struct KeyOrigin : Equatable {
     public let fingerprint: Data
     public let path: BIP32Path
 
-    static func getOrigins(keypaths: wally_map) throws -> [PubKey: KeyOrigin] {
-        var origins: [PubKey: KeyOrigin] = [:]
+    static func getOrigins(keypaths: wally_map) throws -> [ECCompressedPublicKey: KeyOrigin] {
+        var origins: [ECCompressedPublicKey: KeyOrigin] = [:]
         for i in 0..<keypaths.num_items {
             // TOOD: simplify after https://github.com/ElementsProject/libwally-core/issues/241
             let item: wally_map_item = keypaths.items[i]
 
-            let pubKey = try PubKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))
+            let pubKey = try ECCompressedPublicKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))
             let fingerprint = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
             let keyPath = Data(bytes: item.value + Int(BIP32_KEY_FINGERPRINT_LEN), count: Int(item.value_len) - Int(BIP32_KEY_FINGERPRINT_LEN))
 

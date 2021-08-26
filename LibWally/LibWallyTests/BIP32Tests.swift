@@ -51,7 +51,7 @@ class BIP32Tests: XCTestCase {
     func testPubKey() throws {
         let xpub = "xpub661MyMwAqRbcGB88KaFbLGiYAat55APKhtWg4uYMkXAmfuSTbq2QYsn9sKJCj1YqZPafsboef4h4YbXXhNhPwMbkHTpkf3zLhx7HvFw1NDy"
         let hdKey = try HDKey(base58: xpub)
-        XCTAssertEqual(hdKey.pubKey.data.hex, try Data(hex: "02f632717d78bf73e74aa8461e2e782532abae4eed5110241025afb59ebfd3d2fd").hex)
+        XCTAssertEqual(hdKey.pubKey.data.hex, "02f632717d78bf73e74aa8461e2e782532abae4eed5110241025afb59ebfd3d2fd")
     }
     
     func testParseXpub() throws {
