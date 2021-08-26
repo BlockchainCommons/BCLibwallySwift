@@ -11,7 +11,6 @@
 		030A63E325035EDA00A1D27E /* LibWally.h in Headers */ = {isa = PBXBuildFile; fileRef = 030A63D525035ED900A1D27E /* LibWally.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		030A63FA2503702700A1D27E /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F32503702700A1D27E /* Transaction.swift */; };
 		030A63FB2503702700A1D27E /* ScriptPubKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F42503702700A1D27E /* ScriptPubKey.swift */; };
-		030A63FC2503702700A1D27E /* DataExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F52503702700A1D27E /* DataExtension.swift */; };
 		030A63FD2503702700A1D27E /* BIP32Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F62503702700A1D27E /* BIP32Path.swift */; };
 		030A63FE2503702700A1D27E /* PSBT.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F72503702700A1D27E /* PSBT.swift */; };
 		030A63FF2503702700A1D27E /* BIP39Mnemonic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A63F82503702700A1D27E /* BIP39Mnemonic.swift */; };
@@ -49,7 +48,6 @@
 		797BB16625A7E75900FD5140 /* wally_script.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15C25A7E75900FD5140 /* wally_script.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		797BB16725A7E75900FD5140 /* wally_core.h in Headers */ = {isa = PBXBuildFile; fileRef = 797BB15D25A7E75900FD5140 /* wally_core.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		79EC702526D75B2200A3D4E9 /* WallyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EC702426D75B2200A3D4E9 /* WallyUtils.swift */; };
-		79EC702726D75B9400A3D4E9 /* CollectionExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EC702626D75B9400A3D4E9 /* CollectionExtensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,7 +69,6 @@
 		030A63EF25036DDF00A1D27E /* CLibWally.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CLibWally.xcframework; path = ../build/CLibWally.xcframework; sourceTree = "<group>"; };
 		030A63F32503702700A1D27E /* Transaction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
 		030A63F42503702700A1D27E /* ScriptPubKey.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScriptPubKey.swift; sourceTree = "<group>"; };
-		030A63F52503702700A1D27E /* DataExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataExtension.swift; sourceTree = "<group>"; };
 		030A63F62503702700A1D27E /* BIP32Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP32Path.swift; sourceTree = "<group>"; };
 		030A63F72503702700A1D27E /* PSBT.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PSBT.swift; sourceTree = "<group>"; };
 		030A63F82503702700A1D27E /* BIP39Mnemonic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP39Mnemonic.swift; sourceTree = "<group>"; };
@@ -108,7 +105,6 @@
 		797BB15C25A7E75900FD5140 /* wally_script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_script.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_script.h"; sourceTree = "<group>"; };
 		797BB15D25A7E75900FD5140 /* wally_core.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wally_core.h; path = "../../build/arm64-apple-darwin/wallycore/include/wally_core.h"; sourceTree = "<group>"; };
 		79EC702426D75B2200A3D4E9 /* WallyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallyUtils.swift; sourceTree = "<group>"; };
-		79EC702626D75B9400A3D4E9 /* CollectionExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionExtensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -163,7 +159,6 @@
 				03A5611E256A805E00181CB8 /* Witness.swift */,
 				03A560EE2568FE1E00181CB8 /* ECKey.swift */,
 				79EC702426D75B2200A3D4E9 /* WallyUtils.swift */,
-				79EC702626D75B9400A3D4E9 /* CollectionExtensions.swift */,
 				796FE5D526D7756800DDB32A /* Asset.swift */,
 				03A560F62568FE9D00181CB8 /* Network.swift */,
 				796FE5D726D7764C00DDB32A /* UseInfo.swift */,
@@ -174,7 +169,6 @@
 				03A5610425691F1600181CB8 /* TxOutput.swift */,
 				03A5610C256A395A00181CB8 /* KeyOrigin.swift */,
 				03A560E62568ED7B00181CB8 /* LibWallyError.swift */,
-				030A63F52503702700A1D27E /* DataExtension.swift */,
 				03A56110256A397600181CB8 /* PSBTInput.swift */,
 				03A56114256A399700181CB8 /* PSBTOutput.swift */,
 				03A560FC2568FEFD00181CB8 /* HDKey.swift */,
@@ -353,7 +347,6 @@
 				030A63FA2503702700A1D27E /* Transaction.swift in Sources */,
 				03A560EF2568FE1E00181CB8 /* ECKey.swift in Sources */,
 				03A560FD2568FEFD00181CB8 /* HDKey.swift in Sources */,
-				030A63FC2503702700A1D27E /* DataExtension.swift in Sources */,
 				796FE5D626D7756800DDB32A /* Asset.swift in Sources */,
 				79EC702526D75B2200A3D4E9 /* WallyUtils.swift in Sources */,
 				030A63FE2503702700A1D27E /* PSBT.swift in Sources */,
@@ -369,7 +362,6 @@
 				03A560F32568FE4600181CB8 /* PubKey.swift in Sources */,
 				030A63FF2503702700A1D27E /* BIP39Mnemonic.swift in Sources */,
 				03A5610925691F3100181CB8 /* TxInput.swift in Sources */,
-				79EC702726D75B9400A3D4E9 /* CollectionExtensions.swift in Sources */,
 				030A64002503702700A1D27E /* Address.swift in Sources */,
 				03A5611B256A802900181CB8 /* ScriptSig.swift in Sources */,
 			);
