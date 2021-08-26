@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "WolfBase",
+        "repositoryURL": "https://github.com/WolfMcNally/WolfBase.git",
+        "state": {
+          "branch": null,
+          "revision": "3d40d5f913167c24d81cb31ef0ee246552f8e4b7",
+          "version": "2.2.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
