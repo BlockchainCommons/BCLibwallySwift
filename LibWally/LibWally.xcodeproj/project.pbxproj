@@ -23,7 +23,6 @@
 		030A640E250382A300A1D27E /* ScriptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6407250382A300A1D27E /* ScriptTests.swift */; };
 		03A560E72568ED7B00181CB8 /* LibWallyError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560E62568ED7B00181CB8 /* LibWallyError.swift */; };
 		03A560EF2568FE1E00181CB8 /* ECKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560EE2568FE1E00181CB8 /* ECKey.swift */; };
-		03A560F32568FE4600181CB8 /* PubKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560F22568FE4600181CB8 /* PubKey.swift */; };
 		03A560F72568FE9D00181CB8 /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560F62568FE9D00181CB8 /* Network.swift */; };
 		03A560FD2568FEFD00181CB8 /* HDKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560FC2568FEFD00181CB8 /* HDKey.swift */; };
 		03A5610125691F0400181CB8 /* Satoshi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5610025691F0400181CB8 /* Satoshi.swift */; };
@@ -81,7 +80,6 @@
 		030A6407250382A300A1D27E /* ScriptTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScriptTests.swift; sourceTree = "<group>"; };
 		03A560E62568ED7B00181CB8 /* LibWallyError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibWallyError.swift; sourceTree = "<group>"; };
 		03A560EE2568FE1E00181CB8 /* ECKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECKey.swift; sourceTree = "<group>"; };
-		03A560F22568FE4600181CB8 /* PubKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PubKey.swift; sourceTree = "<group>"; };
 		03A560F62568FE9D00181CB8 /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
 		03A560FC2568FEFD00181CB8 /* HDKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDKey.swift; sourceTree = "<group>"; };
 		03A5610025691F0400181CB8 /* Satoshi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Satoshi.swift; sourceTree = "<group>"; };
@@ -155,7 +153,6 @@
 				030A63F42503702700A1D27E /* ScriptPubKey.swift */,
 				03A5611A256A802900181CB8 /* ScriptSig.swift */,
 				03A5610025691F0400181CB8 /* Satoshi.swift */,
-				03A560F22568FE4600181CB8 /* PubKey.swift */,
 				03A5611E256A805E00181CB8 /* Witness.swift */,
 				03A560EE2568FE1E00181CB8 /* ECKey.swift */,
 				79EC702426D75B2200A3D4E9 /* WallyUtils.swift */,
@@ -359,7 +356,6 @@
 				03A5611F256A805E00181CB8 /* Witness.swift in Sources */,
 				796FE5D826D7764C00DDB32A /* UseInfo.swift in Sources */,
 				03A5610D256A395A00181CB8 /* KeyOrigin.swift in Sources */,
-				03A560F32568FE4600181CB8 /* PubKey.swift in Sources */,
 				030A63FF2503702700A1D27E /* BIP39Mnemonic.swift in Sources */,
 				03A5610925691F3100181CB8 /* TxInput.swift in Sources */,
 				030A64002503702700A1D27E /* Address.swift in Sources */,
