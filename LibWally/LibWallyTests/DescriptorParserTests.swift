@@ -10,9 +10,8 @@ import LibWally
 
 class DescriptorParserTests: XCTestCase {
     func testExample() throws {
-        try print(Descriptor("[01234567]"))
-        try print(Descriptor("[01234567/1/2/3/4]"))
-        try print(Descriptor("[01234567/1'/2'/3'/4']"))
-        try print(Descriptor("[01234567/1h/2h/3h/4h]"))
+        try print(Descriptor("[d34db33f/44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*"))
+//        print(DescriptorLexer.debugLex(string: "[d34db33f/44'/0'/0']cP53pDbR5WtAD8dYAW9hhTjuvvTVaEiQBdrz9XPrgLBeRFiyCbQr"))
+        try print(Descriptor("[d34db33f/44'/0'/0']cP53pDbR5WtAD8dYAW9hhTjuvvTVaEiQBdrz9XPrgLBeRFiyCbQr"))
     }
 }

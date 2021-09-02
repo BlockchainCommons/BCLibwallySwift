@@ -6,10 +6,11 @@
 //
 
 import Foundation
+@_implementationOnly import WolfBase
 @_implementationOnly import Flexer
 
 public struct Descriptor {
-    let derivationPath: DerivationPath
+    let key: DescriptorKeyExpression
     
     public init(_ string: String) throws {
         let tokens = DescriptorLexer.lex(string: string).lookAhead
@@ -17,17 +18,51 @@ public struct Descriptor {
         self = try parser.parseTop()
     }
     
-    init(derivationPath: DerivationPath) {
-        self.derivationPath = derivationPath
+    init(key: DescriptorKeyExpression) {
+        self.key = key
     }
 }
 
-enum DescriptorKey {
-    case ecCompressedPublicKey(ECCompressedPublicKey)
-    case ecUncompressedPublicKey(ECUncompressedPublicKey)
-    case ecXOnlyPublicKey(ECXOnlyPublicKey)
-    case ecPrivateKey(ECPrivateKey)
-    case hdKey(HDKey)
+
+public struct DescriptorKeyExpression {
+    public let origin: DerivationPath
+    public let key: Key
+
+    public enum Key {
+        case ecCompressedPublicKey(ECCompressedPublicKey)
+        case ecUncompressedPublicKey(ECUncompressedPublicKey)
+        case ecXOnlyPublicKey(ECXOnlyPublicKey)
+        case wif(WIF)
+        case hdKey(HDKey)
+    }
+}
+
+extension DescriptorKeyExpression : CustomStringConvertible {
+    public var description: String {
+        var comps: [String] = []
+        if !origin.isEmpty {
+            comps.append("[\(origin)]")
+        }
+        comps.append(key.description)
+        return comps.joined()
+    }
+}
+
+extension DescriptorKeyExpression.Key : CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .ecCompressedPublicKey(let key):
+            return key.data.hex
+        case .ecUncompressedPublicKey(let key):
+            return key.data.hex
+        case .ecXOnlyPublicKey(let key):
+            return key.data.hex
+        case .wif(let key):
+            return key.description
+        case .hdKey(let key):
+            return key.description(withChildren: true)
+        }
+    }
 }
 
 public struct DescriptorError: Error, CustomStringConvertible {
@@ -71,10 +106,10 @@ public struct DescriptorParser {
     }
     
     mutating func parseTop() throws -> Descriptor {
-        guard let derivationPath = try parseDerivationPath() else {
+        guard let key = try parseKey() else {
             throw error("Expected derivation path.")
         }
-        return Descriptor(derivationPath: derivationPath)
+        return Descriptor(key: key)
     }
     
     mutating func parseKeyOrigin() -> DerivationPath? {
@@ -219,9 +254,9 @@ public struct DescriptorParser {
         return steps
     }
     
-    mutating func parseDerivationPath() throws -> DerivationPath? {
+    mutating func parseOrigin() throws -> DerivationPath {
         guard parseOpenBracket() else {
-            return nil
+            return .init()
         }
         let fingerprint = try expectFingerprint()
         let steps = try parseDerivationSteps(allowFinalWildcard: false)
@@ -229,14 +264,18 @@ public struct DescriptorParser {
         return DerivationPath(steps: steps, origin: .fingerprint(fingerprint))
     }
     
-    mutating func parseKey() throws -> DescriptorKey? {
-        var seq = tokens
+    mutating func parseKey() throws -> DescriptorKeyExpression? {
+        let save = tokens
+
+        let origin = try parseOrigin()
+        
         guard
-            let token = seq.next()
+            let token = tokens.next()
         else {
+            tokens = save
             return nil
         }
-        let result: DescriptorKey?
+        let resultKey: DescriptorKeyExpression.Key?
         switch token.kind {
         case .data:
             let data = token.data
@@ -244,27 +283,31 @@ public struct DescriptorParser {
                 data.count == ECCompressedPublicKey.keyLen,
                 [0x02, 0x03].contains(data[0])
             {
-                result = .ecCompressedPublicKey(ECCompressedPublicKey(data)!)
+                resultKey = .ecCompressedPublicKey(ECCompressedPublicKey(data)!)
             } else if data.count == ECUncompressedPublicKey.keyLen {
-                result = .ecUncompressedPublicKey(ECUncompressedPublicKey(data)!)
+                resultKey = .ecUncompressedPublicKey(ECUncompressedPublicKey(data)!)
             } else if data.count == ECXOnlyPublicKey.keyLen {
-                result = .ecXOnlyPublicKey(ECXOnlyPublicKey(data)!)
+                resultKey = .ecXOnlyPublicKey(ECXOnlyPublicKey(data)!)
             } else {
-                result = nil
+                resultKey = nil
             }
         case .wif:
-            result = .ecPrivateKey(token.wif.key)
+            resultKey = .wif(token.wif)
         case .hdKey:
-            result = .hdKey(token.hdKey)
+            let key = token.hdKey
+            let childSteps = try parseDerivationSteps(allowFinalWildcard: true)
+            let children = DerivationPath(steps: childSteps)
+            let key2 = HDKey(key: key.wally_ext_key, parent: origin, children: children)
+            resultKey = .hdKey(key2)
         default:
-            result = nil
+            resultKey = nil
         }
 
-        if let result = result {
-            tokens = seq
-            return result
+        guard let result = resultKey else {
+            tokens = save
+            return nil
         }
         
-        return nil
+        return DescriptorKeyExpression(origin: origin, key: result)
     }
 }

@@ -7,76 +7,85 @@
 
 import Foundation
 
-public struct HDKey {
-    public var wally_ext_key: ext_key
-    public var masterKeyFingerprint: Data? // TODO: https://github.com/ElementsProject/libwally-core/issues/164
+public struct HDKey : CustomStringConvertible {
+    public private(set) var wally_ext_key: ext_key
+    public let parent: DerivationPath
+    public let children: DerivationPath
 
-    init(key: ext_key, masterKeyFingerprint: Data? = nil) {
+    public init(key: ext_key, parent: DerivationPath, children: DerivationPath) {
         self.wally_ext_key = key
-        self.masterKeyFingerprint = masterKeyFingerprint
+        self.parent = parent
+        self.children = children
+    }
+    
+    public init(key: ext_key, masterKeyFingerprint: Data? = nil) {
+        let origin: DerivationPath.Origin?
+        if let fingerprint = masterKeyFingerprint {
+            origin = .fingerprint(fingerprint)
+        } else {
+            origin = nil
+        }
+        self.init(key: key, parent: DerivationPath(origin: origin), children: .init())
     }
 
     public init?(base58: String, masterKeyFingerprint: Data? = nil) {
-        var output = ext_key()
-        let result = bip32_key_from_base58(base58, &output)
-        if result == WALLY_OK {
-            self.init(key: output, masterKeyFingerprint: masterKeyFingerprint)
-        } else {
+        guard let key = Wally.hdKey(fromBase58: base58) else {
             return nil
         }
-        if wally_ext_key.depth == 0 {
+        let fingerprint = Wally.fingerprintData(for: key)
+        var masterKeyFingerprint = masterKeyFingerprint
+        
+        if key.depth == 0 {
             if masterKeyFingerprint == nil {
-                self.masterKeyFingerprint = fingerprint
+                masterKeyFingerprint = fingerprint
             } else {
                 guard masterKeyFingerprint == fingerprint else {
                     return nil
                 }
             }
         }
-
+        self.init(key: key, masterKeyFingerprint: masterKeyFingerprint)
     }
 
     public init?(seed: BIP39Mnemonic.Seed, network: Network = .mainnet) {
-        let flags: UInt32
-        switch network {
-        case .mainnet:
-            flags = UInt32(BIP32_VER_MAIN_PRIVATE)
-        case .testnet:
-            flags = UInt32(BIP32_VER_TEST_PRIVATE)
-        }
-        var output = ext_key()
-        let result = seed.data.withUnsafeByteBuffer { buf in
-            bip32_key_from_seed(buf.baseAddress, buf.count, flags, 0, &output)
-        }
-        if result == WALLY_OK {
-            self.init(key: output)
-        } else {
+        guard let key = Wally.hdKey(fromSeed: seed, network: network) else {
             // From libwally-core docs:
             // The entropy passed in may produce an invalid key. If this happens, WALLY_ERROR will be returned
             // and the caller should retry with new entropy.
             return nil
         }
-        masterKeyFingerprint = fingerprint
+        self.init(key: key, masterKeyFingerprint: Wally.fingerprintData(for: key))
+    }
+    
+    public var masterKeyFingerprint: Data? {
+        guard case let .fingerprint(data) = parent.origin else {
+            return nil
+        }
+        return data
     }
 
     public var network: Network {
-        switch wally_ext_key.version {
-        case UInt32(BIP32_VER_MAIN_PRIVATE), UInt32(BIP32_VER_MAIN_PUBLIC):
-            return .mainnet
-        case UInt32(BIP32_VER_TEST_PRIVATE), UInt32(BIP32_VER_TEST_PUBLIC):
-            return .testnet
-        default:
-            precondition(false)
-            return .mainnet
-        }
+        wally_ext_key.network!
     }
 
     public var description: String {
-        isNeutered ? xpub : xpriv!
+        base58
+    }
+    
+    public func description(withParent: Bool = false, withChildren: Bool = false) -> String {
+        var comps: [String] = []
+        if withParent && !parent.isEmpty {
+            comps.append("[\(parent)]")
+        }
+        comps.append(base58)
+        if withChildren && !children.isEmpty {
+            comps.append("/\(children)")
+        }
+        return comps.joined()
     }
 
-    public var isNeutered: Bool {
-        wally_ext_key.version == BIP32_VER_MAIN_PUBLIC || wally_ext_key.version == BIP32_VER_TEST_PUBLIC
+    public var isPrivate: Bool {
+        wally_ext_key.version == BIP32_VER_MAIN_PRIVATE || wally_ext_key.version == BIP32_VER_TEST_PRIVATE
     }
 
     public var xpub: String {
@@ -96,7 +105,7 @@ public struct HDKey {
     }
 
     public var privKey: ECPrivateKey? {
-        if isNeutered {
+        if !isPrivate {
             return nil
         }
         var data = Data(of: wally_ext_key.priv_key)
@@ -106,7 +115,7 @@ public struct HDKey {
     }
 
     public var xpriv: String? {
-        if isNeutered {
+        if !isPrivate {
             return nil
         }
         var hdkey = wally_ext_key
@@ -119,12 +128,13 @@ public struct HDKey {
         precondition(output != nil)
         return String(cString: output!)
     }
+    
+    public var base58: String {
+        xpriv ?? xpub
+    }
 
     public var fingerprint: Data {
-        var hdkey = wally_ext_key
-        var fingerprint_bytes = [UInt8](repeating: 0, count: Int(BIP32_KEY_FINGERPRINT_LEN))
-        precondition(bip32_key_get_fingerprint(&hdkey, &fingerprint_bytes, fingerprint_bytes.count) == WALLY_OK)
-        return Data(fingerprint_bytes)
+        Wally.fingerprintData(for: wally_ext_key)
     }
 
     public func derive(using path: DerivationPath) -> HDKey? {
@@ -138,7 +148,7 @@ public struct HDKey {
             tmpPath = p
         }
 
-        if isNeutered && tmpPath.steps.first(where: { $0.isHardened }) != nil {
+        if !isPrivate && tmpPath.steps.first(where: { $0.isHardened }) != nil {
             // Hardened derivation without private key.
             return nil
         }
@@ -149,7 +159,7 @@ public struct HDKey {
         guard rawPath.count == tmpPath.steps.count else {
             return nil
         }
-        precondition(bip32_key_from_parent_path(&hdkey, rawPath, rawPath.count, UInt32(isNeutered ? BIP32_FLAG_KEY_PUBLIC : BIP32_FLAG_KEY_PRIVATE), &output) == WALLY_OK)
+        precondition(bip32_key_from_parent_path(&hdkey, rawPath, rawPath.count, UInt32(isPrivate ? BIP32_FLAG_KEY_PRIVATE : BIP32_FLAG_KEY_PUBLIC), &output) == WALLY_OK)
         return HDKey(key: output, masterKeyFingerprint: masterKeyFingerprint)
     }
 

@@ -83,7 +83,7 @@ struct DescriptorToken: TokenProtocol {
 }
 
 extension DescriptorToken {
-    func summary(lexer: DescriptorTokenSequence) -> String {
-        "(\(kind) \(lexer.range(of: self)))"
+    func summary(tokens: DescriptorTokenSequence) -> String {
+        "(\(kind) \(tokens.range(of: self)))"
     }
 }

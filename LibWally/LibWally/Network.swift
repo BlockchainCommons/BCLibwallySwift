@@ -72,3 +72,14 @@ extension Network {
         }
     }
 }
+
+extension Network {
+    public func wallyBIP32Version(isPrivate: Bool) -> UInt32 {
+        switch self {
+        case .mainnet:
+            return UInt32(isPrivate ? BIP32_VER_MAIN_PRIVATE : BIP32_VER_MAIN_PUBLIC)
+        case .testnet:
+            return UInt32(isPrivate ? BIP32_VER_TEST_PRIVATE : BIP32_VER_TEST_PUBLIC)
+        }
+    }
+}

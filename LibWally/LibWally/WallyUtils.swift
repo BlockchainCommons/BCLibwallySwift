@@ -80,7 +80,7 @@ extension Wally {
 }
 
 extension Wally {
-    public static func encodeWIF(key: ECKey, network: Network, isPublicKeyCompressed: Bool) -> String {
+    public static func encodeWIF(key: ECPrivateKey, network: Network, isPublicKeyCompressed: Bool) -> String {
         var output: UnsafeMutablePointer<Int8>!
         defer {
             wally_free_string(output)
@@ -383,6 +383,26 @@ extension Wally {
         
         return String(cString: output)
     }
+    
+    public static func hdKey(fromBase58 base58: String) -> ext_key? {
+        var result = ext_key()
+        guard bip32_key_from_base58(base58, &result) == WALLY_OK else {
+            return nil
+        }
+        return result
+    }
+    
+    public static func hdKey(fromSeed seed: BIP39Mnemonic.Seed, network: Network) -> ext_key? {
+        let flags = network.wallyBIP32Version(isPrivate: true)
+        var key = ext_key()
+        let result = seed.data.withUnsafeByteBuffer { buf in
+            bip32_key_from_seed(buf.baseAddress, buf.count, flags, 0, &key)
+        }
+        guard result == WALLY_OK else {
+            return nil
+        }
+        return key
+    }
 }
 
 extension Data {
@@ -438,5 +458,16 @@ extension ext_key: CustomStringConvertible {
         precondition(priv_key.0 == BIP32_FLAG_KEY_PUBLIC || priv_key.0 == BIP32_FLAG_KEY_PRIVATE)
         precondition(!isPrivate || !Data(of: priv_key).dropFirst().isAllZero)
         precondition(!isMaster || Data(of: parent160).isAllZero)
+    }
+    
+    public var network: Network? {
+        switch version {
+        case UInt32(BIP32_VER_MAIN_PRIVATE), UInt32(BIP32_VER_MAIN_PUBLIC):
+            return .mainnet
+        case UInt32(BIP32_VER_TEST_PRIVATE), UInt32(BIP32_VER_TEST_PUBLIC):
+            return .testnet
+        default:
+            return nil
+        }
     }
 }

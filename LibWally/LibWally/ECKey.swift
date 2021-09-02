@@ -51,6 +51,10 @@ public struct ECPrivateKey: ECKey {
     public var `public`: ECCompressedPublicKey {
         return ECCompressedPublicKey(Wally.ecPublicKeyFromPrivateKey(data: data))!
     }
+    
+    public var wif: String {
+        Wally.encodeWIF(key: self, network: .mainnet, isPublicKeyCompressed: true)
+    }
 }
 
 extension ECPrivateKey: CustomStringConvertible {

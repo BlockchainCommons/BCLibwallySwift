@@ -108,16 +108,30 @@ public struct DerivationPath : Equatable {
         }
     }
     
+    public init() {
+        self.origin = nil
+        self.steps = []
+    }
+    
     public init?(rawPath: [UInt32], origin: Origin? = nil) {
         let steps = rawPath.map { DerivationStep(rawValue: $0) }
         self.init(steps: steps, origin: origin)
+    }
+    
+    public var isEmpty: Bool {
+        steps.isEmpty && origin == nil
     }
     
     public var rawPath: [UInt32?] {
         steps.map { $0.rawValue }
     }
     
-    public init?(steps: [DerivationStep], origin: Origin? = nil) {
+    public init(origin: Origin?) {
+        self.steps = []
+        self.origin = origin
+    }
+    
+    public init(steps: [DerivationStep], origin: Origin? = nil) {
         self.steps = steps
         self.origin = origin
     }

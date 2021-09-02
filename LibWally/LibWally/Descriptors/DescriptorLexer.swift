@@ -9,20 +9,20 @@ import Foundation
 @_implementationOnly import Flexer
 
 public struct DescriptorLexer {
-    static func lex(lexer: DescriptorTokenSequence, string: String) -> [DescriptorToken] {
-        return lexer.reduce(into: []) {
+    static func lex(tokens: DescriptorTokenSequence, string: String) -> [DescriptorToken] {
+        return tokens.reduce(into: []) {
             $0.append($1)
         }
     }
 
     static func lex(string: String) -> [DescriptorToken] {
-        let lexer = DescriptorTokenSequence(string: string)
-        return lex(lexer: lexer, string: string)
+        let tokens = DescriptorTokenSequence(string: string)
+        return lex(tokens: tokens, string: string)
     }
     
     public static func debugLex(string: String) -> String {
-        let lexer = DescriptorTokenSequence(string: string)
-        let strings = lex(lexer: lexer, string: string).map { $0.summary(lexer: lexer) }
+        let tokens = DescriptorTokenSequence(string: string)
+        let strings = lex(tokens: tokens, string: string).map { $0.summary(tokens: tokens) }
         return strings.joined(separator: ", ")
     }
 }
@@ -31,7 +31,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
     public typealias Element = DescriptorToken
     
     private let string: String
-    private var lexer: BasicTextCharacterLexer
+    private var tokens: BasicTextCharacterLexer
     
     public func range(of token: DescriptorToken) -> Range<Int> {
         let a = string.distance(from: string.startIndex, to: token.startIndex)
@@ -41,13 +41,14 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
     
     public init(string: String) {
         self.string = string
-        self.lexer = BasicTextCharacterLexer(string: string)
+        self.tokens = BasicTextCharacterLexer(string: string)
     }
 
     private static let tokenLexers = [
         Self.lexDelimiters,
         Self.lexKeywords,
         Self.lexAddress,
+        Self.lexWIF,
         Self.lexHDKey,
         Self.lexData,
         Self.lexInt,
@@ -56,7 +57,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
 
     mutating func next() -> DescriptorToken? {
         for tokenLexer in Self.tokenLexers {
-            if let token = tokenLexer(&lexer, string) {
+            if let token = tokenLexer(&tokens, string) {
                 return token
             }
         }
@@ -76,9 +77,9 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         (.star, .star)
     ]
     
-    private static func lexDelimiters(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+    private static func lexDelimiters(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
         func lexDelimiter(kind: BasicTextCharacterKind, descriptorKind: DescriptorToken.Kind) -> DescriptorToken? {
-            var seq = lexer
+            var seq = tokens
             guard
                 let token = seq.peek(),
                 token.kind == kind,
@@ -87,7 +88,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
                 return nil
             }
             let range = token.startIndex ..< endingToken.endIndex
-            lexer = seq
+            tokens = seq
             return DescriptorToken(kind: descriptorKind, range: range)
         }
 
@@ -101,7 +102,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
 
     private mutating func lexDelimiters() -> DescriptorToken? {
         func lexDelimiter(kind: BasicTextCharacterKind, descriptorKind: DescriptorToken.Kind) -> DescriptorToken? {
-            var seq = lexer
+            var seq = tokens
             guard
                 let token = seq.peek(),
                 token.kind == kind,
@@ -110,7 +111,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
                 return nil
             }
             let range = token.startIndex ..< endingToken.endIndex
-            lexer = seq
+            tokens = seq
             return DescriptorToken(kind: descriptorKind, range: range)
         }
 
@@ -136,9 +137,9 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         ("raw", .raw)
     ]
     
-    private static func lexKeywords(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+    private static func lexKeywords(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
         func lexKeyword(keyword: String, kind: DescriptorToken.Kind) -> DescriptorToken? {
-            var seq = lexer
+            var seq = tokens
             guard
                 let token = seq.peek(),
                 token.kind == .lowercaseLetter,
@@ -150,7 +151,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
             guard string[range] == keyword else {
                 return nil
             }
-            lexer = seq
+            tokens = seq
             return DescriptorToken(kind: kind, range: range)
         }
 
@@ -182,8 +183,8 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         CharacterSet.allowedInAddress.contains(character(of: token, in: string))
     }
     
-    private static func lexData(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = lexer
+    private static func lexData(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+        var seq = tokens
         guard
             let token = seq.peek(),
             isHexDigit(token: token, in: string),
@@ -198,12 +199,12 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         else {
             return nil
         }
-        lexer = seq
+        tokens = seq
         return DescriptorToken(kind: .data, range: range, payload: data)
     }
     
-    private static func lexAddress(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = lexer
+    private static func lexAddress(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+        var seq = tokens
         guard
             let token = seq.peek(),
             isAllowedInAddress(token: token, in: string),
@@ -215,12 +216,12 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         guard let address = Address(string: substring(of: range, in: string)) else {
             return nil
         }
-        lexer = seq
+        tokens = seq
         return DescriptorToken(kind: .address, range: range, payload: address)
     }
     
-    private static func lexWIF(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = lexer
+    private static func lexWIF(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+        var seq = tokens
         guard
             let token = seq.peek(),
             isBase58(token: token, in: string),
@@ -232,12 +233,12 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         guard let wif = WIF(substring(of: range, in: string)) else {
             return nil
         }
-        lexer = seq
+        tokens = seq
         return DescriptorToken(kind: .wif, range: range, payload: wif)
     }
 
-    private static func lexHDKey(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = lexer
+    private static func lexHDKey(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+        var seq = tokens
         guard
             let token = seq.peek(),
             isBase58(token: token, in: string),
@@ -249,12 +250,12 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         guard let hdKey = HDKey(base58: substring(of: range, in: string)) else {
             return nil
         }
-        lexer = seq
+        tokens = seq
         return DescriptorToken(kind: .hdKey, range: range, payload: hdKey)
     }
     
-    private static func lexInt(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = lexer
+    private static func lexInt(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+        var seq = tokens
         guard
             let token = seq.peek(),
             token.kind == .digit,
@@ -266,12 +267,12 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         guard let value = Int(substring(of: range, in: string)) else {
             return nil
         }
-        lexer = seq
+        tokens = seq
         return DescriptorToken(kind: .int, range: range, payload: value)
     }
     
-    private static func lexHardened(lexer: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = lexer
+    private static func lexHardened(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+        var seq = tokens
         guard
             let token = seq.peek(),
             "'h".contains(character(of: token, in: string)),
@@ -280,7 +281,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        lexer = seq
+        tokens = seq
         return DescriptorToken(kind: .isHardened, range: range)
     }
 }
