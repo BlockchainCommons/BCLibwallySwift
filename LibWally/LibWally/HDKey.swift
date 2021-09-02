@@ -16,27 +16,27 @@ public struct HDKey {
         self.masterKeyFingerprint = masterKeyFingerprint
     }
 
-    public init(base58: String, masterKeyFingerprint: Data? = nil) throws {
+    public init?(base58: String, masterKeyFingerprint: Data? = nil) {
         var output = ext_key()
         let result = bip32_key_from_base58(base58, &output)
         if result == WALLY_OK {
             self.init(key: output, masterKeyFingerprint: masterKeyFingerprint)
         } else {
-            throw LibWallyError("Invalid HD key.")
+            return nil
         }
         if wally_ext_key.depth == 0 {
             if masterKeyFingerprint == nil {
                 self.masterKeyFingerprint = fingerprint
             } else {
                 guard masterKeyFingerprint == fingerprint else {
-                    throw LibWallyError("Invalid HD key.")
+                    return nil
                 }
             }
         }
 
     }
 
-    public init(seed: BIP39Mnemonic.Seed, network: Network = .mainnet) throws {
+    public init?(seed: BIP39Mnemonic.Seed, network: Network = .mainnet) {
         let flags: UInt32
         switch network {
         case .mainnet:
@@ -54,7 +54,7 @@ public struct HDKey {
             // From libwally-core docs:
             // The entropy passed in may produce an invalid key. If this happens, WALLY_ERROR will be returned
             // and the caller should retry with new entropy.
-            throw LibWallyError("Invalid HD key.")
+            return nil
         }
         masterKeyFingerprint = fingerprint
     }
@@ -92,7 +92,7 @@ public struct HDKey {
     }
 
     public var pubKey: ECCompressedPublicKey {
-        try! ECCompressedPublicKey(Data(of: wally_ext_key.pub_key))
+        ECCompressedPublicKey(Data(of: wally_ext_key.pub_key))!
     }
 
     public var privKey: ECPrivateKey? {
@@ -102,7 +102,7 @@ public struct HDKey {
         var data = Data(of: wally_ext_key.priv_key)
         // skip prefix byte 0
         precondition(data.popFirst() != nil)
-        return try! ECPrivateKey(data)
+        return ECPrivateKey(data)!
     }
 
     public var xpriv: String? {
@@ -127,24 +127,33 @@ public struct HDKey {
         return Data(fingerprint_bytes)
     }
 
-    public func derive(using path: BIP32Path) throws -> HDKey {
+    public func derive(using path: DerivationPath) -> HDKey? {
         let depth = wally_ext_key.depth
         var tmpPath = path
-        if !path.isRelative {
-            tmpPath = try path.chop(depth: Int(depth))
+        if path.origin != nil {
+            guard let p = path.chop(depth: Int(depth)) else {
+                // Invalid depth.
+                return nil
+            }
+            tmpPath = p
         }
 
-        if isNeutered && tmpPath.components.first(where: { $0.isHardened }) != nil {
-            throw LibWallyError("Hardened derivation without private key.")
+        if isNeutered && tmpPath.steps.first(where: { $0.isHardened }) != nil {
+            // Hardened derivation without private key.
+            return nil
         }
 
         var hdkey = wally_ext_key
         var output = ext_key()
-        precondition(bip32_key_from_parent_path(&hdkey, tmpPath.rawPath, tmpPath.rawPath.count, UInt32(isNeutered ? BIP32_FLAG_KEY_PUBLIC : BIP32_FLAG_KEY_PRIVATE), &output) == WALLY_OK)
+        let rawPath = tmpPath.rawPath.compactMap({ $0 })
+        guard rawPath.count == tmpPath.steps.count else {
+            return nil
+        }
+        precondition(bip32_key_from_parent_path(&hdkey, rawPath, rawPath.count, UInt32(isNeutered ? BIP32_FLAG_KEY_PUBLIC : BIP32_FLAG_KEY_PRIVATE), &output) == WALLY_OK)
         return HDKey(key: output, masterKeyFingerprint: masterKeyFingerprint)
     }
 
-    public func address(type: AddressType) -> Address {
-        try! Address(hdKey: self, type: type)
+    public func address(type: Address.AddressType) -> Address {
+        Address(hdKey: self, type: type)!
     }
 }

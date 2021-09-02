@@ -11,11 +11,11 @@ public struct TxOutput {
     public let scriptPubKey: ScriptPubKey
     public var amount: Satoshi
 
-    public func address(network: Network) -> String? {
-        try? Address(scriptPubKey: self.scriptPubKey, network: network).description
+    public func address(network: Network) -> String {
+        Address(scriptPubKey: self.scriptPubKey, network: network)!.description
     }
 
-    public init (scriptPubKey: ScriptPubKey, amount: Satoshi) {
+    public init(scriptPubKey: ScriptPubKey, amount: Satoshi) {
         self.scriptPubKey = scriptPubKey
         self.amount = amount
     }

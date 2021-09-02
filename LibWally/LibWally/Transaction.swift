@@ -56,21 +56,21 @@ public struct Transaction {
         storage = Storage(tx: Self.clone(tx: tx))
     }
 
-    public init(hex: String) throws {
+    public init?(hex: String) {
         inputs = nil
         outputs = nil
         guard let data = Data(hex: hex) else {
-            throw LibWallyError("Invalid transaction.")
+            return nil
         }
         if data.count != SHA256_LEN { // Not a transaction hash
-            let tx: UnsafeMutablePointer<wally_tx> = try data.withUnsafeByteBuffer { buf in
-                var newTx: UnsafeMutablePointer<wally_tx>!
-                guard wally_tx_from_bytes(buf.baseAddress, buf.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &newTx) == WALLY_OK else {
-                    throw LibWallyError("Invalid transaction.")
-                }
-                return newTx
+            var newTx: UnsafeMutablePointer<wally_tx>!
+            let result = data.withUnsafeByteBuffer { buf in
+                wally_tx_from_bytes(buf.baseAddress, buf.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &newTx)
             }
-            storage = Storage(tx: tx)
+            guard result == WALLY_OK else {
+                return nil
+            }
+            storage = Storage(tx: newTx)
             hash = nil
         } else { // 32 bytes, but not a valid transaction, so treat as a hash
             hash = Data(data.reversed())
@@ -113,8 +113,8 @@ public struct Transaction {
 
         // If we have TxInput objects, make sure they're all signed. Otherwise we've been initialized
         // from a hex string, so we'll just try to reserialize what we have.
-        if inputs != nil {
-            for input in inputs! {
+        if let inputs = inputs {
+            for input in inputs {
                 if !input.isSigned {
                     return nil
                 }
@@ -189,47 +189,50 @@ public struct Transaction {
         return Float64(fee) / Float64(vbytes)
     }
     
-    public func signed(with privKeys: [HDKey]) throws -> Transaction {
+    public func signed(with privKeys: [HDKey]) -> Transaction? {
         guard let tx = tx else {
-            throw LibWallyError("No transaction to sign.")
+            // No transaction to sign.
+            return nil
         }
-        precondition(inputs != nil)
-        if privKeys.count != inputs!.count {
-            throw LibWallyError("Wrong number of keys to sign.")
+        guard let inputs = inputs else {
+            // No inputs to sign.
+            return nil
+        }
+        if privKeys.count != inputs.count {
+            // Wrong number of keys to sign.
+            return nil
         }
 
         let cloned_tx = Self.clone(tx: tx)
 
-        var updatedInputs = inputs!
+        var updatedInputs = inputs
 
         // Loop through inputs to sign:
-        for i in 0 ..< inputs!.count {
-            let hasWitness = inputs![i].witness != nil
-
+        for i in 0 ..< inputs.count {
             var message_bytes = [UInt8](repeating: 0, count: Int(SHA256_LEN))
 
-            if hasWitness {
-                switch inputs![i].witness!.type {
-                case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
-                    let scriptSig = inputs![i].scriptSig!.render(purpose: .signed)!
+            if let witness = inputs[i].witness {
+                switch witness.type {
+                case .payToScriptHashPayToWitnessPubKeyHash:
+                    let scriptSig = inputs[i].scriptSig!.render(purpose: .signed)!
                     scriptSig.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
                     }
 
                     fallthrough
-                case .payToWitnessPubKeyHash(let pubKey):
+                case .payToWitnessPubKeyHash:
                     // Check that we're using the right public key:
                     let pubKeyData = Data(of: privKeys[i].wally_ext_key.pub_key)
-                    precondition(pubKey.data == pubKeyData)
+                    precondition(witness.pubKey.data == pubKeyData)
                     
-                    let scriptCode = inputs![i].witness!.scriptCode
+                    let scriptCode = witness.scriptCode
                     scriptCode.withUnsafeByteBuffer { buf in
-                        precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, inputs![i].amount, UInt32(WALLY_SIGHASH_ALL), UInt32(WALLY_TX_FLAG_USE_WITNESS), &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
+                        precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, inputs[i].amount, UInt32(WALLY_SIGHASH_ALL), UInt32(WALLY_TX_FLAG_USE_WITNESS), &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
                     }
                 }
             } else {
                 // Prep input for signing:
-                let scriptPubKey = inputs![i].scriptPubKey.data
+                let scriptPubKey = inputs[i].scriptPubKey.data
                 scriptPubKey.withUnsafeByteBuffer { buf in
                     // Create hash for signing
                     precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, 0, UInt32(WALLY_SIGHASH_ALL), 0, &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
@@ -267,8 +270,8 @@ public struct Transaction {
             
             // Store signature in TxInput
             let signature =  Data(bytes: sig_bytes, count: sig_bytes_written)
-            if hasWitness {
-                let witness = inputs![i].witness!.signed(signature: signature)
+            if let witness = inputs[i].witness {
+                let witness = witness.signed(signature: signature)
                 updatedInputs[i].witness = witness
                 precondition(wally_tx_set_input_witness(cloned_tx, i, witness.createWallyStack()) == WALLY_OK)
             } else {

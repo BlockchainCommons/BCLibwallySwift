@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct PSBT : Equatable, CustomStringConvertible {
+public struct PSBT : Equatable {
     public let inputs: [PSBTInput]
     public let outputs: [PSBTOutput]
 
@@ -46,51 +46,52 @@ public struct PSBT : Equatable, CustomStringConvertible {
         lhs.data == rhs.data
     }
 
-    private init(ownedPSBT: UnsafeMutablePointer<wally_psbt>) throws {
+    private init(ownedPSBT: UnsafeMutablePointer<wally_psbt>) {
         self.storage = Storage(psbt: ownedPSBT)
 
         var inputs: [PSBTInput] = []
         for i in 0 ..< ownedPSBT.pointee.inputs_allocation_len {
-            try inputs.append(PSBTInput(wallyInput: ownedPSBT.pointee.inputs![i]))
+            inputs.append(PSBTInput(wallyInput: ownedPSBT.pointee.inputs![i]))
         }
         self.inputs = inputs
 
         var outputs: [PSBTOutput] = []
         for i in 0 ..< ownedPSBT.pointee.outputs_allocation_len {
-            try outputs.append(PSBTOutput(wallyPSBTOutput: ownedPSBT.pointee.outputs[i], wallyTxOutput: ownedPSBT.pointee.tx!.pointee.outputs[i]))
+            outputs.append(PSBTOutput(wallyPSBTOutput: ownedPSBT.pointee.outputs[i], wallyTxOutput: ownedPSBT.pointee.tx!.pointee.outputs[i]))
         }
         self.outputs = outputs
     }
 
-    public init(_ data: Data) throws {
+    public init?(_ data: Data) {
         var output: UnsafeMutablePointer<wally_psbt>!
-        try data.withUnsafeByteBuffer { buf in
-            guard wally_psbt_from_bytes(buf.baseAddress, buf.count, &output) == WALLY_OK else {
-                // libwally-core returns WALLY_EINVAL regardless of why parsing fails
-                throw LibWallyError("Invalid PSBT.")
-            }
+        let result = data.withUnsafeByteBuffer { buf in
+            // libwally-core returns WALLY_EINVAL regardless of why parsing fails
+            wally_psbt_from_bytes(buf.baseAddress, buf.count, &output)
+        }
+        guard result == WALLY_OK else {
+            return nil
         }
         precondition(output.pointee.tx != nil)
-        try self.init(ownedPSBT: output)
+        self.init(ownedPSBT: output)
     }
 
-    public init(base64 string: String) throws {
+    public init?(base64 string: String) {
         guard string.count != 0 else {
-            throw LibWallyError("Invalid PSBT.")
+            return nil
         }
 
         guard let psbtData = Data(base64Encoded: string) else {
-            throw LibWallyError("Invalid PSBT.")
+            return nil
         }
 
-        try self.init(psbtData)
+        self.init(psbtData)
     }
 
-    public init(hex: String) throws {
+    public init?(hex: String) {
         guard let data = Data(hex: hex) else {
-            throw LibWallyError("Invalid PSBT.")
+            return nil
         }
-        try self.init(data)
+        self.init(data)
     }
 
     public var data: Data {
@@ -110,10 +111,6 @@ public struct PSBT : Equatable, CustomStringConvertible {
     
     public var hex: String {
         data.hex
-    }
-
-    public var description: String {
-        base64
     }
 
     public var isFinalized: Bool {
@@ -140,36 +137,36 @@ public struct PSBT : Equatable, CustomStringConvertible {
         return tally - valueOut
     }
 
-    public func finalizedTransaction() throws -> Transaction {
+    public func finalizedTransaction() -> Transaction? {
         var output: UnsafeMutablePointer<wally_tx>!
         defer {
             wally_tx_free(output)
         }
 
         guard wally_psbt_extract(_psbt, &output) == WALLY_OK else {
-            throw LibWallyError("Could not finalize PSBT.")
+            return nil
         }
         return Transaction(tx: output)
     }
 
-    public func signed(with privKey: ECPrivateKey) throws -> PSBT {
+    public func signed(with privKey: ECPrivateKey) -> PSBT? {
         // TODO: sanity key for network
         let clonedPSBT = Self.clone(psbt: self._psbt)
         privKey.data.withUnsafeByteBuffer { buf in
             precondition(wally_psbt_sign(clonedPSBT, buf.baseAddress, buf.count, 0) == WALLY_OK)
         }
-        return try PSBT(ownedPSBT: clonedPSBT)
+        return PSBT(ownedPSBT: clonedPSBT)
     }
 
-    public func signed(with hdKey: HDKey) throws -> PSBT {
-        var psbt = self
+    public func signed(with hdKey: HDKey) -> PSBT? {
+        var psbt: PSBT? = self
         for input in self.inputs {
-            if let origins: [ECCompressedPublicKey : KeyOrigin] = input.canSignOrigins(with: hdKey) {
+            if let origins: [ECCompressedPublicKey : DerivationPath] = input.canSignOrigins(with: hdKey) {
                 for origin in origins {
-                    if let childKey = try? hdKey.derive(using: origin.value.path) {
+                    if let childKey = hdKey.derive(using: origin.value) {
                         if let privKey = childKey.privKey {
                             precondition(privKey.public == origin.key)
-                            psbt = try psbt.signed(with: privKey)
+                            psbt = psbt?.signed(with: privKey)
                         }
                     }
                 }
@@ -178,11 +175,17 @@ public struct PSBT : Equatable, CustomStringConvertible {
         return psbt
     }
 
-    public func finalized() throws -> PSBT {
+    public func finalized() -> PSBT? {
         let clonedPSBT = Self.clone(psbt: _psbt)
         guard wally_psbt_finalize(clonedPSBT) == WALLY_OK else {
-            throw LibWallyError("Unable to finalize.")
+            return nil
         }
-        return try PSBT(ownedPSBT: clonedPSBT)
+        return PSBT(ownedPSBT: clonedPSBT)
+    }
+}
+
+extension PSBT: CustomStringConvertible {
+    public var description: String {
+        base64
     }
 }

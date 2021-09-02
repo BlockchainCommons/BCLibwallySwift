@@ -17,21 +17,21 @@ public struct TxInput {
     public let scriptPubKey: ScriptPubKey
 
     // For P2SH wrapped SegWit, we set scriptSig automatically
-    public init(txHash: Data, vout: UInt32, sequence: UInt32 = 0xffffffff, amount: Satoshi, scriptSig: ScriptSig?, witness: Witness?, scriptPubKey: ScriptPubKey) throws {
+    public init(txHash: Data, vout: UInt32, sequence: UInt32 = 0xffffffff, amount: Satoshi, scriptSig: ScriptSig?, witness: Witness?, scriptPubKey: ScriptPubKey) {
         self.txHash = txHash
         self.vout = vout
         self.sequence = sequence
         self.amount = amount
 
-        if witness == nil {
-            self.scriptSig = scriptSig
-        } else {
-            switch witness!.type {
-            case .payToWitnessPubKeyHash(_):
+        if let witness = witness {
+            switch witness.type {
+            case .payToWitnessPubKeyHash:
                 self.scriptSig = nil
-            case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
-                self.scriptSig = ScriptSig(type: .payToScriptHashPayToWitnessPubKeyHash(pubKey))
+            case .payToScriptHashPayToWitnessPubKeyHash:
+                self.scriptSig = ScriptSig(type: .payToScriptHashPayToWitnessPubKeyHash(witness.pubKey))
             }
+        } else {
+            self.scriptSig = scriptSig
         }
 
         self.witness = witness

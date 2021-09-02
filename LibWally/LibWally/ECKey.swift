@@ -12,9 +12,11 @@ public protocol ECKey {
 
     var data: Data { get }
     
-    init(_ data: Data) throws
+    init?(_ data: Data)
     
     var hex: String { get }
+    
+    var `public`: ECCompressedPublicKey { get }
 }
 
 extension ECKey {
@@ -32,38 +34,47 @@ public struct ECPrivateKey: ECKey {
     public static let keyLen = Int(EC_PRIVATE_KEY_LEN)
     public let data: Data
 
-    public init(_ data: Data) throws {
+    public init?(_ data: Data) {
         guard data.count == Self.keyLen else {
-            throw LibWallyError("Incorrect private key length.")
+            return nil
         }
         self.data = data
     }
     
-    public init(wif: String, network: Network, isCompressed: Bool) throws {
-        var bytes_out = [UInt8](repeating: 0, count: Int(EC_PRIVATE_KEY_LEN))
-        // TODO: autodetect network by trying both
-        // TODO: autodetect compression with wally_wif_is_uncompressed
-        guard wally_wif_to_bytes(wif, network.wifPrefix, UInt32(isCompressed ? WALLY_WIF_FLAG_COMPRESSED : WALLY_WIF_FLAG_UNCOMPRESSED), &bytes_out, bytes_out.count) == WALLY_OK else {
-            throw LibWallyError("Invalid key.")
+    public init?(hex: String) {
+        guard let data = Data(hex: hex) else {
+            return nil
         }
-        self.data = Data(bytes_out)
-    }
-
-    public func wif(network: Network, isCompressed: Bool) -> String {
-        precondition(data.count == Int(EC_PRIVATE_KEY_LEN))
-        var output: UnsafeMutablePointer<Int8>?
-        defer {
-            wally_free_string(output)
-        }
-        data.withUnsafeByteBuffer { buf in
-            precondition(wally_wif_from_bytes(buf.baseAddress, buf.count, network.wifPrefix, UInt32(isCompressed ? WALLY_WIF_FLAG_COMPRESSED : WALLY_WIF_FLAG_UNCOMPRESSED), &output) == WALLY_OK)
-        }
-        assert(output != nil)
-        return String(cString: output!)
+        self.init(data)
     }
 
     public var `public`: ECCompressedPublicKey {
-        return try! ECCompressedPublicKey(Wally.ecPublicKeyFromPrivateKey(data: data))
+        return ECCompressedPublicKey(Wally.ecPublicKeyFromPrivateKey(data: data))!
+    }
+}
+
+extension ECPrivateKey: CustomStringConvertible {
+    public var description: String {
+        "ECPrivateKey(\(data.hex))"
+    }
+}
+
+public struct ECXOnlyPublicKey: Hashable {
+    public static var keyLen = 32
+    public let data: Data
+
+    public init?(_ data: Data) {
+        guard data.count == Self.keyLen else {
+            return nil
+        }
+        self.data = data
+    }
+    
+    public init?(hex: String) {
+        guard let data = Data(hex: hex) else {
+            return nil
+        }
+        self.init(data)
     }
 }
 
@@ -71,19 +82,26 @@ public struct ECCompressedPublicKey: ECPublicKey, Hashable {
     public static var keyLen: Int = Int(EC_PUBLIC_KEY_LEN)
     public let data: Data
 
-    public init(_ data: Data) throws {
+    public init?(_ data: Data) {
         guard data.count == Self.keyLen else {
-            throw LibWallyError("Incorrect public key length.")
+            return nil
         }
         self.data = data
     }
     
+    public init?(hex: String) {
+        guard let data = Data(hex: hex) else {
+            return nil
+        }
+        self.init(data)
+    }
+
     public var compressed: ECCompressedPublicKey {
         self
     }
     
     public var uncompressed: ECUncompressedPublicKey {
-        return try! ECUncompressedPublicKey(Wally.ecPublicKeyDecompress(data: data))
+        return ECUncompressedPublicKey(Wally.ecPublicKeyDecompress(data: data))!
     }
     
     public func address(version: UInt8) -> String {
@@ -95,21 +113,51 @@ public struct ECCompressedPublicKey: ECPublicKey, Hashable {
     public func address(useInfo: UseInfo, isSH: Bool) -> String {
         address(version: isSH ? useInfo.versionSH : useInfo.versionPKH)
     }
+
+    public var `public`: ECCompressedPublicKey {
+        self
+    }
+}
+
+extension ECCompressedPublicKey: CustomStringConvertible {
+    public var description: String {
+        "ECCompressedPublicKey(\(data.hex))"
+    }
 }
 
 public struct ECUncompressedPublicKey: ECPublicKey {
     public static var keyLen: Int = Int(EC_PUBLIC_KEY_UNCOMPRESSED_LEN)
     public let data: Data
 
-    public init(_ data: Data) throws {
+    public init?(_ data: Data) {
+        guard data.count == Self.keyLen else {
+            return nil
+        }
         self.data = data
+    }
+    
+    public init?(hex: String) {
+        guard let data = Data(hex: hex) else {
+            return nil
+        }
+        self.init(data)
     }
 
     public var compressed: ECCompressedPublicKey {
-        return try! ECCompressedPublicKey(Wally.ecPublicKeyCompress(data: data))
+        return ECCompressedPublicKey(Wally.ecPublicKeyCompress(data: data))!
     }
     
     public var uncompressed: ECUncompressedPublicKey {
         self
+    }
+
+    public var `public`: ECCompressedPublicKey {
+        self.compressed
+    }
+}
+
+extension ECUncompressedPublicKey: CustomStringConvertible {
+    public var description: String {
+        "ECUncompressedPublicKey(\(data.hex))"
     }
 }

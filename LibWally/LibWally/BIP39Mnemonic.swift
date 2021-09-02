@@ -21,9 +21,9 @@ public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
     public struct Entropy : Equatable, CustomStringConvertible {
         public let data: Data
 
-        public init(hex: String) throws {
+        public init?(hex: String) {
             guard let data = Data(hex: hex) else {
-                throw LibWallyError("Invalid BIP39 mnemonic.")
+                return nil
             }
             self.data = data
         }
@@ -40,9 +40,9 @@ public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
     public struct Seed : Equatable, CustomStringConvertible {
         let data: Data
 
-        public init(hex: String) throws {
+        public init?(hex: String) {
             guard let data = Data(hex: hex) else {
-                throw LibWallyError("Invalid BIP39 mnemonic.")
+                return nil
             }
             self.data = data
         }
@@ -70,19 +70,21 @@ public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
         return words
     }()
 
-    public init(words: [String]) throws {
+    public init?(words: [String]) {
         if !BIP39Mnemonic.isValid(words: words) {
-            throw LibWallyError("Invalid mnemonic.")
+            return nil
         }
         self.words = words
     }
     
-    public init(words: String) throws {
-        try self.init(words: words.components(separatedBy: " "))
+    public init?(words: String) {
+        self.init(words: words.components(separatedBy: " "))
     }
     
-    public init(entropy: Entropy) throws {
-        precondition(entropy.data.count <= Self.MAX_BYTES)
+    public init?(entropy: Entropy) {
+        guard entropy.data.count <= Self.MAX_BYTES else {
+            return nil
+        }
 
         var output: UnsafeMutablePointer<Int8>?
         defer {
@@ -95,9 +97,9 @@ public struct BIP39Mnemonic : Equatable, CustomStringConvertible {
 
         if result == WALLY_OK {
             let words = String(cString: output!)
-            try self.init(words: words)
+            self.init(words: words)
         } else {
-            throw LibWallyError("Invalid mnemonic.")
+            return nil
         }
     }
     

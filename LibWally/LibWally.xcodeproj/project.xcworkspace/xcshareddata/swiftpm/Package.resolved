@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "Flexer",
+        "repositoryURL": "https://github.com/ChimeHQ/Flexer.git",
+        "state": {
+          "branch": null,
+          "revision": "fc83238259c8be6eade1af40d81c41e235e1d178",
+          "version": "0.1.0"
+        }
+      },
+      {
         "package": "WolfBase",
         "repositoryURL": "https://github.com/WolfMcNally/WolfBase.git",
         "state": {

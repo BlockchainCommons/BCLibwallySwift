@@ -9,15 +9,19 @@ import Foundation
 
 public struct PSBTOutput {
     public let txOutput: TxOutput
-    public let origins: [ECCompressedPublicKey: KeyOrigin]?
+    public let origins: [ECCompressedPublicKey: DerivationPath]?
 
-    public func id(network: Network) -> String {
-        self.txOutput.address(network: network)! + String(self.txOutput.amount)
+    public func address(network: Network) -> String {
+        txOutput.address(network: network)
+    }
+    
+    public var amount: Satoshi {
+        txOutput.amount
     }
 
-    init(wallyPSBTOutput: wally_psbt_output, wallyTxOutput: wally_tx_output) throws {
+    init(wallyPSBTOutput: wally_psbt_output, wallyTxOutput: wally_tx_output) {
         if wallyPSBTOutput.keypaths.num_items > 0 {
-            self.origins = try KeyOrigin.getOrigins(keypaths: wallyPSBTOutput.keypaths)
+            self.origins = DerivationPath.getOrigins(keypaths: wallyPSBTOutput.keypaths)
         } else {
             self.origins = nil
         }
@@ -31,12 +35,12 @@ public struct PSBTOutput {
         self.txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: wallyTxOutput.satoshi)
     }
 
-    static func commonOriginChecks(origin: KeyOrigin, rootPathLength: Int, pubKey: ECCompressedPublicKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
+    static func commonOriginChecks(originPath: DerivationPath, rootPathLength: Int, pubKey: ECCompressedPublicKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
         // Check that origin ends with 0/* or 1/*
-        let components = origin.path.components
-        if components.count < 2 ||
-                !(components.reversed()[1] == .normal(0) || components.reversed()[1] == .normal(1)) ||
-            components.reversed()[0].isHardened
+        let steps = originPath.steps
+        if steps.count < 2 ||
+                !(steps.reversed()[1] == .init(0)! || steps.reversed()[1] == .init(1)!) ||
+            steps.reversed()[0].isHardened
         {
             return false
         }
@@ -46,25 +50,30 @@ public struct PSBTOutput {
         guard let signerMasterKeyFingerprint = signer.masterKeyFingerprint else {
             return false
         }
-        if signerMasterKeyFingerprint == origin.fingerprint {
+        guard
+            let pathOrigin = originPath.origin,
+            case .fingerprint(let originFingerprint) = pathOrigin else {
+            return false
+        }
+        if signerMasterKeyFingerprint == originFingerprint {
             hdKey = signer
         } else {
             for cosigner in cosigners {
                 guard let cosignerMasterKeyFingerprint = cosigner.masterKeyFingerprint else {
                     return false
                 }
-                if cosignerMasterKeyFingerprint == origin.fingerprint {
+                if cosignerMasterKeyFingerprint == originFingerprint {
                     hdKey = cosigner
                 }
             }
         }
 
-        guard hdKey != nil else {
+        guard let hdKey = hdKey else {
             return false
         }
 
         // Check that origin pubkey is correct
-        guard let childKey = try? hdKey!.derive(using: origin.path) else {
+        guard let childKey = hdKey.derive(using: originPath) else {
             return false
         }
 
@@ -89,11 +98,11 @@ public struct PSBTOutput {
         }
 
         // Skip key deriviation root
-        let keyPath = inputs[0].origins!.first!.value.path
-        if keyPath.components.count < 2 {
+        let keyPath = inputs[0].origins!.first!.value
+        if keyPath.steps.count < 2 {
             return false
         }
-        let keyPathRootLength = keyPath.components.count - 2
+        let keyPathRootLength = keyPath.steps.count - 2
 
         for input in inputs {
             // Check that we can sign all inputs (TODO: relax assumption for e.g. coinjoin)
@@ -105,7 +114,7 @@ public struct PSBTOutput {
             }
 
             for origin in origins {
-                if !(PSBTOutput.commonOriginChecks(origin: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
+                if !(PSBTOutput.commonOriginChecks(originPath: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
                     return false
                 }
             }
@@ -118,14 +127,18 @@ public struct PSBTOutput {
 
         var changeIndex: UInt32? = nil
         for origin in origins {
-            if !(PSBTOutput.commonOriginChecks(origin: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
+            if !(PSBTOutput.commonOriginChecks(originPath: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
                 return false
             }
             // Check that the output index is reasonable
             // When combined with the above constraints, change "hijacked" to an extreme index can
             // be covered by importing keys using Bitcoin Core's maximum range [0,999999].
             // This needs less than 1 GB of RAM, but is fairly slow.
-            if case let .normal(i) = origin.value.path.components.reversed()[0] {
+            let step = origin.value.steps.reversed()[0]
+            if !step.isHardened {
+                guard case let .childNum(i) = step.index else {
+                    return false
+                }
                 if i > 999999 {
                     return false
                 }

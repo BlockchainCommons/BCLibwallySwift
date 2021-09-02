@@ -10,28 +10,28 @@ import XCTest
 @testable import LibWally
 
 class ScriptTests: XCTestCase {
-    func testDetectScriptPubKeyTypeP2PKH() throws {
-        let scriptPubKey = try ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
+    func testDetectScriptPubKeyTypeP2PKH() {
+        let scriptPubKey = ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")!
         XCTAssertEqual(scriptPubKey.type, .payToPubKeyHash)
     }
 
-    func testDetectScriptPubKeyTypeP2SH() throws {
-        let scriptPubKey = try ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")
+    func testDetectScriptPubKeyTypeP2SH() {
+        let scriptPubKey = ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")!
         XCTAssertEqual(scriptPubKey.type, .payToScriptHash)
     }
 
-    func testDetectScriptPubKeyTypeNativeSegWit() throws {
-        let scriptPubKey = try ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")
+    func testDetectScriptPubKeyTypeNativeSegWit() {
+        let scriptPubKey = ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")!
         XCTAssertEqual(scriptPubKey.type, .payToWitnessPubKeyHash)
     }
 
-    func testDetectScriptPubKeyTypeOpReturn() throws {
-        let scriptPubKey = try ScriptPubKey(hex: "6a13636861726c6579206c6f766573206865696469")
+    func testDetectScriptPubKeyTypeOpReturn() {
+        let scriptPubKey = ScriptPubKey(hex: "6a13636861726c6579206c6f766573206865696469")!
         XCTAssertEqual(scriptPubKey.type, .opReturn)
     }
 
-    func testScriptSigP2PKH() throws {
-        let pubKey = try ECCompressedPublicKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!)
+    func testScriptSigP2PKH() {
+        let pubKey = ECCompressedPublicKey(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!
         var scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
         XCTAssertEqual(scriptSig.type, ScriptSig.ScriptSigType.payToPubKeyHash(pubKey))
         XCTAssertEqual(scriptSig.render(purpose: .signed), nil)
@@ -47,9 +47,9 @@ class ScriptTests: XCTestCase {
         XCTAssertEqual(scriptSig.render(purpose: .signed)?.hex, (signaturePush + pubKeyPush).hex)
     }
 
-    func testWitnessP2WPKH() throws {
-        let pubKey = try ECCompressedPublicKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!)
-        let witness = Witness(type: .payToWitnessPubKeyHash(pubKey))
+    func testWitnessP2WPKH() {
+        let pubKey = ECCompressedPublicKey(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!
+        let witness = Witness(type: .payToWitnessPubKeyHash, pubKey: pubKey)
         XCTAssertEqual(witness.isDummy, true)
 
         let witnessStack = witness.createWallyStack()
@@ -57,41 +57,41 @@ class ScriptTests: XCTestCase {
         XCTAssertEqual(witnessStack.pointee.num_items, 2)
 
         XCTAssertEqual(witness.scriptCode.hex, "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
-        let signedWitness = Witness(type: .payToWitnessPubKeyHash(pubKey), signature: ScriptSig.Signature(hex: "01")!)
+        let signedWitness = Witness(type: .payToWitnessPubKeyHash, pubKey: pubKey, signature: ScriptSig.Signature(hex: "01")!)
         let signedWitnessStack = signedWitness.createWallyStack()
         defer { wally_tx_witness_stack_free(signedWitnessStack) }
         XCTAssertEqual(signedWitnessStack.pointee.num_items, 2)
     }
 
-    func testMultisig() throws {
-        let pubKey1 = try ECCompressedPublicKey(Data(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!) // [3442193e/0'/1]
-        let pubKey2 = try ECCompressedPublicKey(Data(hex: "022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a554737")!) // [bd16bee5/0'/1]
+    func testMultisig() {
+        let pubKey1 = ECCompressedPublicKey(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")! // [3442193e/0'/1]
+        let pubKey2 = ECCompressedPublicKey(hex: "022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a554737")! // [bd16bee5/0'/1]
         let multisig = ScriptPubKey(multisig: [pubKey1, pubKey2], threshold: 2)
         XCTAssertEqual(multisig.type, .multiSig)
         XCTAssertEqual(multisig.data.hex, "5221022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a5547372103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c52ae")
         XCTAssertEqual(multisig.witnessProgram.hex, "0020ce8c526b7a6c9491ed33861f4492299c86ffa8567a75286535f317ddede3062a")
 
-        let address = try Address(scriptPubKey: multisig, network: .mainnet)
+        let address = Address(scriptPubKey: multisig, network: .mainnet)!
         XCTAssertEqual(address.address, "bc1qe6x9y6m6dj2frmfnsc05fy3fnjr0l2zk0f6jsef47vtamm0rqc4qnfnxm0")
     }
     
-    func testScriptPubKeyAddress() throws {
-        let scriptPubKeyPKH = try ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
+    func testScriptPubKeyAddress() {
+        let scriptPubKeyPKH = ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")!
         XCTAssertEqual(scriptPubKeyPKH.type, .payToPubKeyHash)
-        XCTAssertEqual(try Address(scriptPubKey: scriptPubKeyPKH, network: .mainnet).description, "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")
-        XCTAssertEqual(try Address(scriptPubKey: scriptPubKeyPKH, network: .testnet).description, "mxvewdhKCenLkYgNa8irv1UM2omEWPMdEE")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyPKH, network: .mainnet)!.description, "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyPKH, network: .testnet)!.description, "mxvewdhKCenLkYgNa8irv1UM2omEWPMdEE")
     
-        let scriptPubKeyP2SH = try ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")
+        let scriptPubKeyP2SH = ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")!
         XCTAssertEqual(scriptPubKeyP2SH.type, .payToScriptHash)
-        XCTAssertEqual(try Address(scriptPubKey: scriptPubKeyP2SH, network: .mainnet).description, "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")
-        XCTAssertEqual(try Address(scriptPubKey: scriptPubKeyP2SH, network: .testnet).description, "2N5XyEfAXtVde7mv6idZDXp5NFwajYEj9TD")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyP2SH, network: .mainnet)!.description, "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyP2SH, network: .testnet)!.description, "2N5XyEfAXtVde7mv6idZDXp5NFwajYEj9TD")
 
-        let scriptP2WPKH = try ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")
+        let scriptP2WPKH = ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")!
         XCTAssertEqual(scriptP2WPKH.type, .payToWitnessPubKeyHash)
-        XCTAssertEqual(try Address(scriptPubKey: scriptP2WPKH, network: .mainnet).description, "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")
+        XCTAssertEqual(Address(scriptPubKey: scriptP2WPKH, network: .mainnet)!.description, "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")
         
-        let scriptP2WSH = try ScriptPubKey(hex: "0020f8608e6e5b537f8fc8182eb113cf40f564b99cf99d87170c4f1ac259074ee8fd")
+        let scriptP2WSH = ScriptPubKey(hex: "0020f8608e6e5b537f8fc8182eb113cf40f564b99cf99d87170c4f1ac259074ee8fd")!
         XCTAssertEqual(scriptP2WSH.type, .payToWitnessScriptHash)
-        XCTAssertEqual(try Address(scriptPubKey: scriptP2WSH, network: .mainnet).description, "bc1qlpsgumjm2dlcljqc96c38n6q74jtn88enkr3wrz0rtp9jp6war7s2h4lrs")
+        XCTAssertEqual(Address(scriptPubKey: scriptP2WSH, network: .mainnet)!.description, "bc1qlpsgumjm2dlcljqc96c38n6q74jtn88enkr3wrz0rtp9jp6war7s2h4lrs")
     }
 }
