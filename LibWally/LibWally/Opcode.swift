@@ -126,7 +126,7 @@ public enum Opcode {
         }
     }
     
-    static func serialize(int value: Int) -> Data? {
+    private static func serialize(int value: Int) -> Data? {
         switch value {
         case -1:
             return Data([0x48]) // OP_1NEGATE
@@ -139,7 +139,7 @@ public enum Opcode {
         }
     }
     
-    static func serialize(data: Data) -> Data? {
+    private static func serialize(data: Data) -> Data? {
         var result = Data()
         guard let countData = serialize(count: data.count) else {
             return nil
@@ -149,7 +149,7 @@ public enum Opcode {
         return result
     }
     
-    static func serialize(count: Int) -> Data? {
+    private static func serialize(count: Int) -> Data? {
         var result = Data()
         switch count {
         case 0...75:
@@ -169,12 +169,22 @@ public enum Opcode {
         return result
     }
     
-    static func serialize(opcode: Opcode) -> Data? {
-        let s = String(String(describing: opcode).dropFirst(3))
-        guard let code = valueForName[s] else {
+    private var name: String? {
+        guard
+            let v = value,
+            let s = Self.nameForValue[v]
+        else {
             return nil
         }
-        return Data([code])
+        
+        return s
+    }
+    
+    private static func serialize(opcode: Opcode) -> Data? {
+        guard let value = opcode.value else {
+            return nil
+        }
+        return Data([value])
     }
     
     private static let opcodeForValue: [UInt8 : Opcode] = [
@@ -305,6 +315,111 @@ public enum Opcode {
         0xff : .op_invalidopcode,
     ]
     
+    private static let nameForValue: [UInt8: String] = [
+        0x00 : "0",
+        0x51 : "1",
+        
+        0x50 : "RESERVED",
+        0x61 : "NOP",
+        0x62 : "VER",
+        0x63 : "IF",
+        0x64 : "NOTIF",
+        0x65 : "VERIF",
+        0x66 : "VERNOTIF",
+        0x67 : "ELSE",
+        0x68 : "ENDIF",
+        0x69 : "VERIFY",
+        0x6a : "RETURN",
+
+        0x6b : "TOALTSTACK",
+        0x6c : "FROMALTSTACK",
+        0x6d : "2DROP",
+        0x6e : "2DUP",
+        0x6f : "3DUP",
+        0x70 : "2OVER",
+        0x71 : "2ROT",
+        0x72 : "2SWAP",
+        0x73 : "IFDUP",
+        0x74 : "DEPTH",
+        0x75 : "DROP",
+        0x76 : "DUP",
+        0x77 : "NIP",
+        0x78 : "OVER",
+        0x79 : "PICK",
+        0x7a : "ROLL",
+        0x7b : "ROT",
+        0x7c : "SWAP",
+        0x7d : "TUCK",
+
+        0x7e : "CAT",
+        0x7f : "SUBSTR",
+        0x80 : "LEFT",
+        0x81 : "RIGHT",
+        0x82 : "SIZE",
+
+        0x83 : "INVERT",
+        0x84 : "AND",
+        0x85 : "OR",
+        0x86 : "XOR",
+        0x87 : "EQUAL",
+        0x88 : "EQUALVERIFY",
+        0x89 : "RESERVED1",
+        0x8a : "RESERVED2",
+
+        0x8b : "1ADD",
+        0x8c : "1SUB",
+        0x8d : "2MUL",
+        0x8e : "2DIV",
+        0x8f : "NEGATE",
+        0x90 : "ABS",
+        0x91 : "NOT",
+        0x92 : "0NOTEQUAL",
+
+        0x93 : "ADD",
+        0x94 : "SUB",
+        0x95 : "MUL",
+        0x96 : "DIV",
+        0x97 : "MOD",
+        0x98 : "LSHIFT",
+        0x99 : "RSHIFT",
+
+        0x9a : "BOOLAND",
+        0x9b : "BOOLOR",
+        0x9c : "NUMEQUAL",
+        0x9d : "NUMEQUALVERIFY",
+        0x9e : "NUMNOTEQUAL",
+        0x9f : "LESSTHAN",
+        0xa0 : "GREATERTHAN",
+        0xa1 : "LESSTHANOREQUAL",
+        0xa2 : "GREATERTHANOREQUAL",
+        0xa3 : "MIN",
+        0xa4 : "MAX",
+
+        0xa5 : "WITHIN",
+
+        0xa6 : "RIPEMD160",
+        0xa7 : "SHA1",
+        0xa8 : "SHA256",
+        0xa9 : "HASH160",
+        0xaa : "HASH256",
+        0xab : "CODESEPARATOR",
+        0xac : "CHECKSIG",
+        0xad : "CHECKSIGVERIFY",
+        0xae : "CHECKMULTISIG",
+        0xaf : "CHECKMULTISIGVERIFY",
+
+        0xb0 : "NOP1",
+        0xb1 : "CHECKLOCKTIMEVERIFY",
+        0xb2 : "CHECKSEQUENCEVERIFY",
+        0xb3 : "NOP4",
+        0xb4 : "NOP5",
+        0xb5 : "NOP6",
+        0xb6 : "NOP7",
+        0xb7 : "NOP8",
+        0xb8 : "NOP9",
+        0xb9 : "NOP10"
+    ]
+    
     private static let valueForName: [String: UInt8] = [
         "RESERVED" : 0x50,
         "NOP" : 0x61,
@@ -409,124 +524,128 @@ public enum Opcode {
         "NOP10" : 0xb9
     ]
     
-    enum NamedOpcode: UInt8 {
-        case op_0 = 0x00
-        case op_pushdata1 = 0x4c
-        case op_pushdata2 = 0x4d
-        case op_pushdata4 = 0x4e
-        case op_1negate = 0x4f
-        case op_reserved = 0x50
-        case op_1 = 0x51
-        case op_2 = 0x52
-        case op_3 = 0x53
-        case op_4 = 0x54
-        case op_5 = 0x55
-        case op_6 = 0x56
-        case op_7 = 0x57
-        case op_8 = 0x58
-        case op_9 = 0x59
-        case op_10 = 0x5a
-        case op_11 = 0x5b
-        case op_12 = 0x5c
-        case op_13 = 0x5d
-        case op_14 = 0x5e
-        case op_15 = 0x5f
-        case op_16 = 0x60
+    private var value: UInt8? {
+        switch self {
+        case .op_false: return 0x00
+//        case .op_pushdata1: return 0x4c
+//        case .op_pushdata2: return 0x4d
+//        case .op_pushdata4: return 0x4e
+//        case .op_1negate: return 0x4f
+//        case .op_reserved: return 0x50
+        case .op_true: return 0x51
+//        case .op_2: return 0x52
+//        case .op_3: return 0x53
+//        case .op_4: return 0x54
+//        case .op_5: return 0x55
+//        case .op_6: return 0x56
+//        case .op_7: return 0x57
+//        case .op_8: return 0x58
+//        case .op_9: return 0x59
+//        case .op_10: return 0x5a
+//        case .op_11: return 0x5b
+//        case .op_12: return 0x5c
+//        case .op_13: return 0x5d
+//        case .op_14: return 0x5e
+//        case .op_15: return 0x5f
+//        case .op_16: return 0x60
 
-        case op_nop = 0x61
-        case op_ver = 0x62
-        case op_if = 0x63
-        case op_notif = 0x64
-        case op_verif = 0x65
-        case op_vernotif = 0x66
-        case op_else = 0x67
-        case op_endif = 0x68
-        case op_verify = 0x69
-        case op_return = 0x6a
-        case op_toaltstack = 0x6b
-        case op_fromaltstack = 0x6c
-        case op_2drop = 0x6d
-        case op_2dup = 0x6e
-        case op_3dup = 0x6f
+        case .op_nop: return 0x61
+        case .op_ver: return 0x62
+        case .op_if: return 0x63
+        case .op_notif: return 0x64
+        case .op_verif: return 0x65
+        case .op_vernotif: return 0x66
+        case .op_else: return 0x67
+        case .op_endif: return 0x68
+        case .op_verify: return 0x69
+        case .op_return: return 0x6a
+        case .op_toaltstack: return 0x6b
+        case .op_fromaltstack: return 0x6c
+        case .op_2drop: return 0x6d
+        case .op_2dup: return 0x6e
+        case .op_3dup: return 0x6f
 
-        case op_2over = 0x70
-        case op_2rot = 0x71
-        case op_2swap = 0x72
-        case op_ifdup = 0x73
-        case op_depth = 0x74
-        case op_drop = 0x75
-        case op_dup = 0x76
-        case op_nip = 0x77
-        case op_over = 0x78
-        case op_pick = 0x79
-        case op_roll = 0x7a
-        case op_rot = 0x7b
-        case op_swap = 0x7c
-        case op_tuck = 0x7d
-        case op_cat = 0x7e
-        case op_substr = 0x7f
+        case .op_2over: return 0x70
+        case .op_2rot: return 0x71
+        case .op_2swap: return 0x72
+        case .op_ifdup: return 0x73
+        case .op_depth: return 0x74
+        case .op_drop: return 0x75
+        case .op_dup: return 0x76
+        case .op_nip: return 0x77
+        case .op_over: return 0x78
+        case .op_pick: return 0x79
+        case .op_roll: return 0x7a
+        case .op_rot: return 0x7b
+        case .op_swap: return 0x7c
+        case .op_tuck: return 0x7d
+        case .op_cat: return 0x7e
+        case .op_substr: return 0x7f
 
-        case op_left = 0x80
-        case op_right = 0x81
-        case op_size = 0x82
-        case op_invert = 0x83
-        case op_and = 0x84
-        case op_or = 0x85
-        case op_xor = 0x86
-        case op_equal = 0x87
-        case op_equalverify = 0x88
-        case op_reserved1 = 0x89
-        case op_reserved2 = 0x8a
-        case op_1add = 0x8b
-        case op_1sub = 0x8c
-        case op_2mul = 0x8d
-        case op_2div = 0x8e
-        case op_negate = 0x8f
+        case .op_left: return 0x80
+        case .op_right: return 0x81
+        case .op_size: return 0x82
+        case .op_invert: return 0x83
+        case .op_and: return 0x84
+        case .op_or: return 0x85
+        case .op_xor: return 0x86
+        case .op_equal: return 0x87
+        case .op_equalverify: return 0x88
+        case .op_reserved1: return 0x89
+        case .op_reserved2: return 0x8a
+        case .op_1add: return 0x8b
+        case .op_1sub: return 0x8c
+        case .op_2mul: return 0x8d
+        case .op_2div: return 0x8e
+        case .op_negate: return 0x8f
 
-        case op_abs = 0x90
-        case op_not = 0x91
-        case op_0notequal = 0x92
-        case op_add = 0x93
-        case op_sub = 0x94
-        case op_mul = 0x95
-        case op_div = 0x96
-        case op_mod = 0x97
-        case op_lshift = 0x98
-        case op_rshift = 0x99
-        case op_booland = 0x9a
-        case op_boolor = 0x9b
-        case op_numequal = 0x9c
-        case op_numequalverify = 0x9d
-        case op_numnotequal = 0x9e
-        case op_lessthan = 0x9f
+        case .op_abs: return 0x90
+        case .op_not: return 0x91
+        case .op_0notequal: return 0x92
+        case .op_add: return 0x93
+        case .op_sub: return 0x94
+        case .op_mul: return 0x95
+        case .op_div: return 0x96
+        case .op_mod: return 0x97
+        case .op_lshift: return 0x98
+        case .op_rshift: return 0x99
+        case .op_booland: return 0x9a
+        case .op_boolor: return 0x9b
+        case .op_numequal: return 0x9c
+        case .op_numequalverify: return 0x9d
+        case .op_numnotequal: return 0x9e
+        case .op_lessthan: return 0x9f
 
-        case op_greaterthan = 0xa0
-        case op_lessthanorequal = 0xa1
-        case op_greaterthanorequal = 0xa2
-        case op_min = 0xa3
-        case op_max = 0xa4
-        case op_within = 0xa5
-        case op_ripemd160 = 0xa6
-        case op_sha1 = 0xa7
-        case op_sha256 = 0xa8
-        case op_hash160 = 0xa9
-        case op_hash256 = 0xaa
-        case op_codeseparator = 0xab
-        case op_checksig = 0xac
-        case op_checksigverify = 0xad
-        case op_checkmultisig = 0xae
-        case op_checkmultisigverify = 0xaf
+        case .op_greaterthan: return 0xa0
+        case .op_lessthanorequal: return 0xa1
+        case .op_greaterthanorequal: return 0xa2
+        case .op_min: return 0xa3
+        case .op_max: return 0xa4
+        case .op_within: return 0xa5
+        case .op_ripemd160: return 0xa6
+        case .op_sha1: return 0xa7
+        case .op_sha256: return 0xa8
+        case .op_hash160: return 0xa9
+        case .op_hash256: return 0xaa
+        case .op_codeseparator: return 0xab
+        case .op_checksig: return 0xac
+        case .op_checksigverify: return 0xad
+        case .op_checkmultisig: return 0xae
+        case .op_checkmultisigverify: return 0xaf
 
-        case op_nop1 = 0xb0
-        case op_checklocktimeverify = 0xb1
-        case op_checksequenceverify = 0xb2
-        case op_nop4 = 0xb3
-        case op_nop5 = 0xb4
-        case op_nop6 = 0xb5
-        case op_nop7 = 0xb6
-        case op_nop8 = 0xb7
-        case op_nop9 = 0xb8
-        case op_nop10 = 0xb9
+        case .op_nop1: return 0xb0
+        case .op_checklocktimeverify: return 0xb1
+        case .op_checksequenceverify: return 0xb2
+        case .op_nop4: return 0xb3
+        case .op_nop5: return 0xb4
+        case .op_nop6: return 0xb5
+        case .op_nop7: return 0xb6
+        case .op_nop8: return 0xb7
+        case .op_nop9: return 0xb8
+        case .op_nop10: return 0xb9
+            
+        default: return nil
+        }
     }
 }
 
@@ -540,6 +659,19 @@ extension Opcode {
             return nil
         }
         self = .data(data)
+    }
+}
+
+extension Opcode : CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .literal(let value):
+            return String(describing: value)
+        case .data(let data):
+            return "[\(data.hex)]"
+        default:
+            return name ?? "UNKNOWN"
+        }
     }
 }
 
