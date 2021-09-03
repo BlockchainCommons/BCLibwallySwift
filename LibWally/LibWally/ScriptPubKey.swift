@@ -34,15 +34,23 @@ public struct ScriptPubKey : Equatable {
         self = Wally.multisigScriptPubKey(pubKeys: pubKeys, threshold: threshold, isBIP67: isBIP67)
     }
 
-    public var description: String {
-        data.hex
-    }
-
     public init(_ data: Data) {
         self.data = data
     }
 
     public var witnessProgram: Data {
         Wally.witnessProgram(scriptPubKey: self)
+    }
+}
+
+extension ScriptPubKey: CustomStringConvertible {
+    public var description: String {
+        let t: String
+        if let type = type {
+            t = String(describing: type)
+        } else {
+            t = "unknown"
+        }
+        return "\(t):\(data.hex)"
     }
 }

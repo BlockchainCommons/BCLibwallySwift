@@ -8,8 +8,7 @@
 import Foundation
 @_implementationOnly import Flexer
 
-
-public final class DescriptorParser: Parser {
+final class DescriptorParser: Parser {
     typealias Tokens = LookAheadSequence<[DescriptorToken]>
     typealias Transaction = ParseTransaction<DescriptorParser>
     typealias Error = DescriptorError<DescriptorToken>
@@ -26,15 +25,11 @@ public final class DescriptorParser: Parser {
         Error(message, tokens.peek(), source: source)
     }
     
-    func parseTop() throws -> Descriptor {
-        guard let key = try parseKey() else {
-            throw error("Expected derivation path.")
+    func parse() throws -> DescriptorFunction {
+        guard let raw = try parseRaw() else {
+            throw error("Expected top level function.")
         }
-        return Descriptor(key: key)
-    }
-    
-    func parseKeyOrigin() -> DerivationPath? {
-        nil
+        return raw
     }
     
     func parseFingerprint() -> Data? {
@@ -81,6 +76,10 @@ public final class DescriptorParser: Parser {
         return token
     }
 
+    func parseKind(_ kind: DescriptorToken.Kind) -> Bool {
+        parseToken(kind: kind) != nil
+    }
+
     func parseChildnum() -> UInt32? {
         let transaction = Transaction(self)
         guard
@@ -98,15 +97,35 @@ public final class DescriptorParser: Parser {
     }
 
     func parseWildcard() -> Bool {
-        parseToken(kind: .star) != nil
+        parseKind(.star)
+    }
+
+    func parseOpenParen() -> Bool {
+        parseKind(.openParen)
+    }
+    
+    func expectOpenParen() throws {
+        guard parseOpenParen() else {
+            throw error("Expected open parenthesis.")
+        }
+    }
+
+    func parseCloseParen() -> Bool {
+        parseKind(.closeParen)
+    }
+    
+    func expectCloseParen() throws {
+        guard parseCloseParen() else {
+            throw error("Expected close parenthesis.")
+        }
     }
 
     func parseOpenBracket() -> Bool {
-        parseToken(kind: .openBracket) != nil
+        parseKind(.openBracket)
     }
 
     func parseCloseBracket() -> Bool {
-        parseToken(kind: .closeBracket) != nil
+        parseKind(.closeBracket)
     }
     
     func expectCloseBracket() throws {
@@ -185,6 +204,25 @@ public final class DescriptorParser: Parser {
         return DerivationPath(steps: steps, origin: .fingerprint(fingerprint))
     }
     
+    func parseData() -> Data? {
+        let transaction = Transaction(self)
+        guard
+            let token = tokens.next(),
+            token.kind == .data
+        else {
+            return nil
+        }
+        transaction.commit()
+        return token.data
+    }
+    
+    func expectData() throws -> Data {
+        guard let data = parseData() else {
+            throw error("Expected data.")
+        }
+        return data
+    }
+    
     func parseKey() throws -> DescriptorKeyExpression? {
         let transaction = Transaction(self)
 
@@ -229,5 +267,23 @@ public final class DescriptorParser: Parser {
         
         transaction.commit()
         return DescriptorKeyExpression(origin: origin, key: result)
+    }
+    
+    func parseRaw() throws -> DescriptorRaw? {
+        guard parseKind(.raw) else {
+            return nil
+        }
+        try expectOpenParen()
+        let data = try expectData()
+        try expectCloseParen()
+        return DescriptorRaw(data: data)
+    }
+}
+
+struct DescriptorRaw: DescriptorFunction {
+    let data: Data
+    
+    var scriptPubKey: ScriptPubKey {
+        ScriptPubKey(data)
     }
 }

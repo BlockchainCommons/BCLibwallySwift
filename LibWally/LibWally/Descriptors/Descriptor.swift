@@ -7,15 +7,18 @@
 
 import Foundation
 
+protocol DescriptorFunction {
+    var scriptPubKey: ScriptPubKey { get }
+}
+
 public struct Descriptor {
-    let key: DescriptorKeyExpression
+    public let source: String
+    public let scriptPubKey: ScriptPubKey
     
     public init(_ source: String) throws {
+        self.source = source
         let tokens = try DescriptorLexer(source: source).lex()
-        self = try DescriptorParser(tokens: tokens, source: source).parseTop()
-    }
-    
-    init(key: DescriptorKeyExpression) {
-        self.key = key
+        let function = try DescriptorParser(tokens: tokens, source: source).parse()
+        self.scriptPubKey = function.scriptPubKey
     }
 }
