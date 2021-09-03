@@ -81,9 +81,3 @@ struct DescriptorToken: TokenProtocol {
         payload as! WIF
     }
 }
-
-extension DescriptorToken {
-    func summary(tokens: DescriptorTokenSequence) -> String {
-        "(\(kind) \(tokens.range(of: self)))"
-    }
-}

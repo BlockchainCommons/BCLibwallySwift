@@ -52,6 +52,10 @@
 		79865C5326E06DA200897441 /* DescriptorParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5126E06A5F00897441 /* DescriptorParser.swift */; };
 		79865C5526E08D4800897441 /* DescriptorParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5426E08D4800897441 /* DescriptorParserTests.swift */; };
 		79865C5726E0A4EC00897441 /* WIF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5626E0A4EC00897441 /* WIF.swift */; };
+		79C7CE0F26E1C35700C5CD75 /* DescriptorError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */; };
+		79C7CE1126E1C56500C5CD75 /* Descriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1026E1C56500C5CD75 /* Descriptor.swift */; };
+		79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */; };
+		79C7CE1526E1FBF100C5CD75 /* ParseTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1426E1FBF100C5CD75 /* ParseTransaction.swift */; };
 		79EC702526D75B2200A3D4E9 /* WallyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EC702426D75B2200A3D4E9 /* WallyUtils.swift */; };
 /* End PBXBuildFile section */
 
@@ -113,6 +117,10 @@
 		79865C5126E06A5F00897441 /* DescriptorParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorParser.swift; sourceTree = "<group>"; };
 		79865C5426E08D4800897441 /* DescriptorParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorParserTests.swift; sourceTree = "<group>"; };
 		79865C5626E0A4EC00897441 /* WIF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIF.swift; sourceTree = "<group>"; };
+		79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorError.swift; sourceTree = "<group>"; };
+		79C7CE1026E1C56500C5CD75 /* Descriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptor.swift; sourceTree = "<group>"; };
+		79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorKeyExpression.swift; sourceTree = "<group>"; };
+		79C7CE1426E1FBF100C5CD75 /* ParseTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParseTransaction.swift; sourceTree = "<group>"; };
 		79EC702426D75B2200A3D4E9 /* WallyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallyUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -235,6 +243,10 @@
 				79865C4F26E068EB00897441 /* DescriptorToken.swift */,
 				79865C4D26E068D900897441 /* CharacterSetExtensions.swift */,
 				79865C5126E06A5F00897441 /* DescriptorParser.swift */,
+				79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */,
+				79C7CE1026E1C56500C5CD75 /* Descriptor.swift */,
+				79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */,
+				79C7CE1426E1FBF100C5CD75 /* ParseTransaction.swift */,
 			);
 			path = Descriptors;
 			sourceTree = "<group>";
@@ -366,18 +378,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				79C7CE1126E1C56500C5CD75 /* Descriptor.swift in Sources */,
 				03A56111256A397600181CB8 /* PSBTInput.swift in Sources */,
 				030A63FA2503702700A1D27E /* Transaction.swift in Sources */,
 				03A560EF2568FE1E00181CB8 /* ECKey.swift in Sources */,
 				03A560FD2568FEFD00181CB8 /* HDKey.swift in Sources */,
 				796FE5D626D7756800DDB32A /* Asset.swift in Sources */,
+				79C7CE0F26E1C35700C5CD75 /* DescriptorError.swift in Sources */,
 				79865C5326E06DA200897441 /* DescriptorParser.swift in Sources */,
 				79EC702526D75B2200A3D4E9 /* WallyUtils.swift in Sources */,
 				030A63FE2503702700A1D27E /* PSBT.swift in Sources */,
+				79C7CE1526E1FBF100C5CD75 /* ParseTransaction.swift in Sources */,
 				03A560F72568FE9D00181CB8 /* Network.swift in Sources */,
 				030A63FD2503702700A1D27E /* DerivationPath.swift in Sources */,
 				79865C5726E0A4EC00897441 /* WIF.swift in Sources */,
 				030A63FB2503702700A1D27E /* ScriptPubKey.swift in Sources */,
+				79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */,
 				03A5610125691F0400181CB8 /* Satoshi.swift in Sources */,
 				03A56115256A399700181CB8 /* PSBTOutput.swift in Sources */,
 				03A5610525691F1600181CB8 /* TxOutput.swift in Sources */,

@@ -40,7 +40,7 @@ class ScriptTests: XCTestCase {
 
         XCTAssertEqual(scriptSig.render(purpose: .feeWorstCase)?.count, 2 + Int(EC_SIGNATURE_DER_MAX_LOW_R_LEN) + 1 + pubKey.data.count)
 
-        scriptSig.signature = ScriptSig.Signature(hex: "01")
+        scriptSig.signature = Data(hex: "01")
         let sigHashByte = Data(hex: "01")! // SIGHASH_ALL
         let signaturePush = Data(hex: "02")! + scriptSig.signature! + sigHashByte
         let pubKeyPush = Data([UInt8(pubKey.data.count)]) + pubKey.data
@@ -57,7 +57,7 @@ class ScriptTests: XCTestCase {
         XCTAssertEqual(witnessStack.pointee.num_items, 2)
 
         XCTAssertEqual(witness.scriptCode.hex, "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
-        let signedWitness = Witness(type: .payToWitnessPubKeyHash, pubKey: pubKey, signature: ScriptSig.Signature(hex: "01")!)
+        let signedWitness = Witness(type: .payToWitnessPubKeyHash, pubKey: pubKey, signature: Data(hex: "01")!)
         let signedWitnessStack = signedWitness.createWallyStack()
         defer { wally_tx_witness_stack_free(signedWitnessStack) }
         XCTAssertEqual(signedWitnessStack.pointee.num_items, 2)

@@ -8,12 +8,10 @@
 import Foundation
 
 public struct ScriptSig {
-    public typealias Signature = Data
-
     public let type: ScriptSigType
 
     // When used in a finalized transaction, scriptSig usually includes a signature:
-    public var signature: Signature?
+    public var signature: Data?
 
     public enum ScriptSigType : Equatable {
         case payToPubKeyHash(ECCompressedPublicKey) // P2PKH (legacy)

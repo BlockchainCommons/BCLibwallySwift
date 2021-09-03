@@ -8,64 +8,75 @@
 import Foundation
 @_implementationOnly import Flexer
 
-public struct DescriptorLexer {
-    static func lex(tokens: DescriptorTokenSequence, string: String) -> [DescriptorToken] {
-        return tokens.reduce(into: []) {
-            $0.append($1)
-        }
+
+public final class DescriptorLexer: Parser {
+    typealias Tokens = BasicTextCharacterLexer
+    typealias Transaction = ParseTransaction<DescriptorLexer>
+    typealias Error = DescriptorError<BasicTextCharacter>
+
+    let source: String
+    var tokens: Tokens
+    
+    public init(source: String) {
+        self.source = source
+        self.tokens = Tokens(string: source)
     }
 
-    static func lex(string: String) -> [DescriptorToken] {
-        let tokens = DescriptorTokenSequence(string: string)
-        return lex(tokens: tokens, string: string)
+    func error(_ message: String) -> Error {
+        Error(message, tokens.peek(), source: source)
     }
     
-    public static func debugLex(string: String) -> String {
-        let tokens = DescriptorTokenSequence(string: string)
-        let strings = lex(tokens: tokens, string: string).map { $0.summary(tokens: tokens) }
+    func lex() throws -> [DescriptorToken] {
+        var result: [DescriptorToken] = []
+        while let t = try lexNext() {
+            result.append(t)
+        }
+        return result
+    }
+    
+    public static func debugLex(_ source: String) throws -> String {
+        let lexer = DescriptorLexer(source: source)
+        let tokens = try lexer.lex()
+        let strings = tokens.map { lexer.summary(of: $0) }
         return strings.joined(separator: ", ")
     }
-}
-
-struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable {
-    public typealias Element = DescriptorToken
     
-    private let string: String
-    private var tokens: BasicTextCharacterLexer
+    func summary(of token: DescriptorToken) -> String {
+        "(\(token.kind) \(range(of: token)))"
+    }
     
-    public func range(of token: DescriptorToken) -> Range<Int> {
-        let a = string.distance(from: string.startIndex, to: token.startIndex)
-        let b = string.distance(from: string.startIndex, to: token.endIndex)
+    func range(of token: DescriptorToken) -> Range<Int> {
+        let a = source.distance(from: source.startIndex, to: token.startIndex)
+        let b = source.distance(from: source.startIndex, to: token.endIndex)
         return a ..< b
     }
-    
-    public init(string: String) {
-        self.string = string
-        self.tokens = BasicTextCharacterLexer(string: string)
-    }
 
-    private static let tokenLexers = [
-        Self.lexDelimiters,
-        Self.lexKeywords,
-        Self.lexAddress,
-        Self.lexWIF,
-        Self.lexHDKey,
-        Self.lexData,
-        Self.lexInt,
-        Self.lexHardened
-    ]
+    func lexNext() throws -> DescriptorToken? {
+        guard tokens.peek() != nil else {
+            return nil
+        }
+        
+        let tokenLexers = [
+            lexDelimiters,
+            lexKeywords,
+            lexAddress,
+            lexWIF,
+            lexHDKey,
+            lexData,
+            lexInt,
+            lexHardened
+        ]
 
-    mutating func next() -> DescriptorToken? {
-        for tokenLexer in Self.tokenLexers {
-            if let token = tokenLexer(&tokens, string) {
+        for tokenLexer in tokenLexers {
+            if let token = tokenLexer() {
                 return token
             }
         }
         
-        return nil
+        throw error("Unrecognized token.")
     }
 
-    private static let delimiters: [(BasicTextCharacterKind, DescriptorToken.Kind)] = [
+    static let delimiters: [(BasicTextCharacterKind, DescriptorToken.Kind)] = [
         (.openParen, .openParen),
         (.closeParen, .closeParen),
         (.openBracket, .openBracket),
@@ -77,18 +88,19 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         (.star, .star)
     ]
     
-    private static func lexDelimiters(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+    func lexDelimiters() -> DescriptorToken? {
         func lexDelimiter(kind: BasicTextCharacterKind, descriptorKind: DescriptorToken.Kind) -> DescriptorToken? {
-            var seq = tokens
+            let transaction = Transaction(self)
+            
             guard
-                let token = seq.peek(),
+                let token = tokens.peek(),
                 token.kind == kind,
-                let endingToken = seq.next() else
+                let endingToken = tokens.next() else
             {
                 return nil
             }
             let range = token.startIndex ..< endingToken.endIndex
-            tokens = seq
+            transaction.commit()
             return DescriptorToken(kind: descriptorKind, range: range)
         }
 
@@ -100,30 +112,7 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         return nil
     }
 
-    private mutating func lexDelimiters() -> DescriptorToken? {
-        func lexDelimiter(kind: BasicTextCharacterKind, descriptorKind: DescriptorToken.Kind) -> DescriptorToken? {
-            var seq = tokens
-            guard
-                let token = seq.peek(),
-                token.kind == kind,
-                let endingToken = seq.next() else
-            {
-                return nil
-            }
-            let range = token.startIndex ..< endingToken.endIndex
-            tokens = seq
-            return DescriptorToken(kind: descriptorKind, range: range)
-        }
-
-        for delimiter in Self.delimiters {
-            if let descriptorToken = lexDelimiter(kind: delimiter.0, descriptorKind: delimiter.1) {
-                return descriptorToken
-            }
-        }
-        return nil
-    }
-
-    private static let keywords: [(String, DescriptorToken.Kind)] = [
+    static let keywords: [(String, DescriptorToken.Kind)] = [
         ("sh", .sh),
         ("wsh", .wsh),
         ("pk", .pk),
@@ -137,21 +126,22 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         ("raw", .raw)
     ]
     
-    private static func lexKeywords(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
+    func lexKeywords() -> DescriptorToken? {
         func lexKeyword(keyword: String, kind: DescriptorToken.Kind) -> DescriptorToken? {
-            var seq = tokens
+            let transaction = Transaction(self)
+
             guard
-                let token = seq.peek(),
+                let token = tokens.peek(),
                 token.kind == .lowercaseLetter,
-                let endingToken = seq.nextUntil(notIn: [.lowercaseLetter])
+                let endingToken = tokens.nextUntil(notIn: [.lowercaseLetter])
             else {
                 return nil
             }
             let range = token.startIndex ..< endingToken.endIndex
-            guard string[range] == keyword else {
+            guard source[range] == keyword else {
                 return nil
             }
-            tokens = seq
+            transaction.commit()
             return DescriptorToken(kind: kind, range: range)
         }
 
@@ -163,125 +153,133 @@ struct DescriptorTokenSequence: Sequence, IteratorProtocol, StringInitializable 
         return nil
     }
     
-    private static func character(of token: BasicTextCharacter, in string: String) -> Character {
-        string[token.range].first!
+    func character(of token: BasicTextCharacter) -> Character {
+        source[token.range].first!
     }
     
-    private static func substring(of range: Range<Token<BasicTextCharacterKind>.Index>, in string: String) -> String {
-        String(string[range])
+    func substring(of range: Range<Token<BasicTextCharacterKind>.Index>) -> String {
+        String(source[range])
     }
     
-    private static func isHexDigit(token: BasicTextCharacter, in string: String) -> Bool {
-        CharacterSet.hexDigits.contains(character(of: token, in: string))
+    func isHexDigit(token: BasicTextCharacter) -> Bool {
+        CharacterSet.hexDigits.contains(character(of: token))
     }
     
-    private static func isBase58(token: BasicTextCharacter, in string: String) -> Bool {
-        CharacterSet.base58.contains(character(of: token, in: string))
+    func isBase58(token: BasicTextCharacter) -> Bool {
+        CharacterSet.base58.contains(character(of: token))
     }
     
-    private static func isAllowedInAddress(token: BasicTextCharacter, in string: String) -> Bool {
-        CharacterSet.allowedInAddress.contains(character(of: token, in: string))
+    func isAllowedInAddress(token: BasicTextCharacter) -> Bool {
+        CharacterSet.allowedInAddress.contains(character(of: token))
     }
     
-    private static func lexData(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = tokens
+    func lexData() -> DescriptorToken? {
+        let transaction = Transaction(self)
+
         guard
-            let token = seq.peek(),
-            isHexDigit(token: token, in: string),
-            let endingToken = seq.nextUntil( { !isHexDigit(token: $0, in: string) } )
+            let token = tokens.peek(),
+            isHexDigit(token: token),
+            let endingToken = tokens.nextUntil( { !isHexDigit(token: $0) } )
         else {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
         guard
-            let data = Data(hex: substring(of: range, in: string)),
+            let data = Data(hex: substring(of: range)),
             data.count > 1 // reject short data as it's probably an int
         else {
             return nil
         }
-        tokens = seq
+        transaction.commit()
         return DescriptorToken(kind: .data, range: range, payload: data)
     }
     
-    private static func lexAddress(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = tokens
+    func lexAddress() -> DescriptorToken? {
+        let transaction = Transaction(self)
+
         guard
-            let token = seq.peek(),
-            isAllowedInAddress(token: token, in: string),
-            let endingToken = seq.nextUntil( { !isAllowedInAddress(token: $0, in: string) } )
+            let token = tokens.peek(),
+            isAllowedInAddress(token: token),
+            let endingToken = tokens.nextUntil( { !isAllowedInAddress(token: $0) } )
         else {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        guard let address = Address(string: substring(of: range, in: string)) else {
+        guard let address = Address(string: substring(of: range)) else {
             return nil
         }
-        tokens = seq
+        transaction.commit()
         return DescriptorToken(kind: .address, range: range, payload: address)
     }
     
-    private static func lexWIF(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = tokens
+    func lexWIF() -> DescriptorToken? {
+        let transaction = Transaction(self)
+
         guard
-            let token = seq.peek(),
-            isBase58(token: token, in: string),
-            let endingToken = seq.nextUntil( { !isBase58(token: $0, in: string) } )
+            let token = tokens.peek(),
+            isBase58(token: token),
+            let endingToken = tokens.nextUntil( { !isBase58(token: $0) } )
         else {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        guard let wif = WIF(substring(of: range, in: string)) else {
+        guard let wif = WIF(substring(of: range)) else {
             return nil
         }
-        tokens = seq
+        transaction.commit()
         return DescriptorToken(kind: .wif, range: range, payload: wif)
     }
 
-    private static func lexHDKey(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = tokens
+    func lexHDKey() -> DescriptorToken? {
+        let transaction = Transaction(self)
+
         guard
-            let token = seq.peek(),
-            isBase58(token: token, in: string),
-            let endingToken = seq.nextUntil( { !isBase58(token: $0, in: string) } )
+            let token = tokens.peek(),
+            isBase58(token: token),
+            let endingToken = tokens.nextUntil( { !isBase58(token: $0) } )
         else {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        guard let hdKey = HDKey(base58: substring(of: range, in: string)) else {
+        guard let hdKey = HDKey(base58: substring(of: range)) else {
             return nil
         }
-        tokens = seq
+        transaction.commit()
         return DescriptorToken(kind: .hdKey, range: range, payload: hdKey)
     }
     
-    private static func lexInt(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = tokens
+    func lexInt() -> DescriptorToken? {
+        let transaction = Transaction(self)
+
         guard
-            let token = seq.peek(),
+            let token = tokens.peek(),
             token.kind == .digit,
-            let endingToken = seq.nextUntil(notIn: [.digit])
+            let endingToken = tokens.nextUntil(notIn: [.digit])
         else {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        guard let value = Int(substring(of: range, in: string)) else {
+        guard let value = Int(substring(of: range)) else {
             return nil
         }
-        tokens = seq
+        
+        transaction.commit()
         return DescriptorToken(kind: .int, range: range, payload: value)
     }
     
-    private static func lexHardened(tokens: inout BasicTextCharacterLexer, string: String) -> DescriptorToken? {
-        var seq = tokens
+    func lexHardened() -> DescriptorToken? {
+        let transaction = Transaction(self)
+
         guard
-            let token = seq.peek(),
-            "'h".contains(character(of: token, in: string)),
-            let endingToken = seq.next()
+            let token = tokens.peek(),
+            "'h".contains(character(of: token)),
+            let endingToken = tokens.next()
         else {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        tokens = seq
+        
+        transaction.commit()
         return DescriptorToken(kind: .isHardened, range: range)
     }
 }
