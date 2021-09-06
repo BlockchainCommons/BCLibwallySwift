@@ -6,22 +6,23 @@
 //
 
 import XCTest
-import LibWally
+@testable import LibWally
 
 class OpcodeTests: XCTestCase {
-    func testExample() throws {
-//        XCTAssertEqual(Script.name(for: .op_checksig), "CHECKSIG")
-//        let o: [Opcode] = [1, "0012", .op_checksig, false, true]
-//        let o: [Opcode] = [false]
-        let o: [Opcode] = [
-            .op_dup, .op_hash160, "89ABCDEFABBAABBAABBAABBAABBAABBAABBAABBA", .op_equalverify, .op_checksig
-        ]
-        print(o.map({$0.description}).joined(separator: " ").flanked("[", "]"))
+    func testConversions() {
+        for op in Opcode.ops {
+            let (symbol, name, rawValue) = op
+            XCTAssertEqual(symbol.rawValue, rawValue)
+            XCTAssertEqual(Opcode(rawValue: rawValue), symbol)
+            XCTAssertEqual(symbol.name, name)
+            XCTAssertEqual(Opcode(name: name), symbol)
+        }
     }
-}
-
-extension String {
-    func flanked(_ leading: String, _ trailing: String) -> String {
-        leading + self + trailing
+    
+    func testAliases() {
+        XCTAssertEqual(Opcode(name: "op_0"), .op_false)
+        XCTAssertEqual(Opcode(name: "OP_1"), .op_true)
+        XCTAssertEqual(Opcode(name: "OP_NOP2"), .op_checklocktimeverify)
+        XCTAssertEqual(Opcode(name: "OP_NOP3"), .op_checksequenceverify)
     }
 }

@@ -109,7 +109,7 @@ public struct ECCompressedPublicKey: ECPublicKey, Hashable {
     }
     
     public func address(version: UInt8) -> String {
-        var hash = data.hash160
+        var hash = hash160
         hash.insert(version, at: 0)
         return hash.base58(isCheck: true)
     }
@@ -120,6 +120,10 @@ public struct ECCompressedPublicKey: ECPublicKey, Hashable {
 
     public var `public`: ECCompressedPublicKey {
         self
+    }
+    
+    public var hash160: Data {
+        data.hash160
     }
 }
 

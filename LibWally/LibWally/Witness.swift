@@ -63,6 +63,6 @@ public struct Witness {
     }
 
     public var scriptCode: Data {
-        return Data(hex: "76a914")! + pubKey.data.hash160 + Data(hex: "88ac")!
+        return Data(hex: "76a914")! + pubKey.hash160 + Data(hex: "88ac")!
     }
 }

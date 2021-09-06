@@ -50,7 +50,7 @@ public struct ScriptSig {
                 }
             }
         case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
-            let redeemScript = Data(hex: "0014")! + pubKey.data.hash160
+            let redeemScript = Data(hex: "0014")! + pubKey.hash160
             return Data([UInt8(redeemScript.count)]) + redeemScript
         }
     }
