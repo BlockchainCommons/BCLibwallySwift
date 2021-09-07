@@ -7,21 +7,40 @@
 
 import Foundation
 
-public struct DescriptorKeyExpression {
-    public let origin: DerivationPath
-    public let key: Key
+struct DescriptorKeyExpression {
+    let origin: DerivationPath
+    let key: Key
 
-    public enum Key {
+    enum Key {
         case ecCompressedPublicKey(ECCompressedPublicKey)
         case ecUncompressedPublicKey(ECUncompressedPublicKey)
-        case ecXOnlyPublicKey(ECXOnlyPublicKey)
+        //case ecXOnlyPublicKey(ECXOnlyPublicKey)
         case wif(WIF)
         case hdKey(HDKey)
     }
 }
 
+extension DescriptorKeyExpression {
+    var pubKeyData: Data {
+        let data: Data
+        switch key {
+        case .ecCompressedPublicKey(let k):
+            data = k.data
+        case .ecUncompressedPublicKey(let k):
+            data = k.data
+        // case .ecXOnlyPublicKey(let k):
+        //     data = k.data
+        case .wif(let k):
+            data = k.key.public.data
+        case .hdKey(let k):
+            data = k.pubKey.data
+        }
+        return data
+    }
+}
+
 extension DescriptorKeyExpression : CustomStringConvertible {
-    public var description: String {
+    var description: String {
         var comps: [String] = []
         if !origin.isEmpty {
             comps.append("[\(origin)]")
@@ -32,14 +51,14 @@ extension DescriptorKeyExpression : CustomStringConvertible {
 }
 
 extension DescriptorKeyExpression.Key : CustomStringConvertible {
-    public var description: String {
+    var description: String {
         switch self {
         case .ecCompressedPublicKey(let key):
             return key.data.hex
         case .ecUncompressedPublicKey(let key):
             return key.data.hex
-        case .ecXOnlyPublicKey(let key):
-            return key.data.hex
+        // case .ecXOnlyPublicKey(let key):
+        //    return key.data.hex
         case .wif(let key):
             return key.description
         case .hdKey(let key):

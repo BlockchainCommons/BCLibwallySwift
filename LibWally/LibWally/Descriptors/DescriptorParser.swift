@@ -26,10 +26,25 @@ final class DescriptorParser: Parser {
     }
     
     func parse() throws -> DescriptorFunction {
-        guard let raw = try parseRaw() else {
-            throw error("Expected top level function.")
+        if let raw = try parseRaw() {
+            return raw
         }
-        return raw
+        if let pk = try parsePK() {
+            return pk
+        }
+        if let pkh = try parsePKH() {
+            return pkh
+        }
+        if let wpkh = try parseWPKH() {
+            return wpkh
+        }
+        if let sh = try parseSH() {
+            return sh
+        }
+        if let addr = try parseAddr() {
+            return addr
+        }
+        throw error("Expected top level function.")
     }
     
     func parseFingerprint() -> Data? {
@@ -222,7 +237,7 @@ final class DescriptorParser: Parser {
         }
         return data
     }
-    
+
     func parseKey() throws -> DescriptorKeyExpression? {
         let transaction = Transaction(self)
 
@@ -244,8 +259,8 @@ final class DescriptorParser: Parser {
                 resultKey = .ecCompressedPublicKey(ECCompressedPublicKey(data)!)
             } else if data.count == ECUncompressedPublicKey.keyLen {
                 resultKey = .ecUncompressedPublicKey(ECUncompressedPublicKey(data)!)
-            } else if data.count == ECXOnlyPublicKey.keyLen {
-                resultKey = .ecXOnlyPublicKey(ECXOnlyPublicKey(data)!)
+            // } else if data.count == ECXOnlyPublicKey.keyLen {
+            //     resultKey = .ecXOnlyPublicKey(ECXOnlyPublicKey(data)!)
             } else {
                 resultKey = nil
             }
@@ -269,6 +284,55 @@ final class DescriptorParser: Parser {
         return DescriptorKeyExpression(origin: origin, key: result)
     }
     
+    func expectKey() throws -> DescriptorKeyExpression {
+        guard let key = try parseKey() else {
+            throw error("Expected key expression.")
+        }
+        return key
+    }
+    
+    func parseAddress() -> Address? {
+        let transaction = Transaction(self)
+        guard
+            let token = tokens.next(),
+            token.kind == .address
+        else {
+            return nil
+        }
+        transaction.commit()
+        return token.address
+    }
+
+    func expectAddress() throws -> Address {
+        guard let address = parseAddress() else {
+            throw error("Expected address.")
+        }
+        return address
+    }
+    
+    func parseScript() -> Script? {
+        let transaction = Transaction(self)
+        guard
+            let token = tokens.next(),
+            token.kind == .data
+        else {
+            return nil
+        }
+        let script = Script(token.data)
+        guard script.operations != nil else {
+            return nil
+        }
+        transaction.commit()
+        return script
+    }
+    
+    func expectScript() throws -> Script {
+        guard let script = parseScript() else {
+            throw error("Expected script.")
+        }
+        return script
+    }
+
     func parseRaw() throws -> DescriptorRaw? {
         guard parseKind(.raw) else {
             return nil
@@ -277,6 +341,56 @@ final class DescriptorParser: Parser {
         let data = try expectData()
         try expectCloseParen()
         return DescriptorRaw(data: data)
+    }
+    
+    func parsePK() throws -> DescriptorPK? {
+        guard parseKind(.pk) else {
+            return nil
+        }
+        try expectOpenParen()
+        let key = try expectKey()
+        try expectCloseParen()
+        return DescriptorPK(key: key)
+    }
+    
+    func parsePKH() throws -> DescriptorPKH? {
+        guard parseKind(.pkh) else {
+            return nil
+        }
+        try expectOpenParen()
+        let key = try expectKey()
+        try expectCloseParen()
+        return DescriptorPKH(key: key)
+    }
+    
+    func parseWPKH() throws -> DescriptorWPKH? {
+        guard parseKind(.wpkh) else {
+            return nil
+        }
+        try expectOpenParen()
+        let key = try expectKey()
+        try expectCloseParen()
+        return DescriptorWPKH(key: key)
+    }
+
+    func parseSH() throws -> DescriptorSH? {
+        guard parseKind(.sh) else {
+            return nil
+        }
+        try expectOpenParen()
+        let script = try expectScript()
+        try expectCloseParen()
+        return DescriptorSH(script: script)
+    }
+
+    func parseAddr() throws -> Address? {
+        guard parseKind(.addr) else {
+            return nil
+        }
+        try expectOpenParen()
+        let address = try expectAddress()
+        try expectCloseParen()
+        return address
     }
 }
 
@@ -287,3 +401,37 @@ struct DescriptorRaw: DescriptorFunction {
         ScriptPubKey(Script(data))
     }
 }
+
+struct DescriptorPK: DescriptorFunction {
+    let key: DescriptorKeyExpression
+    
+    var scriptPubKey: ScriptPubKey {
+        ScriptPubKey(Script(ops: [.data(key.pubKeyData), .op(.op_checksig)]))
+    }
+}
+
+struct DescriptorPKH: DescriptorFunction {
+    let key: DescriptorKeyExpression
+    
+    var scriptPubKey: ScriptPubKey {
+        ScriptPubKey(Script(ops: [.op(.op_dup), .op(.op_hash160), .data(key.pubKeyData.hash160), .op(.op_equalverify), .op(.op_checksig)]))
+    }
+}
+
+struct DescriptorWPKH: DescriptorFunction {
+    let key: DescriptorKeyExpression
+    
+    var scriptPubKey: ScriptPubKey {
+        ScriptPubKey(Script(ops: [.op(.op_false), .data(key.pubKeyData.hash160)]))
+    }
+}
+
+struct DescriptorSH: DescriptorFunction {
+    let script: Script
+    
+    var scriptPubKey: ScriptPubKey {
+        ScriptPubKey(Script(ops: [.op(.op_hash160), .data(script.data.hash160), .op(.op_equal)]))
+    }
+}
+
+extension Address: DescriptorFunction { }

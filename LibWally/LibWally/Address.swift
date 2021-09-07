@@ -11,10 +11,10 @@ import Foundation
 public struct Address {
     public let network: Network
     public let scriptPubKey: ScriptPubKey
-    let address: String
+    public let string: String
     
     public init?(string: String) {
-        self.address = string
+        self.string = string
 
         // Try if this is a bech32 Bitcoin mainnet address:
         if let scriptPubKey = Wally.segwitAddressToScriptPubKey(address: string, network: .mainnet) {
@@ -47,29 +47,28 @@ public struct Address {
         return nil
     }
     
-    init?(hdKey: HDKey, type: AddressType) {
+    public init?(hdKey: HDKey, type: AddressType) {
         let address = Wally.hdKeyToAddress(hdKey: hdKey, type: type)
-        // TODO: get scriptPubKey directly from libwally (requires a new function) instead parsing the string
-        self.init(string: address) // libwally generated this string, so it's safe to force unwrap
+        self.init(string: address)
     }
     
     public init?(scriptPubKey: ScriptPubKey, network: Network) {
         self.network = network
         self.scriptPubKey = scriptPubKey
         switch scriptPubKey.type {
-        case .payToPubKeyHash, .payToScriptHash:
-            self.address = Wally.address(from: scriptPubKey, network: network)
-        case .payToWitnessPubKeyHash, .payToWitnessScriptHash:
-            self.address = Wally.segwitAddress(scriptPubKey: scriptPubKey, network: network)
-        case .multiSig:
-            self.address = Wally.segwitAddress(script: scriptPubKey.witnessProgram, network: network)
+        case .pkh, .sh:
+            self.string = Wally.address(from: scriptPubKey, network: network)
+        case .wpkh, .wsh:
+            self.string = Wally.segwitAddress(scriptPubKey: scriptPubKey, network: network)
+        case .multi:
+            self.string = Wally.segwitAddress(script: scriptPubKey.witnessProgram, network: network)
         default:
             return nil
         }
     }
     
     public var description: String {
-        address
+        string
     }
 
     public enum AddressType {

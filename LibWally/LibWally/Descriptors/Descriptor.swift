@@ -22,3 +22,9 @@ public struct Descriptor {
         self.scriptPubKey = function.scriptPubKey
     }
 }
+
+extension Descriptor: CustomStringConvertible {
+    public var description: String {
+        source
+    }
+}

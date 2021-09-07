@@ -153,7 +153,7 @@ public struct PSBTOutput {
 
         // Check scriptPubKey
         switch self.txOutput.scriptPubKey.type {
-        case .multiSig:
+        case .multi:
             let expectedScriptPubKey = ScriptPubKey(multisig: Array(origins.keys), threshold: threshold)
             if self.txOutput.scriptPubKey != expectedScriptPubKey {
                 return false

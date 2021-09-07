@@ -11,16 +11,27 @@ public struct ScriptPubKey : Equatable {
     public let script: Script
 
     public enum ScriptType {
-        case opReturn // OP_RETURN
-        case payToPubKeyHash // P2PKH (legacy)
-        case payToScriptHash // P2SH (could be wrapped SegWit)
-        case payToWitnessPubKeyHash // P2WPKH (native SegWit)
-        case payToWitnessScriptHash // P2WS (native SegWit script)
-        case multiSig
+        case `return` // OP_RETURN
+        case pk // P2PK
+        case pkh // P2PKH (legacy)
+        case sh // P2SH (could be wrapped SegWit)
+        case wpkh // P2WPKH (native SegWit)
+        case wsh // P2WSH (native SegWit script)
+        case multi // MultiSig
     }
 
     public var type: ScriptType? {
-        Wally.getType(from: self)
+        if let type = Wally.getType(from: self) {
+            return type
+        } else if
+            let ops = script.operations,
+            ops.count == 2,
+            case .data = ops[0],
+            case .op(.op_checksig) = ops[1]
+        {
+            return .pk
+        }
+        return nil
     }
 
     public init?(hex: String) {
@@ -45,12 +56,12 @@ public struct ScriptPubKey : Equatable {
 
 extension ScriptPubKey: CustomStringConvertible {
     public var description: String {
-        let t: String
+        let typeString: String
         if let type = type {
-            t = String(describing: type)
+            typeString = String(describing: type)
         } else {
-            t = "unknown"
+            typeString = "unknown"
         }
-        return "\(t):\(script.description)"
+        return "\(typeString):\(script.description)"
     }
 }

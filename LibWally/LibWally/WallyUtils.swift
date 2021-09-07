@@ -271,17 +271,17 @@ extension Wally {
 
         switch Int32(output) {
         case WALLY_SCRIPT_TYPE_OP_RETURN:
-            return .opReturn
+            return .return
         case WALLY_SCRIPT_TYPE_P2PKH:
-            return .payToPubKeyHash
+            return .pkh
         case WALLY_SCRIPT_TYPE_P2SH:
-            return .payToScriptHash
+            return .sh
         case WALLY_SCRIPT_TYPE_P2WPKH:
-            return .payToWitnessPubKeyHash
+            return .wpkh
         case WALLY_SCRIPT_TYPE_P2WSH:
-            return .payToWitnessScriptHash
+            return .wsh
         case WALLY_SCRIPT_TYPE_MULTISIG:
-            return .multiSig
+            return .multi
         default:
             precondition(output == WALLY_SCRIPT_TYPE_UNKNOWN)
             return nil
