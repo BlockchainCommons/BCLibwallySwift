@@ -10,24 +10,46 @@ import XCTest
 @testable import LibWally
 
 class ScriptTests: XCTestCase {
+    func testInit() {
+        let asm = Script(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")!.asm!
+        XCTAssertEqual(asm, "OP_DUP OP_HASH160 bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe OP_EQUALVERIFY OP_CHECKSIG")
+        let asm2 = Script(asm: asm)!.asm!
+        XCTAssertEqual(asm, asm2)
+    }
+    
+    func checkScriptPubKeyAsm(_ scriptPubKey: ScriptPubKey, _ expectedAsm: String) {
+        let asm = scriptPubKey.script.asm!
+        XCTAssertEqual(asm, expectedAsm)
+        let s2 = ScriptPubKey(Script(asm: asm)!)
+        XCTAssertEqual(s2, scriptPubKey)
+    }
+    
     func testDetectScriptPubKeyTypeP2PKH() {
         let scriptPubKey = ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")!
         XCTAssertEqual(scriptPubKey.type, .payToPubKeyHash)
+        
+        checkScriptPubKeyAsm(scriptPubKey, "OP_DUP OP_HASH160 bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe OP_EQUALVERIFY OP_CHECKSIG")
     }
 
     func testDetectScriptPubKeyTypeP2SH() {
         let scriptPubKey = ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")!
         XCTAssertEqual(scriptPubKey.type, .payToScriptHash)
+
+        checkScriptPubKeyAsm(scriptPubKey, "OP_HASH160 86cc442a97817c245ce90ed0d31d6dbcde3841f9 OP_EQUAL")
     }
 
     func testDetectScriptPubKeyTypeNativeSegWit() {
         let scriptPubKey = ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")!
         XCTAssertEqual(scriptPubKey.type, .payToWitnessPubKeyHash)
+
+        checkScriptPubKeyAsm(scriptPubKey, "OP_FALSE bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")
     }
 
     func testDetectScriptPubKeyTypeOpReturn() {
         let scriptPubKey = ScriptPubKey(hex: "6a13636861726c6579206c6f766573206865696469")!
         XCTAssertEqual(scriptPubKey.type, .opReturn)
+
+        checkScriptPubKeyAsm(scriptPubKey, "OP_RETURN 636861726c6579206c6f766573206865696469")
     }
 
     func testScriptSigP2PKH() {
@@ -38,7 +60,9 @@ class ScriptTests: XCTestCase {
 
         XCTAssertEqual(scriptSig.signature, nil)
 
-        XCTAssertEqual(scriptSig.render(purpose: .feeWorstCase)?.count, 2 + Int(EC_SIGNATURE_DER_MAX_LOW_R_LEN) + 1 + pubKey.data.count)
+        let script = scriptSig.render(purpose: .feeWorstCase)!
+        print(script)
+        XCTAssertEqual(script.data.count, 2 + Int(EC_SIGNATURE_DER_MAX_LOW_R_LEN) + 1 + pubKey.data.count)
 
         scriptSig.signature = Data(hex: "01")
         let sigHashByte = Data(hex: "01")! // SIGHASH_ALL
@@ -56,7 +80,7 @@ class ScriptTests: XCTestCase {
         defer { wally_tx_witness_stack_free(witnessStack) }
         XCTAssertEqual(witnessStack.pointee.num_items, 2)
 
-        XCTAssertEqual(witness.scriptCode.hex, "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
+        XCTAssertEqual(witness.script.hex, "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")
         let signedWitness = Witness(type: .payToWitnessPubKeyHash, pubKey: pubKey, signature: Data(hex: "01")!)
         let signedWitnessStack = signedWitness.createWallyStack()
         defer { wally_tx_witness_stack_free(signedWitnessStack) }
@@ -68,7 +92,7 @@ class ScriptTests: XCTestCase {
         let pubKey2 = ECCompressedPublicKey(hex: "022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a554737")! // [bd16bee5/0'/1]
         let multisig = ScriptPubKey(multisig: [pubKey1, pubKey2], threshold: 2)
         XCTAssertEqual(multisig.type, .multiSig)
-        XCTAssertEqual(multisig.data.hex, "5221022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a5547372103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c52ae")
+        XCTAssertEqual(multisig.script.data.hex, "5221022e3d55c64908832291348d1faa74bff4ae1047e9777a28b26b064e410a5547372103501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c52ae")
         XCTAssertEqual(multisig.witnessProgram.hex, "0020ce8c526b7a6c9491ed33861f4492299c86ffa8567a75286535f317ddede3062a")
 
         let address = Address(scriptPubKey: multisig, network: .mainnet)!

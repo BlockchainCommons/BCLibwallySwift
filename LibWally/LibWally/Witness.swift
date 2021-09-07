@@ -62,7 +62,7 @@ public struct Witness {
         Witness(type: type, pubKey: pubKey, signature: signature)
     }
 
-    public var scriptCode: Data {
-        return Data(hex: "76a914")! + pubKey.hash160 + Data(hex: "88ac")!
+    public var script: Script {
+        return Script(ops: [.op(.op_dup), .op(.op_hash160), .data(pubKey.hash160), .op(.op_equalverify), .op(.op_checksig)])
     }
 }

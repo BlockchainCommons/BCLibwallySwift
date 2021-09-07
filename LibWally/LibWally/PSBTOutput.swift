@@ -27,9 +27,9 @@ public struct PSBTOutput {
         }
         let scriptPubKey: ScriptPubKey
         if let scriptPubKeyBytes = wallyPSBTOutput.witness_script {
-            scriptPubKey = ScriptPubKey(Data(bytes: scriptPubKeyBytes, count: wallyPSBTOutput.witness_script_len))
+            scriptPubKey = ScriptPubKey(Script(Data(bytes: scriptPubKeyBytes, count: wallyPSBTOutput.witness_script_len)))
         } else {
-            scriptPubKey = ScriptPubKey(Data(bytes: wallyTxOutput.script, count: wallyTxOutput.script_len))
+            scriptPubKey = ScriptPubKey(Script(Data(bytes: wallyTxOutput.script, count: wallyTxOutput.script_len)))
         }
 
         self.txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: wallyTxOutput.satoshi)

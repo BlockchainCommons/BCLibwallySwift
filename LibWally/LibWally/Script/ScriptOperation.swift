@@ -1,5 +1,5 @@
 //
-//  Operation.swift
+//  ScriptOperation.swift
 //  LibWally
 //
 //  Created by Wolf McNally on 9/5/21.
@@ -8,20 +8,20 @@
 import Foundation
 @_implementationOnly import WolfBase
 
-public enum Operation: Equatable {
+public enum ScriptOperation: Equatable {
     case data(Data)
-    case op(Opcode)
+    case op(ScriptOpcode)
     
     public init(_ data: Data) {
         self = .data(data)
     }
     
-    public init(_ opcode: Opcode) {
+    public init(_ opcode: ScriptOpcode) {
         self = .op(opcode)
     }
     
     public init?(_ string: String) {
-        if let opcode = Opcode(name: string) {
+        if let opcode = ScriptOpcode(name: string) {
             self = .op(opcode)
         } else if let data = Data(hex: string) {
             self = .data(data)
@@ -42,15 +42,15 @@ public enum Operation: Equatable {
                 result.append(UInt8(count))
                 result.append(data)
             case 0x4c...0xff:
-                result.append(Opcode.op_pushdata1.rawValue)
+                result.append(ScriptOpcode.op_pushdata1.rawValue)
                 result.append(serialize(UInt8(count), littleEndian: true))
                 result.append(data)
             case 0x100...0xffff:
-                result.append(Opcode.op_pushdata2.rawValue)
+                result.append(ScriptOpcode.op_pushdata2.rawValue)
                 result.append(serialize(UInt16(count), littleEndian: true))
                 result.append(data)
             case 0x10000...0xffffffff:
-                result.append(Opcode.op_pushdata4.rawValue)
+                result.append(ScriptOpcode.op_pushdata4.rawValue)
                 result.append(serialize(UInt32(count), littleEndian: true))
                 result.append(data)
             default:
@@ -58,5 +58,16 @@ public enum Operation: Equatable {
             }
         }
         return result
+    }
+}
+
+extension ScriptOperation: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .data(let data):
+            return data.hex
+        case .op(let opcode):
+            return opcode.description
+        }
     }
 }

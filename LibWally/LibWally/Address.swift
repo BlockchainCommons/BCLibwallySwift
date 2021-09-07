@@ -62,7 +62,7 @@ public struct Address {
         case .payToWitnessPubKeyHash, .payToWitnessScriptHash:
             self.address = Wally.segwitAddress(scriptPubKey: scriptPubKey, network: network)
         case .multiSig:
-            self.address = Wally.segwitAddress(data: scriptPubKey.witnessProgram, network: network)
+            self.address = Wally.segwitAddress(script: scriptPubKey.witnessProgram, network: network)
         default:
             return nil
         }

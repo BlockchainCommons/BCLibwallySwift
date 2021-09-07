@@ -22,7 +22,7 @@ public struct TxOutput {
 
     public func createWallyOutput() -> UnsafeMutablePointer<wally_tx_output> {
         var output: UnsafeMutablePointer<wally_tx_output>!
-        scriptPubKey.data.withUnsafeByteBuffer { buf in
+        scriptPubKey.script.data.withUnsafeByteBuffer { buf in
             precondition(wally_tx_output_init_alloc(amount, buf.baseAddress, buf.count, &output) == WALLY_OK)
         }
         return output

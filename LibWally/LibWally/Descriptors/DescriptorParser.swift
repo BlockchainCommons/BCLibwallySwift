@@ -284,6 +284,6 @@ struct DescriptorRaw: DescriptorFunction {
     let data: Data
     
     var scriptPubKey: ScriptPubKey {
-        ScriptPubKey(data)
+        ScriptPubKey(Script(data))
     }
 }

@@ -265,7 +265,7 @@ extension Wally {
 extension Wally {
     public static func getType(from scriptPubKey: ScriptPubKey) -> ScriptPubKey.ScriptType? {
         var output = 0
-        scriptPubKey.data.withUnsafeByteBuffer { buf in
+        scriptPubKey.script.data.withUnsafeByteBuffer { buf in
             precondition(wally_scriptpubkey_get_type(buf.baseAddress, buf.count, &output) == WALLY_OK)
         }
 
@@ -300,7 +300,7 @@ extension Wally {
         pubkeys_bytes.withUnsafeByteBuffer { buf in
             precondition(wally_scriptpubkey_multisig_from_bytes(buf.baseAddress, buf.count, UInt32(threshold), flags, &script_bytes, scriptLen, &written) == WALLY_OK)
         }
-        return ScriptPubKey(Data(bytes: script_bytes, count: written))
+        return ScriptPubKey(Script(Data(bytes: script_bytes, count: written)))
     }
     
     public static func address(from scriptPubKey: ScriptPubKey, network: Network) -> String {
@@ -308,36 +308,36 @@ extension Wally {
         defer {
             wally_free_string(output)
         }
-        scriptPubKey.data.withUnsafeByteBuffer { buf in
+        scriptPubKey.script.data.withUnsafeByteBuffer { buf in
             precondition(wally_scriptpubkey_to_address(buf.baseAddress, buf.count, network.wallyNetwork, &output) == WALLY_OK)
         }
         precondition(output != nil)
         return String(cString: output!)
     }
     
-    public static func segwitAddress(data: Data, network: Network) -> String {
+    public static func segwitAddress(script: Script, network: Network) -> String {
         var output: UnsafeMutablePointer<Int8>!
         defer {
             wally_free_string(output)
         }
-        data.withUnsafeByteBuffer { buf in
+        script.data.withUnsafeByteBuffer { buf in
             precondition(wally_addr_segwit_from_bytes(buf.baseAddress, buf.count, network.segwitFamily, 0, &output) == WALLY_OK)
         }
         return String(cString: output)
     }
     
     public static func segwitAddress(scriptPubKey: ScriptPubKey, network: Network) -> String {
-        segwitAddress(data: scriptPubKey.data, network: network)
+        segwitAddress(script: scriptPubKey.script, network: network)
     }
     
-    public static func witnessProgram(scriptPubKey: ScriptPubKey) -> Data {
+    public static func witnessProgram(scriptPubKey: ScriptPubKey) -> Script {
         var script_bytes = [UInt8](repeating: 0, count: 34) // 00 20 HASH256
         var written = 0
-        scriptPubKey.data.withUnsafeByteBuffer { buf in
+        scriptPubKey.script.data.withUnsafeByteBuffer { buf in
             precondition(wally_witness_program_from_bytes(buf.baseAddress, buf.count, UInt32(WALLY_SCRIPT_SHA256), &script_bytes, script_bytes.count, &written) == WALLY_OK)
             precondition(written == script_bytes.count)
         }
-        return Data(script_bytes)
+        return Script(Data(script_bytes))
     }
 
     public static func addressToScriptPubKey(address: String, network: Network) -> ScriptPubKey? {
@@ -347,7 +347,7 @@ extension Wally {
         guard wally_address_to_scriptpubkey(address, network.wallyNetwork, &bytes_out, address.count, &written) == WALLY_OK else {
             return nil
         }
-        return ScriptPubKey(Data(bytes: bytes_out, count: written))
+        return ScriptPubKey(Script(Data(bytes: bytes_out, count: written)))
     }
 
     public static func segwitAddressToScriptPubKey(address: String, network: Network) -> ScriptPubKey? {
@@ -357,7 +357,7 @@ extension Wally {
         guard wally_addr_segwit_to_bytes(address, network.segwitFamily, 0, &bytes_out, address.count, &written) == WALLY_OK else {
             return nil
         }
-        return ScriptPubKey(Data(bytes: bytes_out, count: written))
+        return ScriptPubKey(Script(Data(bytes: bytes_out, count: written)))
     }
     
     public static func hdKeyToAddress(hdKey: HDKey, type: Address.AddressType) -> String {

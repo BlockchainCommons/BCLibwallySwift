@@ -8,7 +8,7 @@
 import Foundation
 
 public struct ScriptPubKey : Equatable {
-    public let data: Data
+    public let script: Script
 
     public enum ScriptType {
         case opReturn // OP_RETURN
@@ -27,18 +27,18 @@ public struct ScriptPubKey : Equatable {
         guard let data = Data(hex: hex) else {
             return nil
         }
-        self.data = data
+        self.script = Script(data)
     }
     
     public init(multisig pubKeys: [ECCompressedPublicKey], threshold: UInt, isBIP67: Bool = true) {
         self = Wally.multisigScriptPubKey(pubKeys: pubKeys, threshold: threshold, isBIP67: isBIP67)
     }
 
-    public init(_ data: Data) {
-        self.data = data
+    public init(_ script: Script) {
+        self.script = script
     }
 
-    public var witnessProgram: Data {
+    public var witnessProgram: Script {
         Wally.witnessProgram(scriptPubKey: self)
     }
 }
@@ -51,6 +51,6 @@ extension ScriptPubKey: CustomStringConvertible {
         } else {
             t = "unknown"
         }
-        return "\(t):\(data.hex)"
+        return "\(t):\(script.description)"
     }
 }

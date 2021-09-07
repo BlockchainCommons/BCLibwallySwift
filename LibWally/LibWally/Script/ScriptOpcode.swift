@@ -1,5 +1,5 @@
 //
-//  Opcode.swift
+//  ScriptOpcode.swift
 //  LibWally
 //
 //  Created by Wolf McNally on 9/3/21.
@@ -8,7 +8,7 @@
 import Foundation
 @_implementationOnly import WolfBase
 
-public enum Opcode: UInt8, Equatable {
+public enum ScriptOpcode: UInt8, Equatable {
     // See: https://en.bitcoin.it/wiki/Script
     
     // push value
@@ -152,17 +152,17 @@ public enum Opcode: UInt8, Equatable {
     case op_invalidopcode = 0xff
 }
 
-extension Opcode: CustomStringConvertible {
+extension ScriptOpcode: CustomStringConvertible {
     public var description: String {
         name†
     }
 }
 
-extension Opcode {
+extension ScriptOpcode {
     public init?(name: String) {
         guard
             let rawValue = Self.rawValueForName[name.uppercased()],
-            let opcode = Opcode(rawValue: rawValue)
+            let opcode = ScriptOpcode(rawValue: rawValue)
         else {
             return nil
         }
@@ -200,7 +200,7 @@ extension Opcode {
         return result
     }()
     
-    static let ops: [(Opcode, String, UInt8)] = [
+    static let ops: [(ScriptOpcode, String, UInt8)] = [
         // case op_0 = 0x00
         (.op_false,     "OP_FALSE",     0x00),
         (.op_pushdata1, "OP_PUSHDATA1", 0x4c),

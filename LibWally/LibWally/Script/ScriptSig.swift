@@ -28,7 +28,7 @@ public struct ScriptSig {
         case feeWorstCase
     }
 
-    public func render(purpose: ScriptSigPurpose) -> Data? {
+    public func render(purpose: ScriptSigPurpose) -> Script? {
         switch type {
         case .payToPubKeyHash(let pubKey):
             switch purpose {
@@ -38,20 +38,20 @@ public struct ScriptSig {
                 let sigHashByte = Data([UInt8(WALLY_SIGHASH_ALL)])
                 let lengthPushSignature = Data([UInt8(dummySignature.count + 1)]) // DER encoded signature + sighash byte
                 let lengthPushPubKey = Data([UInt8(pubKey.data.count)])
-                return lengthPushSignature + dummySignature + sigHashByte + lengthPushPubKey + pubKey.data
+                return Script(lengthPushSignature + dummySignature + sigHashByte + lengthPushPubKey + pubKey.data)
             case .signed:
                 if let signature = signature {
                     let lengthPushSignature = Data([UInt8(signature.count + 1)]) // DER encoded signature + sighash byte
                     let sigHashByte = Data([UInt8(WALLY_SIGHASH_ALL)])
                     let lengthPushPubKey = Data([UInt8(pubKey.data.count)])
-                    return lengthPushSignature + signature + sigHashByte + lengthPushPubKey + pubKey.data
+                    return Script(lengthPushSignature + signature + sigHashByte + lengthPushPubKey + pubKey.data)
                 } else {
                     return nil
                 }
             }
         case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
-            let redeemScript = Data(hex: "0014")! + pubKey.hash160
-            return Data([UInt8(redeemScript.count)]) + redeemScript
+            let redeemScript = Script(ops: [.op(.op_false), .data(pubKey.hash160)])
+            return Script(ops: [.data(redeemScript.data)])
         }
     }
 }

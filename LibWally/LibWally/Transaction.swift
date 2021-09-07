@@ -166,7 +166,7 @@ public struct Transaction {
             if !input.isSigned {
                 if let scriptSig = input.scriptSig {
                     let scriptSigWorstCase = scriptSig.render(purpose: .feeWorstCase)!
-                    scriptSigWorstCase.withUnsafeByteBuffer { buf in
+                    scriptSigWorstCase.data.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_set_input_script(cloned_tx, index, buf.baseAddress, buf.count) == WALLY_OK)
                     }
                 }
@@ -215,7 +215,7 @@ public struct Transaction {
                 switch witness.type {
                 case .payToScriptHashPayToWitnessPubKeyHash:
                     let scriptSig = inputs[i].scriptSig!.render(purpose: .signed)!
-                    scriptSig.withUnsafeByteBuffer { buf in
+                    scriptSig.data.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
                     }
 
@@ -225,14 +225,14 @@ public struct Transaction {
                     let pubKeyData = Data(of: privKeys[i].wally_ext_key.pub_key)
                     precondition(witness.pubKey.data == pubKeyData)
                     
-                    let scriptCode = witness.scriptCode
-                    scriptCode.withUnsafeByteBuffer { buf in
+                    let script = witness.script
+                    script.data.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, inputs[i].amount, UInt32(WALLY_SIGHASH_ALL), UInt32(WALLY_TX_FLAG_USE_WITNESS), &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
                     }
                 }
             } else {
                 // Prep input for signing:
-                let scriptPubKey = inputs[i].scriptPubKey.data
+                let scriptPubKey = inputs[i].scriptPubKey.script.data
                 scriptPubKey.withUnsafeByteBuffer { buf in
                     // Create hash for signing
                     precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, 0, UInt32(WALLY_SIGHASH_ALL), 0, &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
@@ -279,7 +279,7 @@ public struct Transaction {
                 
                 // Update scriptSig:
                 let signedScriptSig = updatedInputs[i].scriptSig!.render(purpose: .signed)!
-                signedScriptSig.withUnsafeByteBuffer { buf in
+                signedScriptSig.data.withUnsafeByteBuffer { buf in
                     precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
                 }
             }

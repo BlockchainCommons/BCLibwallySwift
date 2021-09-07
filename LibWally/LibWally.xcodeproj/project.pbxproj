@@ -53,14 +53,15 @@
 		79865C5526E08D4800897441 /* DescriptorParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5426E08D4800897441 /* DescriptorParserTests.swift */; };
 		79865C5726E0A4EC00897441 /* WIF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5626E0A4EC00897441 /* WIF.swift */; };
 		79B02BF826E59DDA00950779 /* FlexerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BF726E59DDA00950779 /* FlexerExtensions.swift */; };
-		79B02BFB26E59E3100950779 /* Operation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFA26E59E3100950779 /* Operation.swift */; };
+		79B02BFB26E59E3100950779 /* ScriptOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFA26E59E3100950779 /* ScriptOperation.swift */; };
 		79B02BFD26E59E5400950779 /* Script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFC26E59E5400950779 /* Script.swift */; };
+		79B02BFF26E681CF00950779 /* ScriptOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */; };
 		79C7CE0F26E1C35700C5CD75 /* DescriptorError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */; };
 		79C7CE1126E1C56500C5CD75 /* Descriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1026E1C56500C5CD75 /* Descriptor.swift */; };
 		79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */; };
 		79C7CE1526E1FBF100C5CD75 /* ParseTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1426E1FBF100C5CD75 /* ParseTransaction.swift */; };
-		79C7CE1726E217F700C5CD75 /* Opcode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1626E217F700C5CD75 /* Opcode.swift */; };
-		79C7CE1926E21D3E00C5CD75 /* OpcodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1826E21D3E00C5CD75 /* OpcodeTests.swift */; };
+		79C7CE1726E217F700C5CD75 /* ScriptOpcode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1626E217F700C5CD75 /* ScriptOpcode.swift */; };
+		79C7CE1926E21D3E00C5CD75 /* ScriptOpcodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1826E21D3E00C5CD75 /* ScriptOpcodeTests.swift */; };
 		79EC702526D75B2200A3D4E9 /* WallyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EC702426D75B2200A3D4E9 /* WallyUtils.swift */; };
 /* End PBXBuildFile section */
 
@@ -123,14 +124,15 @@
 		79865C5426E08D4800897441 /* DescriptorParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorParserTests.swift; sourceTree = "<group>"; };
 		79865C5626E0A4EC00897441 /* WIF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIF.swift; sourceTree = "<group>"; };
 		79B02BF726E59DDA00950779 /* FlexerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexerExtensions.swift; sourceTree = "<group>"; };
-		79B02BFA26E59E3100950779 /* Operation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Operation.swift; sourceTree = "<group>"; };
+		79B02BFA26E59E3100950779 /* ScriptOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOperation.swift; sourceTree = "<group>"; };
 		79B02BFC26E59E5400950779 /* Script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Script.swift; sourceTree = "<group>"; };
+		79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOperationTests.swift; sourceTree = "<group>"; };
 		79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorError.swift; sourceTree = "<group>"; };
 		79C7CE1026E1C56500C5CD75 /* Descriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptor.swift; sourceTree = "<group>"; };
 		79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorKeyExpression.swift; sourceTree = "<group>"; };
 		79C7CE1426E1FBF100C5CD75 /* ParseTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParseTransaction.swift; sourceTree = "<group>"; };
-		79C7CE1626E217F700C5CD75 /* Opcode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Opcode.swift; sourceTree = "<group>"; };
-		79C7CE1826E21D3E00C5CD75 /* OpcodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpcodeTests.swift; sourceTree = "<group>"; };
+		79C7CE1626E217F700C5CD75 /* ScriptOpcode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOpcode.swift; sourceTree = "<group>"; };
+		79C7CE1826E21D3E00C5CD75 /* ScriptOpcodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOpcodeTests.swift; sourceTree = "<group>"; };
 		79EC702426D75B2200A3D4E9 /* WallyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallyUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -216,7 +218,8 @@
 				030A6403250382A300A1D27E /* TransactionTests.swift */,
 				79865C4A26DEF3BB00897441 /* DescriptorLexerTests.swift */,
 				79865C5426E08D4800897441 /* DescriptorParserTests.swift */,
-				79C7CE1826E21D3E00C5CD75 /* OpcodeTests.swift */,
+				79C7CE1826E21D3E00C5CD75 /* ScriptOpcodeTests.swift */,
+				79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */,
 				030A63E225035EDA00A1D27E /* Info.plist */,
 			);
 			path = LibWallyTests;
@@ -267,8 +270,8 @@
 			children = (
 				030A63F42503702700A1D27E /* ScriptPubKey.swift */,
 				03A5611A256A802900181CB8 /* ScriptSig.swift */,
-				79C7CE1626E217F700C5CD75 /* Opcode.swift */,
-				79B02BFA26E59E3100950779 /* Operation.swift */,
+				79C7CE1626E217F700C5CD75 /* ScriptOpcode.swift */,
+				79B02BFA26E59E3100950779 /* ScriptOperation.swift */,
 				79B02BFC26E59E5400950779 /* Script.swift */,
 			);
 			path = Script;
@@ -415,12 +418,12 @@
 				79C7CE1526E1FBF100C5CD75 /* ParseTransaction.swift in Sources */,
 				03A560F72568FE9D00181CB8 /* Network.swift in Sources */,
 				030A63FD2503702700A1D27E /* DerivationPath.swift in Sources */,
-				79B02BFB26E59E3100950779 /* Operation.swift in Sources */,
+				79B02BFB26E59E3100950779 /* ScriptOperation.swift in Sources */,
 				79865C5726E0A4EC00897441 /* WIF.swift in Sources */,
 				030A63FB2503702700A1D27E /* ScriptPubKey.swift in Sources */,
 				79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */,
 				03A5610125691F0400181CB8 /* Satoshi.swift in Sources */,
-				79C7CE1726E217F700C5CD75 /* Opcode.swift in Sources */,
+				79C7CE1726E217F700C5CD75 /* ScriptOpcode.swift in Sources */,
 				03A56115256A399700181CB8 /* PSBTOutput.swift in Sources */,
 				03A5610525691F1600181CB8 /* TxOutput.swift in Sources */,
 				03A5611F256A805E00181CB8 /* Witness.swift in Sources */,
@@ -445,9 +448,10 @@
 				030A640E250382A300A1D27E /* ScriptTests.swift in Sources */,
 				030A640B250382A300A1D27E /* AddressTests.swift in Sources */,
 				030A6408250382A300A1D27E /* BIP39Tests.swift in Sources */,
+				79B02BFF26E681CF00950779 /* ScriptOperationTests.swift in Sources */,
 				79865C5526E08D4800897441 /* DescriptorParserTests.swift in Sources */,
 				79865C4B26DEF3BB00897441 /* DescriptorLexerTests.swift in Sources */,
-				79C7CE1926E21D3E00C5CD75 /* OpcodeTests.swift in Sources */,
+				79C7CE1926E21D3E00C5CD75 /* ScriptOpcodeTests.swift in Sources */,
 				030A640D250382A300A1D27E /* BIP32Tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

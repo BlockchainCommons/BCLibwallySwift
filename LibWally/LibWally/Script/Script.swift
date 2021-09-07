@@ -8,14 +8,14 @@
 import Foundation
 @_implementationOnly import WolfBase
 
-public struct Script {
+public struct Script: Equatable {
     public let data: Data
     
     public init(_ data: Data) {
         self.data = data
     }
 
-    public init(ops: [Operation]) {
+    public init(ops: [ScriptOperation]) {
         self.data = Data(ops.map({$0.serialized}).joined())
     }
     
@@ -26,13 +26,13 @@ public struct Script {
         self.init(data)
     }
 
-    public init?(string: String) {
+    public init?(asm: String) {
         var data = Data()
-        let tokens = string.split(separator: " ").map { String($0) }
+        let tokens = asm.split(separator: " ").map { String($0) }
         for token in tokens {
             if let hexData = Data(hex: token) {
-                data.append(hexData)
-            } else if let opcode = Opcode(name: token) {
+                data.append(ScriptOperation.data(hexData).serialized)
+            } else if let opcode = ScriptOpcode(name: token) {
                 data.append(opcode.rawValue)
             }
         }
@@ -43,9 +43,9 @@ public struct Script {
         data.hex
     }
     
-    public var ops: [Operation]? {
+    public var operations: [ScriptOperation]? {
         var bytes = data.lookAhead
-        var ops: [Operation] = []
+        var ops: [ScriptOperation] = []
         
         func pushData(count: Int) -> Bool {
             guard let dataBytes = bytes.next(count: count) else {
@@ -93,7 +93,7 @@ public struct Script {
             case 0x50: // OP_RESERVED
                 ops.append(.op(.op_reserved))
             case 0x51...0xba:
-                guard let opcode = Opcode(rawValue: byte) else {
+                guard let opcode = ScriptOpcode(rawValue: byte) else {
                     return nil
                 }
                 ops.append(.op(opcode))
@@ -103,5 +103,18 @@ public struct Script {
         }
         
         return ops
+    }
+    
+    public var asm: String? {
+        guard let ops = operations else {
+            return nil
+        }
+        return ops.map({$0.description}).joined(separator: " ")
+    }
+}
+
+extension Script: CustomStringConvertible {
+    public var description: String {
+        asm ?? "invalid"
     }
 }
