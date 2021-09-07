@@ -42,7 +42,7 @@ class ScriptTests: XCTestCase {
         let scriptPubKey = ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")!
         XCTAssertEqual(scriptPubKey.type, .wpkh)
 
-        checkScriptPubKeyAsm(scriptPubKey, "OP_FALSE bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")
+        checkScriptPubKeyAsm(scriptPubKey, "OP_0 bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")
     }
 
     func testDetectScriptPubKeyTypeOpReturn() {

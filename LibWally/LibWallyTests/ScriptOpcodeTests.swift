@@ -20,8 +20,8 @@ class ScriptOpcodeTests: XCTestCase {
     }
     
     func testAliases() {
-        XCTAssertEqual(ScriptOpcode(name: "op_0"), .op_false)
-        XCTAssertEqual(ScriptOpcode(name: "OP_1"), .op_true)
+        XCTAssertEqual(ScriptOpcode(name: "op_false"), .op_0)
+        XCTAssertEqual(ScriptOpcode(name: "OP_TRUE"), .op_1)
         XCTAssertEqual(ScriptOpcode(name: "OP_NOP2"), .op_checklocktimeverify)
         XCTAssertEqual(ScriptOpcode(name: "OP_NOP3"), .op_checksequenceverify)
     }

@@ -50,7 +50,7 @@ public struct ScriptSig {
                 }
             }
         case .payToScriptHashPayToWitnessPubKeyHash(let pubKey):
-            let redeemScript = Script(ops: [.op(.op_false), .data(pubKey.hash160)])
+            let redeemScript = Script(ops: [.op(.op_0), .data(pubKey.hash160)])
             return Script(ops: [.data(redeemScript.data)])
         }
     }

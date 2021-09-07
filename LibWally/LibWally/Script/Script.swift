@@ -70,7 +70,7 @@ public struct Script: Equatable {
         while let byte = bytes.next() {
             switch byte {
             case 0x00:
-                ops.append(.op(.op_false))
+                ops.append(.op(.op_0))
             case 0x01...0x4b:
                 let count = Int(byte)
                 guard pushData(count: count) else {

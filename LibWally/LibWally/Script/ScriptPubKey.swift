@@ -11,13 +11,13 @@ public struct ScriptPubKey : Equatable {
     public let script: Script
 
     public enum ScriptType {
-        case `return` // OP_RETURN
-        case pk // P2PK
-        case pkh // P2PKH (legacy)
-        case sh // P2SH (could be wrapped SegWit)
-        case wpkh // P2WPKH (native SegWit)
-        case wsh // P2WSH (native SegWit script)
-        case multi // MultiSig
+        case `return`   // OP_RETURN
+        case pk         // P2PK
+        case pkh        // P2PKH (legacy)
+        case sh         // P2SH (could be wrapped SegWit)
+        case wpkh       // P2WPKH (native SegWit)
+        case wsh        // P2WSH (native SegWit script)
+        case multi      // MultiSig
     }
 
     public var type: ScriptType? {

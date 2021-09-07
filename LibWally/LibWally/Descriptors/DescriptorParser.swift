@@ -38,6 +38,9 @@ final class DescriptorParser: Parser {
         if let wpkh = try parseWPKH() {
             return wpkh
         }
+        if let multi = try parseMulti() {
+            return multi
+        }
         if let sh = try parseSH() {
             return sh
         }
@@ -94,6 +97,26 @@ final class DescriptorParser: Parser {
     func parseKind(_ kind: DescriptorToken.Kind) -> Bool {
         parseToken(kind: kind) != nil
     }
+    
+    func parseInt() -> Int? {
+        let transaction = Transaction(self)
+        guard
+            let token = tokens.next(),
+            token.kind == .int
+        else {
+            return nil
+        }
+        let i = token.int
+        transaction.commit()
+        return i
+    }
+    
+    func expectInt() throws -> Int {
+        guard let i = parseInt() else {
+            throw error("Expected integer.")
+        }
+        return i
+    }
 
     func parseChildnum() -> UInt32? {
         let transaction = Transaction(self)
@@ -146,6 +169,16 @@ final class DescriptorParser: Parser {
     func expectCloseBracket() throws {
         guard parseCloseBracket() else {
             throw error("Expected close bracket.")
+        }
+    }
+    
+    func parseComma() -> Bool {
+        parseKind(.comma)
+    }
+    
+    func expectComma() throws {
+        guard parseComma() else {
+            throw error("Expected comma.")
         }
     }
 
@@ -291,6 +324,19 @@ final class DescriptorParser: Parser {
         return key
     }
     
+    func expectKeyList() throws -> [DescriptorKeyExpression] {
+        let transaction = Transaction(self)
+        var result: [DescriptorKeyExpression] = []
+        while parseComma() {
+            try result.append(expectKey())
+        }
+        guard !result.isEmpty else {
+            throw error("Expected list of keys.")
+        }
+        transaction.commit()
+        return result
+    }
+    
     func parseAddress() -> Address? {
         let transaction = Transaction(self)
         guard
@@ -392,6 +438,17 @@ final class DescriptorParser: Parser {
         try expectCloseParen()
         return address
     }
+    
+    func parseMulti() throws -> DescriptorMulti? {
+        guard parseKind(.multi) else {
+            return nil
+        }
+        try expectOpenParen()
+        let threshold = try expectInt()
+        let keys = try expectKeyList()
+        try expectCloseParen()
+        return DescriptorMulti(threshold: threshold, keys: keys)
+    }
 }
 
 struct DescriptorRaw: DescriptorFunction {
@@ -422,7 +479,7 @@ struct DescriptorWPKH: DescriptorFunction {
     let key: DescriptorKeyExpression
     
     var scriptPubKey: ScriptPubKey {
-        ScriptPubKey(Script(ops: [.op(.op_false), .data(key.pubKeyData.hash160)]))
+        ScriptPubKey(Script(ops: [.op(.op_0), .data(key.pubKeyData.hash160)]))
     }
 }
 
@@ -435,3 +492,19 @@ struct DescriptorSH: DescriptorFunction {
 }
 
 extension Address: DescriptorFunction { }
+
+struct DescriptorMulti: DescriptorFunction {
+    let threshold: Int
+    let keys: [DescriptorKeyExpression]
+    
+    var scriptPubKey: ScriptPubKey {
+        var ops: [ScriptOperation] = []
+        ops.append(.op(ScriptOpcode(int: threshold)!))
+        for key in keys {
+            ops.append(.data(key.pubKeyData))
+        }
+        ops.append(.op(ScriptOpcode(int: keys.count)!))
+        ops.append(.op(.op_checkmultisig))
+        return ScriptPubKey(Script(ops: ops))
+    }
+}

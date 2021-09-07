@@ -54,11 +54,19 @@ class DescriptorParserTests: XCTestCase {
         let wif = hdKey.privKey!.wif
         let tpub = hdKey.xpub
         
-        try XCTAssertEqual(Descriptor("wpkh(\(ecPub))").scriptPubKey.description, "wpkh:OP_FALSE 4efd3ded47d967e4122982422c9d84db60503972")
-        try XCTAssertEqual(Descriptor("wpkh(\(ecPubUncompressed))").scriptPubKey.description, "wpkh:OP_FALSE 335f3a94aeed3518f0baedc04330945e3dd0744b")
-        try XCTAssertEqual(Descriptor("wpkh(\(wif))").scriptPubKey.description, "wpkh:OP_FALSE 4efd3ded47d967e4122982422c9d84db60503972")
-        try XCTAssertEqual(Descriptor("wpkh(\(tprv))").scriptPubKey.description, "wpkh:OP_FALSE 4efd3ded47d967e4122982422c9d84db60503972")
-        try XCTAssertEqual(Descriptor("wpkh(\(tpub))").scriptPubKey.description, "wpkh:OP_FALSE 4efd3ded47d967e4122982422c9d84db60503972")
+        try XCTAssertEqual(Descriptor("wpkh(\(ecPub))").scriptPubKey.description, "wpkh:OP_0 4efd3ded47d967e4122982422c9d84db60503972")
+        try XCTAssertEqual(Descriptor("wpkh(\(ecPubUncompressed))").scriptPubKey.description, "wpkh:OP_0 335f3a94aeed3518f0baedc04330945e3dd0744b")
+        try XCTAssertEqual(Descriptor("wpkh(\(wif))").scriptPubKey.description, "wpkh:OP_0 4efd3ded47d967e4122982422c9d84db60503972")
+        try XCTAssertEqual(Descriptor("wpkh(\(tprv))").scriptPubKey.description, "wpkh:OP_0 4efd3ded47d967e4122982422c9d84db60503972")
+        try XCTAssertEqual(Descriptor("wpkh(\(tpub))").scriptPubKey.description, "wpkh:OP_0 4efd3ded47d967e4122982422c9d84db60503972")
+    }
+    
+    func testMulti() throws {
+        let m1 = "multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)"
+        try XCTAssertEqual(Descriptor(m1).scriptPubKey.description, "multi:OP_1 022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4 025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc OP_2 OP_CHECKMULTISIG")
+        
+        let m2 = "multi(2,03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7,03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb,03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a)"
+        try XCTAssertEqual(Descriptor(m2).scriptPubKey.description, "multi:OP_2 03a0434d9e47f3c86235477c7b1ae6ae5d3442d49b1943c2b752a68e2a47e247c7 03774ae7f858a9411e5ef4246b70c65aac5649980be5c17891bbec17895da008cb 03d01115d548e7561b15c38f004d734633687cf4419620095bc5b0f47070afe85a OP_3 OP_CHECKMULTISIG")
     }
 
     func testAddr() throws {
@@ -72,6 +80,6 @@ class DescriptorParserTests: XCTestCase {
         try XCTAssertEqual(Descriptor("addr(\(p2shp2wpkh))").scriptPubKey.description, "sh:OP_HASH160 8fb371a0195598d96e634b9eddb645fa1f128e11 OP_EQUAL")
         let p2wpkh = Address(hdKey: hdKey, type: .payToWitnessPubKeyHash)!.string
         XCTAssertEqual(p2wpkh, "tb1qfm7nmm28m9n7gy3fsfpze8vymds9qwtjwn4w7y")
-        try XCTAssertEqual(Descriptor("addr(\(p2wpkh))").scriptPubKey.description, "wpkh:OP_FALSE 4efd3ded47d967e4122982422c9d84db60503972")
+        try XCTAssertEqual(Descriptor("addr(\(p2wpkh))").scriptPubKey.description, "wpkh:OP_0 4efd3ded47d967e4122982422c9d84db60503972")
     }
 }

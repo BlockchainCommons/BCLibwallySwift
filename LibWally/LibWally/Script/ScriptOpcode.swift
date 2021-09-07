@@ -12,15 +12,15 @@ public enum ScriptOpcode: UInt8, Equatable {
     // See: https://en.bitcoin.it/wiki/Script
     
     // push value
-    // case op_0 = 0x00
-    case op_false = 0x00
+    case op_0 = 0x00
+//    case op_false = 0x00
     case op_pushdata1 = 0x4c
     case op_pushdata2 = 0x4d
     case op_pushdata4 = 0x4e
     case op_1negate = 0x4f
     case op_reserved = 0x50
-    // case op_1 = 0x51
-    case op_true = 0x51
+    case op_1 = 0x51
+//    case op_true = 0x51
     case op_2 = 0x52
     case op_3 = 0x53
     case op_4 = 0x54
@@ -152,6 +152,20 @@ public enum ScriptOpcode: UInt8, Equatable {
     case op_invalidopcode = 0xff
 }
 
+extension ScriptOpcode {
+    public init?(int i: Int) {
+        guard (0...16).contains(i) else {
+            return nil
+        }
+        switch i {
+        case 0:
+            self = .op_0
+        default:
+            self = ScriptOpcode(rawValue: 0x50 + UInt8(i))!
+        }
+    }
+}
+
 extension ScriptOpcode: CustomStringConvertible {
     public var description: String {
         name†
@@ -181,8 +195,8 @@ extension ScriptOpcode {
             result[name] = rawValue
         }
         
-        result["OP_0"] = 0x00
-        result["OP_1"] = 0x51
+        result["OP_FALSE"] = 0x00
+        result["OP_TRUE"] = 0x51
         result["OP_NOP2"] = 0xb1
         result["OP_NOP3"] = 0xb2
         
@@ -201,15 +215,15 @@ extension ScriptOpcode {
     }()
     
     static let ops: [(ScriptOpcode, String, UInt8)] = [
-        // case op_0 = 0x00
-        (.op_false,     "OP_FALSE",     0x00),
+        // case op_false = 0x00
+        (.op_0,         "OP_0",         0x00),
         (.op_pushdata1, "OP_PUSHDATA1", 0x4c),
         (.op_pushdata2, "OP_PUSHDATA2", 0x4d),
         (.op_pushdata4, "OP_PUSHDATA4", 0x4e),
         (.op_1negate,   "OP_1NEGATE",   0x4f),
         (.op_reserved,  "OP_RESERVED",  0x50),
-        // case op_1 = 0x51
-        (.op_true,      "OP_TRUE",      0x51),
+        // case op_true = 0x51
+        (.op_1,         "OP_1",         0x51),
         (.op_2,         "OP_2",         0x52),
         (.op_3,         "OP_3",         0x53),
         (.op_4,         "OP_4",         0x54),
