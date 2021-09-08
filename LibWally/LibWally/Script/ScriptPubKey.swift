@@ -52,6 +52,14 @@ public struct ScriptPubKey : Equatable {
     public var witnessProgram: Script {
         Wally.witnessProgram(scriptPubKey: self)
     }
+    
+    public var hex: String {
+        script.hex
+    }
+    
+    public var asm: String? {
+        script.asm
+    }
 }
 
 extension ScriptPubKey: CustomStringConvertible {

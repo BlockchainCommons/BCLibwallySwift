@@ -7,6 +7,7 @@
 
 import Foundation
 @_implementationOnly import Flexer
+@_implementationOnly import WolfBase
 
 final class DescriptorParser: Parser {
     typealias Tokens = LookAheadSequence<[DescriptorToken]>
@@ -50,7 +51,7 @@ final class DescriptorParser: Parser {
         throw error("Expected top level function.")
     }
     
-    func parseFingerprint() -> Data? {
+    func parseFingerprint() -> UInt32? {
         let transaction = Transaction(self)
         guard
             let token = tokens.next(),
@@ -60,10 +61,10 @@ final class DescriptorParser: Parser {
             return nil
         }
         transaction.commit()
-        return token.data
+        return deserialize(UInt32.self, token.data)
     }
     
-    func expectFingerprint() throws -> Data {
+    func expectFingerprint() throws -> UInt32 {
         guard let fingerprint = parseFingerprint() else {
             throw error("Fingerprint expected.")
         }
@@ -271,7 +272,7 @@ final class DescriptorParser: Parser {
         return data
     }
 
-    func parseKey() throws -> DescriptorKeyExpression? {
+    func parseKey(allowUncompressed: Bool = true) throws -> DescriptorKeyExpression? {
         let transaction = Transaction(self)
 
         let origin = try parseOrigin()
@@ -290,7 +291,10 @@ final class DescriptorParser: Parser {
                 [0x02, 0x03].contains(data[0])
             {
                 resultKey = .ecCompressedPublicKey(ECCompressedPublicKey(data)!)
-            } else if data.count == ECUncompressedPublicKey.keyLen {
+            } else if
+                allowUncompressed,
+                data.count == ECUncompressedPublicKey.keyLen
+            {
                 resultKey = .ecUncompressedPublicKey(ECUncompressedPublicKey(data)!)
             // } else if data.count == ECXOnlyPublicKey.keyLen {
             //     resultKey = .ecXOnlyPublicKey(ECXOnlyPublicKey(data)!)
@@ -317,18 +321,18 @@ final class DescriptorParser: Parser {
         return DescriptorKeyExpression(origin: origin, key: result)
     }
     
-    func expectKey() throws -> DescriptorKeyExpression {
-        guard let key = try parseKey() else {
+    func expectKey(allowUncompressed: Bool = true) throws -> DescriptorKeyExpression {
+        guard let key = try parseKey(allowUncompressed: allowUncompressed) else {
             throw error("Expected key expression.")
         }
         return key
     }
     
-    func expectKeyList() throws -> [DescriptorKeyExpression] {
+    func expectKeyList(allowUncompressed: Bool = true) throws -> [DescriptorKeyExpression] {
         let transaction = Transaction(self)
         var result: [DescriptorKeyExpression] = []
         while parseComma() {
-            try result.append(expectKey())
+            try result.append(expectKey(allowUncompressed: allowUncompressed))
         }
         guard !result.isEmpty else {
             throw error("Expected list of keys.")
@@ -440,21 +444,26 @@ final class DescriptorParser: Parser {
     }
     
     func parseMulti() throws -> DescriptorMulti? {
-        guard parseKind(.multi) else {
+        let isSorted: Bool
+        if parseKind(.multi) {
+            isSorted = false
+        } else if parseKind(.sortedmulti) {
+            isSorted = true
+        } else {
             return nil
         }
         try expectOpenParen()
         let threshold = try expectInt()
-        let keys = try expectKeyList()
+        let keys = try expectKeyList(allowUncompressed: false)
         try expectCloseParen()
-        return DescriptorMulti(threshold: threshold, keys: keys)
+        return DescriptorMulti(threshold: threshold, keys: keys, isSorted: isSorted)
     }
 }
 
 struct DescriptorRaw: DescriptorFunction {
     let data: Data
     
-    var scriptPubKey: ScriptPubKey {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
         ScriptPubKey(Script(data))
     }
 }
@@ -462,46 +471,68 @@ struct DescriptorRaw: DescriptorFunction {
 struct DescriptorPK: DescriptorFunction {
     let key: DescriptorKeyExpression
     
-    var scriptPubKey: ScriptPubKey {
-        ScriptPubKey(Script(ops: [.data(key.pubKeyData), .op(.op_checksig)]))
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+        guard let data = key.pubKeyData(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
+            return nil
+        }
+        return ScriptPubKey(Script(ops: [.data(data), .op(.op_checksig)]))
     }
 }
 
 struct DescriptorPKH: DescriptorFunction {
     let key: DescriptorKeyExpression
     
-    var scriptPubKey: ScriptPubKey {
-        ScriptPubKey(Script(ops: [.op(.op_dup), .op(.op_hash160), .data(key.pubKeyData.hash160), .op(.op_equalverify), .op(.op_checksig)]))
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+        guard let data = key.pubKeyData(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
+            return nil
+        }
+        return ScriptPubKey(Script(ops: [.op(.op_dup), .op(.op_hash160), .data(data.hash160), .op(.op_equalverify), .op(.op_checksig)]))
     }
 }
 
 struct DescriptorWPKH: DescriptorFunction {
     let key: DescriptorKeyExpression
     
-    var scriptPubKey: ScriptPubKey {
-        ScriptPubKey(Script(ops: [.op(.op_0), .data(key.pubKeyData.hash160)]))
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+        guard let data = key.pubKeyData(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
+            return nil
+        }
+        return ScriptPubKey(Script(ops: [.op(.op_0), .data(data.hash160)]))
     }
 }
 
 struct DescriptorSH: DescriptorFunction {
     let script: Script
     
-    var scriptPubKey: ScriptPubKey {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
         ScriptPubKey(Script(ops: [.op(.op_hash160), .data(script.data.hash160), .op(.op_equal)]))
     }
 }
 
-extension Address: DescriptorFunction { }
+extension Address: DescriptorFunction {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+        scriptPubKey
+    }
+}
 
 struct DescriptorMulti: DescriptorFunction {
     let threshold: Int
     let keys: [DescriptorKeyExpression]
+    let isSorted: Bool
     
-    var scriptPubKey: ScriptPubKey {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
         var ops: [ScriptOperation] = []
         ops.append(.op(ScriptOpcode(int: threshold)!))
-        for key in keys {
-            ops.append(.data(key.pubKeyData))
+        
+        var rawKeys = keys.compactMap { $0.pubKeyData(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) }
+        guard rawKeys.count == keys.count else {
+            return nil
+        }
+        if isSorted {
+            rawKeys.sort { $0.lexicographicallyPrecedes($1) }
+        }
+        for rawKey in rawKeys {
+            ops.append(.data(rawKey))
         }
         ops.append(.op(ScriptOpcode(int: keys.count)!))
         ops.append(.op(.op_checkmultisig))

@@ -163,7 +163,7 @@ public struct PSBT : Equatable {
         for input in self.inputs {
             if let origins: [ECCompressedPublicKey : DerivationPath] = input.canSignOrigins(with: hdKey) {
                 for origin in origins {
-                    if let childKey = hdKey.derive(using: origin.value) {
+                    if let childKey = hdKey.derive(path: origin.value) {
                         if let privKey = childKey.privKey {
                             precondition(privKey.public == origin.key)
                             psbt = psbt?.signed(with: privKey)

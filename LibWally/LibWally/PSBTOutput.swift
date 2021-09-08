@@ -73,7 +73,7 @@ public struct PSBTOutput {
         }
 
         // Check that origin pubkey is correct
-        guard let childKey = hdKey.derive(using: originPath) else {
+        guard let childKey = hdKey.derive(path: originPath) else {
             return false
         }
 

@@ -21,7 +21,10 @@ struct DescriptorKeyExpression {
 }
 
 extension DescriptorKeyExpression {
-    var pubKeyData: Data {
+    func pubKeyData(
+        wildcardChildNum: UInt32?,
+        privateKeyProvider: PrivateKeyProvider?
+    ) -> Data? {
         let data: Data
         switch key {
         case .ecCompressedPublicKey(let k):
@@ -33,7 +36,10 @@ extension DescriptorKeyExpression {
         case .wif(let k):
             data = k.key.public.data
         case .hdKey(let k):
-            data = k.pubKey.data
+            guard let k2 = k.derive(path: k.children, wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
+                return nil
+            }
+            data = k2.pubKey.data
         }
         return data
     }

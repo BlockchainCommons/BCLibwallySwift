@@ -11,7 +11,7 @@ import XCTest
 
 class PSBTTests: XCTestCase {
     // Test vectors from https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki
-    let fingerprint = Data(hex: "d90c6a4f")!
+    let fingerprint: UInt32 = 0xd90c6a4f
     
     let validPSBT = "cHNidP8BAHUCAAAAASaBcTce3/KF6Tet7qSze3gADAVmy7OtZGQXE8pCFxv2AAAAAAD+////AtPf9QUAAAAAGXapFNDFmQPFusKGh2DpD9UhpGZap2UgiKwA4fUFAAAAABepFDVF5uM7gyxHBQ8k0+65PJwDlIvHh7MuEwAAAQD9pQEBAAAAAAECiaPHHqtNIOA3G7ukzGmPopXJRjr6Ljl/hTPMti+VZ+UBAAAAFxYAFL4Y0VKpsBIDna89p95PUzSe7LmF/////4b4qkOnHf8USIk6UwpyN+9rRgi7st0tAXHmOuxqSJC0AQAAABcWABT+Pp7xp0XpdNkCxDVZQ6vLNL1TU/////8CAMLrCwAAAAAZdqkUhc/xCX/Z4Ai7NK9wnGIZeziXikiIrHL++E4sAAAAF6kUM5cluiHv1irHU6m80GfWx6ajnQWHAkcwRAIgJxK+IuAnDzlPVoMR3HyppolwuAJf3TskAinwf4pfOiQCIAGLONfc0xTnNMkna9b7QPZzMlvEuqFEyADS8vAtsnZcASED0uFWdJQbrUqZY3LLh+GFbTZSYG2YVi/jnF6efkE/IQUCSDBFAiEA0SuFLYXc2WHS9fSrZgZU327tzHlMDDPOXMMJ/7X85Y0CIGczio4OFyXBl/saiK9Z9R5E5CVbIBZ8hoQDHAXR8lkqASECI7cr7vCWXRC+B3jv7NYfysb3mk6haTkzgHNEZPhPKrMAAAAAAAAA"
     
@@ -55,8 +55,8 @@ class PSBTTests: XCTestCase {
     // Mainnet multisig wallet based on BIP32 test vectors.
     // To import into Bitcoin Core (experimental descriptor wallet branch) use:
     // importdescriptors '[{"range":1000,"timestamp":"now","watchonly":true,"internal":false,"desc":"wsh(sortedmulti(2,[3442193e\/48h\/0h\/0h\/2h]xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi\/0\/*,[bd16bee5\/48h\/0h\/0h\/2h]xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a\/0\/*))#75z63vc9","active":true},{"range":1000,"timestamp":"now","watchonly":true,"internal":true,"desc":"wsh(sortedmulti(2,[3442193e\/48h\/0h\/0h\/2h]xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi\/1\/*,[bd16bee5\/48h\/0h\/0h\/2h]xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a\/1\/*))#8837llds","active":true}]'
-    let fingerprint1 = Data(hex: "3442193e")!
-    let fingerprint2 = Data(hex: "bd16bee5")!
+    let fingerprint1: UInt32 = 0x3442193e
+    let fingerprint2: UInt32 = 0xbd16bee5
     let master1 = "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi"
     let master2 = "xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U"
      let multiUnsignedPSBTWithoutChange = "cHNidP8BAFICAAAAAV/0Rj8kmS/ZB5NjsQvCKM1LTtovmhuQu2GITtz/XUFnAAAAAAD9////Af4SAAAAAAAAFgAUgPiTflaS1yPZmZleFfTq7fUwdIYAAAAAAAEBK4gTAAAAAAAAIgAg+GCObltTf4/IGC6xE89A9WS5nPmdhxcMTxrCWQdO6P0BBUdSIQIRWymltMLmSLuvwQBG3wDoMRcQlj79Fah1NMZw3Q6w+iEDkxPICphGAQSk6avIbx9z0fqYLssxciadkXQV5q7uJnVSriIGAhFbKaW0wuZIu6/BAEbfAOgxFxCWPv0VqHU0xnDdDrD6HL0WvuUwAACAAAAAgAAAAIACAACAAAAAAAAAAAAiBgOTE8gKmEYBBKTpq8hvH3PR+pguyzFyJp2RdBXmru4mdRw0Qhk+MAAAgAAAAIAAAACAAgAAgAAAAAAAAAAAAAA="
@@ -207,7 +207,7 @@ class PSBTTests: XCTestCase {
     // In this example we sign with seperate keys, more representative of a real
     // setup with multiple wallets.
     func testCanSignNeutered() {
-        let us = HDKey(base58: "xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi", masterKeyFingerprint:Data(hex: "3442193e"))!
+        let us = HDKey(base58: "xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi", masterKeyFingerprint: 0x3442193e)!
         let psbt = PSBT(base64: multiUnsignedPSBTWithChange)!
         for input in psbt.inputs {
             XCTAssertTrue(input.canSign(with: us))
@@ -257,15 +257,15 @@ class PSBTTests: XCTestCase {
     
     func testIsChangeWithNeuteredCosignerKey() {
         let us = HDKey(base58: master1)!
-        let cosigner = HDKey(base58: "xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a", masterKeyFingerprint:Data(hex: "bd16bee5"))!
+        let cosigner = HDKey(base58: "xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a", masterKeyFingerprint: 0xbd16bee5)!
         let psbt = PSBT(base64: multiUnsignedPSBTWithChange)!
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
     }
     
     func testIsChangeWithNeuteredAllKeys() {
-        let us = HDKey(base58: "xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi", masterKeyFingerprint:Data(hex: "3442193e"))!
-        let cosigner = HDKey(base58: "xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a", masterKeyFingerprint:Data(hex: "bd16bee5"))!
+        let us = HDKey(base58: "xpub6E64WfdQwBGz85XhbZryr9gUGUPBgoSu5WV6tJWpzAvgAmpVpdPHkT3XYm9R5J6MeWzvLQoz4q845taC9Q28XutbptxAmg7q8QPkjvTL4oi", masterKeyFingerprint: 0x3442193e)!
+        let cosigner = HDKey(base58: "xpub6DwQ4gBCmJZM3TaKogP41tpjuEwnMH2nWEi3PFev37LfsWPvjZrh1GfAG8xvoDYMPWGKG1oBPMCfKpkVbJtUHRaqRdCb6X6o1e9PQTVK88a", masterKeyFingerprint: 0xbd16bee5)!
         let psbt = PSBT(base64: multiUnsignedPSBTWithChange)!
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))

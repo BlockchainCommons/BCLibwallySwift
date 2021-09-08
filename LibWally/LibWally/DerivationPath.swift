@@ -6,6 +6,7 @@
 //
 
 import Foundation
+@_implementationOnly import WolfBase
 
 public struct DerivationStep : Equatable {
     public let index: Index
@@ -66,14 +67,20 @@ public struct DerivationStep : Equatable {
         self.init(index, isHardened: isHardened)
     }
     
-    public var rawValue: UInt32? {
-        guard case let .childNum(index) = index else {
+    public func rawValue(wildcardChildNum: UInt32? = nil) -> UInt32? {
+        let childNum: UInt32?
+        if case let .childNum(num) = index {
+            childNum = num
+        } else {
+            childNum = wildcardChildNum
+        }
+        guard let childNum = childNum else {
             return nil
         }
         if isHardened {
-            return index + BIP32_INITIAL_HARDENED_CHILD
+            return childNum + BIP32_INITIAL_HARDENED_CHILD
         } else {
-            return index
+            return childNum
         }
     }
 }
@@ -95,13 +102,13 @@ public struct DerivationPath : Equatable {
     public let steps: [DerivationStep]
     
     public enum Origin: Equatable, CustomStringConvertible {
-        case fingerprint(Data)
+        case fingerprint(UInt32)
         case master
         
         public var description: String {
             switch self {
-            case .fingerprint(let data):
-                return data.hex
+            case .fingerprint(let f):
+                return f.hex
             case .master:
                 return "m"
             }
@@ -122,8 +129,12 @@ public struct DerivationPath : Equatable {
         steps.isEmpty && origin == nil
     }
     
-    public var rawPath: [UInt32?] {
-        steps.map { $0.rawValue }
+    public var isHardened: Bool {
+        return steps.first(where: { $0.isHardened } ) != nil
+    }
+    
+    public func rawPath(wildcardChildNum: UInt32? = nil) -> [UInt32?] {
+        steps.map { $0.rawValue(wildcardChildNum: wildcardChildNum) }
     }
     
     public init(origin: Origin?) {
@@ -159,7 +170,7 @@ public struct DerivationPath : Equatable {
             origin = .master
             components.removeFirst()
         } else if let data = Data(hex: o), data.count == 4 {
-            origin = .fingerprint(data)
+            origin = .fingerprint(deserialize(UInt32.self, data)!)
             components.removeFirst()
         } else {
             origin = nil
@@ -210,7 +221,8 @@ extension DerivationPath {
             let item: wally_map_item = keypaths.items[i]
 
             let pubKey = ECCompressedPublicKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))!
-            let fingerprint = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
+            let fingerprintData = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
+            let fingerprint = deserialize(UInt32.self, fingerprintData)!
             let keyPath = Data(bytes: item.value + Int(BIP32_KEY_FINGERPRINT_LEN), count: Int(item.value_len) - Int(BIP32_KEY_FINGERPRINT_LEN))
 
             var components: [UInt32] = []
@@ -221,5 +233,11 @@ extension DerivationPath {
             result[pubKey] = DerivationPath(rawPath: components, origin: .fingerprint(fingerprint))!
         }
         return result
+    }
+}
+
+extension DerivationPath {
+    public static func + (lhs: DerivationPath, rhs: DerivationPath) -> DerivationPath {
+        DerivationPath(steps: lhs.steps + rhs.steps, origin: lhs.origin)
     }
 }
