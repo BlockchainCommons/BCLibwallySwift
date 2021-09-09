@@ -42,13 +42,19 @@ final class DescriptorParser: Parser {
         if let multi = try parseMulti() {
             return multi
         }
+        if let wsh = try parseWSH() {
+            return wsh
+        }
         if let sh = try parseSH() {
             return sh
         }
         if let addr = try parseAddr() {
             return addr
         }
-        throw error("Expected top level function.")
+        if let combo = try parseCombo() {
+            return combo
+        }
+        throw error("Descriptor: expected top-level script function.")
     }
     
     func parseFingerprint() -> UInt32? {
@@ -422,15 +428,57 @@ final class DescriptorParser: Parser {
         try expectCloseParen()
         return DescriptorWPKH(key: key)
     }
+    
+    func parseCombo() throws -> DescriptorCombo? {
+        guard parseKind(.combo) else {
+            return nil
+        }
+        try expectOpenParen()
+        let key = try expectKey()
+        try expectCloseParen()
+        return DescriptorCombo(key: key)
+    }
+
+    func parseWSH() throws -> DescriptorWSH? {
+        guard parseKind(.wsh) else {
+            return nil
+        }
+        let redeemScript: DescriptorFunction
+        try expectOpenParen()
+        if let pk = try parsePK() {
+            redeemScript = pk
+        } else if let pkh = try parsePKH() {
+            redeemScript = pkh
+        } else if let multi = try parseMulti() {
+            redeemScript = multi
+        } else {
+            throw error("wsh() expected one of: pk(), pkh(), multi(), sortedmulti().")
+        }
+        try expectCloseParen()
+        return DescriptorWSH(redeemScript: redeemScript)
+    }
 
     func parseSH() throws -> DescriptorSH? {
         guard parseKind(.sh) else {
             return nil
         }
+        let redeemScript: DescriptorFunction
         try expectOpenParen()
-        let script = try expectScript()
+        if let pk = try parsePK() {
+            redeemScript = pk
+        } else if let pkh = try parsePKH() {
+            redeemScript = pkh
+        } else if let wpkh = try parseWPKH() {
+            redeemScript = wpkh
+        } else if let wsh = try parseWSH() {
+            redeemScript = wsh
+        } else if let multi = try parseMulti() {
+            redeemScript = multi
+        } else {
+            throw error("wsh() expected one of: pk(), pkh(), wpkh(), wsh(), multi(), sortedmulti().")
+        }
         try expectCloseParen()
-        return DescriptorSH(script: script)
+        return DescriptorSH(redeemScript: redeemScript)
     }
 
     func parseAddr() throws -> Address? {
@@ -463,7 +511,7 @@ final class DescriptorParser: Parser {
 struct DescriptorRaw: DescriptorFunction {
     let data: Data
     
-    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
         ScriptPubKey(Script(data))
     }
 }
@@ -471,7 +519,7 @@ struct DescriptorRaw: DescriptorFunction {
 struct DescriptorPK: DescriptorFunction {
     let key: DescriptorKeyExpression
     
-    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
         guard let data = key.pubKeyData(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
             return nil
         }
@@ -482,7 +530,7 @@ struct DescriptorPK: DescriptorFunction {
 struct DescriptorPKH: DescriptorFunction {
     let key: DescriptorKeyExpression
     
-    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
         guard let data = key.pubKeyData(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
             return nil
         }
@@ -493,7 +541,7 @@ struct DescriptorPKH: DescriptorFunction {
 struct DescriptorWPKH: DescriptorFunction {
     let key: DescriptorKeyExpression
     
-    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
         guard let data = key.pubKeyData(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
             return nil
         }
@@ -501,16 +549,36 @@ struct DescriptorWPKH: DescriptorFunction {
     }
 }
 
-struct DescriptorSH: DescriptorFunction {
-    let script: Script
+struct DescriptorCombo: DescriptorFunction {
+    let key: DescriptorKeyExpression
     
-    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
-        ScriptPubKey(Script(ops: [.op(.op_hash160), .data(script.data.hash160), .op(.op_equal)]))
+    // https://github.com/bitcoin/bips/blob/master/bip-0384.mediawiki
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
+        guard let comboOutput = comboOutput else {
+            return nil
+        }
+        switch comboOutput {
+        case .pk:
+            return DescriptorPK(key: key).scriptPubKey(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider, comboOutput: nil)
+        case .pkh:
+            return DescriptorPKH(key: key).scriptPubKey(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider, comboOutput: nil)
+        case .wpkh:
+            if case .ecUncompressedPublicKey = key.key {
+                return nil
+            }
+            return DescriptorWPKH(key: key).scriptPubKey(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider, comboOutput: nil)
+        case .sh_wpkh:
+            if case .ecUncompressedPublicKey = key.key {
+                return nil
+            }
+            let redeemScript = DescriptorWPKH(key: key)
+            return DescriptorSH(redeemScript: redeemScript).scriptPubKey(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider, comboOutput: nil)
+        }
     }
 }
 
 extension Address: DescriptorFunction {
-    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
         scriptPubKey
     }
 }
@@ -520,7 +588,7 @@ struct DescriptorMulti: DescriptorFunction {
     let keys: [DescriptorKeyExpression]
     let isSorted: Bool
     
-    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?) -> ScriptPubKey? {
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
         var ops: [ScriptOperation] = []
         ops.append(.op(ScriptOpcode(int: threshold)!))
         
@@ -537,5 +605,27 @@ struct DescriptorMulti: DescriptorFunction {
         ops.append(.op(ScriptOpcode(int: keys.count)!))
         ops.append(.op(.op_checkmultisig))
         return ScriptPubKey(Script(ops: ops))
+    }
+}
+
+struct DescriptorWSH: DescriptorFunction {
+    let redeemScript: DescriptorFunction
+    
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
+        guard let redeemScript = redeemScript.scriptPubKey(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider, comboOutput: comboOutput) else {
+            return nil
+        }
+        return ScriptPubKey(Script(ops: [.op(.op_0), .data(redeemScript.script.data.sha256Digest)]))
+    }
+}
+
+struct DescriptorSH: DescriptorFunction {
+    let redeemScript: DescriptorFunction
+    
+    func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
+        guard let redeemScript = redeemScript.scriptPubKey(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider, comboOutput: comboOutput) else {
+            return nil
+        }
+        return ScriptPubKey(Script(ops: [.op(.op_hash160), .data(redeemScript.script.data.hash160), .op(.op_equal)]))
     }
 }
