@@ -34,11 +34,14 @@ class TransactionTests: XCTestCase {
         let amount: Satoshi = 1000
         let scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
 
-        let input = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount, scriptSig: scriptSig, witness: nil, scriptPubKey: scriptPubKey)
+        let input = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey)
         XCTAssertEqual(input.txHash, prevTx.hash)
         XCTAssertEqual(input.vout, 0)
         XCTAssertEqual(input.sequence, 0xFFFFFFFF)
-        XCTAssertEqual(input.scriptSig!.type, scriptSig.type)
+        guard case let .scriptSig(ss) = input.sig else {
+            preconditionFailure()
+        }
+        XCTAssertEqual(ss.type, scriptSig.type)
         XCTAssertEqual(input.isSigned, false)
     }
 
@@ -48,7 +51,7 @@ class TransactionTests: XCTestCase {
         let vout: UInt32 = 0
         let amount: Satoshi = 1000
         let scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
-        let txInput = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount, scriptSig: scriptSig, witness: nil, scriptPubKey: scriptPubKey)
+        let txInput = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey)
 
         // Output:
         let txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: 1000)
@@ -90,19 +93,19 @@ class TransactionInstanceTests: XCTestCase {
         let vout: UInt32 = 0
         let amount1: Satoshi = 1000 + Satoshi(legacyInputBytes)
         let scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
-        let txInput1 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount1, scriptSig: scriptSig, witness: nil, scriptPubKey: scriptPubKey1)
+        let txInput1 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount1, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey1)
 
         // Input (native SegWit)
         let witness = Witness(type: .payToWitnessPubKeyHash, pubKey: pubKey)
         let amount2: Satoshi = 1000 + Satoshi(nativeSegWitInputBytes)
         let scriptPubKey2 = ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")!
-        let txInput2 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount2, scriptSig: nil, witness: witness, scriptPubKey: scriptPubKey2)
+        let txInput2 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount2, sig: .witness(witness), scriptPubKey: scriptPubKey2)
 
         // Input (wrapped SegWit)
         let witness3 = Witness(type: .payToScriptHashPayToWitnessPubKeyHash, pubKey: pubKey)
         let amount3: Satoshi = 1000 + Satoshi(wrappedSegWitInputBytes)
         let scriptPubKey3 = ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")!
-        let txInput3 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount3, scriptSig: nil, witness: witness3, scriptPubKey: scriptPubKey3)
+        let txInput3 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount3, sig: .witness(witness3), scriptPubKey: scriptPubKey3)
         
         // Output:
         let txOutput = TxOutput(scriptPubKey: scriptPubKey1, amount: 1000)

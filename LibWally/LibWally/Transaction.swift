@@ -152,9 +152,12 @@ public struct Transaction {
     }
     
     public var vbytes: Int? {
-        guard let tx = tx else { return nil }
-
-        precondition(inputs != nil)
+        guard
+            let tx = tx,
+            let inputs = inputs
+        else {
+            return nil
+        }
 
         let cloned_tx = Self.clone(tx: tx)
         defer {
@@ -162,9 +165,21 @@ public struct Transaction {
         }
 
         // Set scriptSig for all unsigned inputs to .feeWorstCase
-        for (index, input) in inputs!.enumerated() {
+        for (index, input) in inputs.enumerated() {
             if !input.isSigned {
-                if let scriptSig = input.scriptSig {
+                let scriptSig: ScriptSig?
+                switch input.sig {
+                case .scriptSig(let ss):
+                    scriptSig = ss
+                case .witness(let witness):
+                    if witness.type == .payToScriptHashPayToWitnessPubKeyHash {
+                        scriptSig = ScriptSig(type: .payToScriptHashPayToWitnessPubKeyHash(witness.pubKey))
+                    } else {
+                        scriptSig = nil
+                    }
+                }
+                
+                if let scriptSig = scriptSig {
                     let scriptSigWorstCase = scriptSig.render(purpose: .feeWorstCase)!
                     scriptSigWorstCase.data.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_set_input_script(cloned_tx, index, buf.baseAddress, buf.count) == WALLY_OK)
@@ -211,14 +226,15 @@ public struct Transaction {
         for i in 0 ..< inputs.count {
             var message_bytes = [UInt8](repeating: 0, count: Int(SHA256_LEN))
 
-            if let witness = inputs[i].witness {
+            switch inputs[i].sig {
+            case .witness(let witness):
                 switch witness.type {
                 case .payToScriptHashPayToWitnessPubKeyHash:
-                    let scriptSig = inputs[i].scriptSig!.render(purpose: .signed)!
+                    let scriptSig = ScriptSig(type: .payToScriptHashPayToWitnessPubKeyHash(witness.pubKey)).render(purpose: .signed)!
                     scriptSig.data.withUnsafeByteBuffer { buf in
                         precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
                     }
-
+                    
                     fallthrough
                 case .payToWitnessPubKeyHash:
                     // Check that we're using the right public key:
@@ -230,7 +246,7 @@ public struct Transaction {
                         precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, inputs[i].amount, UInt32(WALLY_SIGHASH_ALL), UInt32(WALLY_TX_FLAG_USE_WITNESS), &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
                     }
                 }
-            } else {
+            case .scriptSig:
                 // Prep input for signing:
                 let scriptPubKey = inputs[i].scriptPubKey.script.data
                 scriptPubKey.withUnsafeByteBuffer { buf in
@@ -270,15 +286,17 @@ public struct Transaction {
             
             // Store signature in TxInput
             let signature =  Data(bytes: sig_bytes, count: sig_bytes_written)
-            if let witness = inputs[i].witness {
+            switch inputs[i].sig {
+            case .witness(let witness):
                 let witness = witness.signed(signature: signature)
-                updatedInputs[i].witness = witness
+                updatedInputs[i].sig = .witness(witness)
                 precondition(wally_tx_set_input_witness(cloned_tx, i, witness.createWallyStack()) == WALLY_OK)
-            } else {
-                updatedInputs[i].scriptSig!.signature = signature
+            case .scriptSig(var scriptSig):
+                scriptSig.signature = signature
+                updatedInputs[i].sig = .scriptSig(scriptSig)
                 
                 // Update scriptSig:
-                let signedScriptSig = updatedInputs[i].scriptSig!.render(purpose: .signed)!
+                let signedScriptSig = scriptSig.render(purpose: .signed)!
                 signedScriptSig.data.withUnsafeByteBuffer { buf in
                     precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
                 }

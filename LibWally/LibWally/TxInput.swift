@@ -12,41 +12,47 @@ public struct TxInput {
     public let vout: UInt32
     public let sequence: UInt32
     public let amount: Satoshi
-    public var scriptSig: ScriptSig?
-    public var witness: Witness?
+    public var sig: Sig
     public let scriptPubKey: ScriptPubKey
+    
+    public enum Sig {
+        case scriptSig(ScriptSig)
+        case witness(Witness)
+    }
 
     // For P2SH wrapped SegWit, we set scriptSig automatically
-    public init(txHash: Data, vout: UInt32, sequence: UInt32 = 0xffffffff, amount: Satoshi, scriptSig: ScriptSig?, witness: Witness?, scriptPubKey: ScriptPubKey) {
+    public init(txHash: Data, vout: UInt32, sequence: UInt32 = 0xffffffff, amount: Satoshi, sig: Sig, scriptPubKey: ScriptPubKey) {
         self.txHash = txHash
         self.vout = vout
         self.sequence = sequence
         self.amount = amount
-
-        if let witness = witness {
-            switch witness.type {
-            case .payToWitnessPubKeyHash:
-                self.scriptSig = nil
-            case .payToScriptHashPayToWitnessPubKeyHash:
-                self.scriptSig = ScriptSig(type: .payToScriptHashPayToWitnessPubKeyHash(witness.pubKey))
-            }
-        } else {
-            self.scriptSig = scriptSig
-        }
-
-        self.witness = witness
+        self.sig = sig
         self.scriptPubKey = scriptPubKey
     }
 
     public func createWallyInput() -> UnsafeMutablePointer<wally_tx_input> {
-        var wti: UnsafeMutablePointer<wally_tx_input>?
         txHash.withUnsafeByteBuffer { hashBuf in
-            precondition(wally_tx_input_init_alloc(hashBuf.baseAddress, hashBuf.count, vout, sequence, nil, 0, self.witness == nil ? nil : self.witness!.createWallyStack(), &wti) == WALLY_OK)
+            var wti: UnsafeMutablePointer<wally_tx_input>!
+            
+            let witness: UnsafeMutablePointer<wally_tx_witness_stack>?
+            if case let .witness(w) = sig {
+                witness = w.createWallyStack()
+            } else {
+                witness = nil
+            }
+            
+            precondition(wally_tx_input_init_alloc(hashBuf.baseAddress, hashBuf.count, vout, sequence, nil, 0, witness, &wti) == WALLY_OK)
+
+            return wti
         }
-        return wti!
     }
 
     public var isSigned: Bool {
-        (self.scriptSig != nil && self.scriptSig!.signature != nil) || (self.witness != nil && !self.witness!.isDummy)
+        switch sig {
+        case .scriptSig(let scriptSig):
+            return scriptSig.signature != nil
+        case .witness(let witness):
+            return !witness.isDummy
+        }
     }
 }
