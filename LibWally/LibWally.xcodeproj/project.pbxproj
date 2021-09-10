@@ -52,6 +52,8 @@
 		79865C5326E06DA200897441 /* DescriptorParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5126E06A5F00897441 /* DescriptorParser.swift */; };
 		79865C5526E08D4800897441 /* DescriptorParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5426E08D4800897441 /* DescriptorParserTests.swift */; };
 		79865C5726E0A4EC00897441 /* WIF.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79865C5626E0A4EC00897441 /* WIF.swift */; };
+		798FDDFD26EADBD600677B33 /* VarInt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798FDDFC26EADBD600677B33 /* VarInt.swift */; };
+		798FDDFF26EAE8D100677B33 /* VarIntTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798FDDFE26EAE8D100677B33 /* VarIntTests.swift */; };
 		79B02BF826E59DDA00950779 /* FlexerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BF726E59DDA00950779 /* FlexerExtensions.swift */; };
 		79B02BFB26E59E3100950779 /* ScriptOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFA26E59E3100950779 /* ScriptOperation.swift */; };
 		79B02BFD26E59E5400950779 /* Script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFC26E59E5400950779 /* Script.swift */; };
@@ -123,6 +125,8 @@
 		79865C5126E06A5F00897441 /* DescriptorParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorParser.swift; sourceTree = "<group>"; };
 		79865C5426E08D4800897441 /* DescriptorParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorParserTests.swift; sourceTree = "<group>"; };
 		79865C5626E0A4EC00897441 /* WIF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WIF.swift; sourceTree = "<group>"; };
+		798FDDFC26EADBD600677B33 /* VarInt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VarInt.swift; sourceTree = "<group>"; };
+		798FDDFE26EAE8D100677B33 /* VarIntTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VarIntTests.swift; sourceTree = "<group>"; };
 		79B02BF726E59DDA00950779 /* FlexerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexerExtensions.swift; sourceTree = "<group>"; };
 		79B02BFA26E59E3100950779 /* ScriptOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOperation.swift; sourceTree = "<group>"; };
 		79B02BFC26E59E5400950779 /* Script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Script.swift; sourceTree = "<group>"; };
@@ -201,6 +205,7 @@
 				03A560FC2568FEFD00181CB8 /* HDKey.swift */,
 				030A63F32503702700A1D27E /* Transaction.swift */,
 				030A63F72503702700A1D27E /* PSBT.swift */,
+				798FDDFC26EADBD600677B33 /* VarInt.swift */,
 				79B02BF726E59DDA00950779 /* FlexerExtensions.swift */,
 				79865C4C26E068C300897441 /* Descriptors */,
 			);
@@ -220,6 +225,7 @@
 				79865C5426E08D4800897441 /* DescriptorParserTests.swift */,
 				79C7CE1826E21D3E00C5CD75 /* ScriptOpcodeTests.swift */,
 				79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */,
+				798FDDFE26EAE8D100677B33 /* VarIntTests.swift */,
 				030A63E225035EDA00A1D27E /* Info.plist */,
 			);
 			path = LibWallyTests;
@@ -423,6 +429,7 @@
 				030A63FB2503702700A1D27E /* ScriptPubKey.swift in Sources */,
 				79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */,
 				03A5610125691F0400181CB8 /* Satoshi.swift in Sources */,
+				798FDDFD26EADBD600677B33 /* VarInt.swift in Sources */,
 				79C7CE1726E217F700C5CD75 /* ScriptOpcode.swift in Sources */,
 				03A56115256A399700181CB8 /* PSBTOutput.swift in Sources */,
 				03A5610525691F1600181CB8 /* TxOutput.swift in Sources */,
@@ -443,6 +450,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				798FDDFF26EAE8D100677B33 /* VarIntTests.swift in Sources */,
 				030A640C250382A300A1D27E /* PSBTTests.swift in Sources */,
 				030A640A250382A300A1D27E /* TransactionTests.swift in Sources */,
 				030A640E250382A300A1D27E /* ScriptTests.swift in Sources */,

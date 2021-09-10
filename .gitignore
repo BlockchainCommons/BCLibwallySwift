@@ -26,3 +26,4 @@ DerivedData/
 /*.gcno
 
 buildlog.txt
+Package.resolved
