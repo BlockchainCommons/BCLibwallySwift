@@ -9,7 +9,7 @@ import Foundation
 
 public struct PSBTOutput {
     public let txOutput: TxOutput
-    public let origins: [ECCompressedPublicKey: DerivationPath]?
+    public let origins: [ECCompressedPublicKey: DerivationPath]
 
     public func address(network: Network) -> String {
         txOutput.address(network: network)
@@ -19,11 +19,11 @@ public struct PSBTOutput {
         txOutput.amount
     }
 
-    init(wallyPSBTOutput: wally_psbt_output, wallyTxOutput: wally_tx_output) {
+    init(wallyPSBTOutput: WallyPSBTOutput, wallyTxOutput: wally_tx_output) {
         if wallyPSBTOutput.keypaths.num_items > 0 {
             self.origins = DerivationPath.getOrigins(keypaths: wallyPSBTOutput.keypaths)
         } else {
-            self.origins = nil
+            self.origins = [:]
         }
         let scriptPubKey: ScriptPubKey
         if let scriptPubKeyBytes = wallyPSBTOutput.witness_script {
@@ -92,13 +92,13 @@ public struct PSBTOutput {
 
         // All inputs must have origin info
         for input in inputs {
-            if input.origins == nil {
+            if input.origins.isEmpty {
                 return false
             }
         }
 
         // Skip key deriviation root
-        let keyPath = inputs[0].origins!.first!.value
+        let keyPath = inputs[0].origins.first!.value
         if keyPath.steps.count < 2 {
             return false
         }
@@ -109,7 +109,9 @@ public struct PSBTOutput {
             if !input.canSign(with: signer) {
                 return false
             }
-            guard let origins = input.origins else {
+            
+            let origins = input.origins
+            guard !origins.isEmpty else {
                 return false
             }
 
@@ -121,7 +123,7 @@ public struct PSBTOutput {
         }
 
         // Check outputs
-        guard let origins = self.origins else {
+        guard !origins.isEmpty else {
             return false
         }
 

@@ -9,8 +9,8 @@ import Foundation
 @_implementationOnly import WolfBase
 
 public struct PSBTInput {
-    public let origins: [ECCompressedPublicKey: DerivationPath]?
-    public let signatures: [ECCompressedPublicKey: Data]?
+    public let origins: [ECCompressedPublicKey: DerivationPath]
+    public let signatures: [ECCompressedPublicKey: Data]
     public let witnessScript: Data?
     public let isSegwit: Bool
     public let amount: Satoshi?
@@ -26,17 +26,17 @@ public struct PSBTInput {
         return result
     }
 
-    init(wallyInput: wally_psbt_input) {
+    init(wallyInput: WallyPSBTInput) {
         if wallyInput.keypaths.num_items > 0 {
             self.origins = DerivationPath.getOrigins(keypaths: wallyInput.keypaths)
         } else {
-            self.origins = nil
+            self.origins = [:]
         }
 
         if(wallyInput.signatures.num_items > 0) {
             self.signatures = Self.getSignatures(signatures: wallyInput.signatures)
         } else {
-            self.signatures = nil
+            self.signatures = [:]
         }
 
         if let witnessScript = wallyInput.witness_script {
@@ -55,39 +55,37 @@ public struct PSBTInput {
     }
 
     // Can we provide at least one signature, assuming we have the private key?
-    public func canSignOrigins(with hdKey: HDKey) -> [ECCompressedPublicKey: DerivationPath]? {
+    public func signableOrigins(with hdKey: HDKey) -> [ECCompressedPublicKey: DerivationPath] {
         var result: [ECCompressedPublicKey: DerivationPath] = [:]
-        if let origins = self.origins {
-            for origin in origins {
-                guard let masterKeyFingerprint = hdKey.masterKeyFingerprint else {
-                    break
-                }
-                let path = origin.value
-                guard
-                    let pathOrigin = path.origin,
-                    case .fingerprint(let originFingerprint) = pathOrigin else {
-                    return nil
-                }
-                if masterKeyFingerprint == originFingerprint {
-                    if let childKey = hdKey.derive(path: path) {
-                        if childKey.pubKey == origin.key {
-                            result[origin.key] = origin.value
-                        }
+        for origin in origins {
+            guard let masterKeyFingerprint = hdKey.masterKeyFingerprint else {
+                break
+            }
+            let path = origin.value
+            guard
+                let pathOrigin = path.origin,
+                case .fingerprint(let originFingerprint) = pathOrigin
+            else {
+                continue
+            }
+            if masterKeyFingerprint == originFingerprint {
+                if let childKey = hdKey.derive(path: path) {
+                    if childKey.pubKey == origin.key {
+                        result[origin.key] = origin.value
                     }
                 }
             }
         }
-        if result.count == 0 { return nil }
         return result
     }
 
     public func canSign(with hdKey: HDKey) -> Bool {
-        canSignOrigins(with: hdKey) != nil
+        !signableOrigins(with: hdKey).isEmpty
     }
 }
 
 extension PSBTInput: CustomStringConvertible {
     public var description: String {
-        "PSBTInput(origins: \(origins†), signatures: \(signatures†), witnessScript: \((witnessScript?.hex)†), isSegwit: \(isSegwit), amount: \(amount†))"
+        "PSBTInput(origins: \(origins), signatures: \(signatures), witnessScript: \((witnessScript?.hex)†), isSegwit: \(isSegwit), amount: \(amount†))"
     }
 }

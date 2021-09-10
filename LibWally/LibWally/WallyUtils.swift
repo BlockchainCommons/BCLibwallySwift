@@ -13,6 +13,8 @@ public typealias WallyTxInput = UnsafeMutablePointer<wally_tx_input>
 public typealias WallyTxOutput = UnsafeMutablePointer<wally_tx_output>
 public typealias WallyExtKey = ext_key
 public typealias WallyPSBT = UnsafeMutablePointer<wally_psbt>
+public typealias WallyPSBTInput = wally_psbt_input
+public typealias WallyPSBTOutput = wally_psbt_output
 
 public enum Wally {
 }
@@ -113,15 +115,46 @@ extension Wally {
         wally_psbt_free(psbt)
     }
     
+    public static func clone(psbt: WallyPSBT) -> WallyPSBT {
+        var new_psbt: WallyPSBT!
+        precondition(wally_psbt_clone_alloc(psbt, 0, &new_psbt) == WALLY_OK)
+        return new_psbt
+    }
+    
     public static func isFinalized(psbt: WallyPSBT) -> Bool {
         var result = 0
         precondition(wally_psbt_is_finalized(psbt, &result) == WALLY_OK)
         return result != 0
     }
     
-    public static func serialized(psbt: WallyPSBT) -> Data {
+    public static func finalized(psbt: WallyPSBT) -> WallyPSBT? {
+        let final = copy(psbt: psbt)
+        guard wally_psbt_finalize(final) == WALLY_OK else {
+            return nil
+        }
+        return final
+    }
+
+    public static func finalizedTransaction(psbt: WallyPSBT) -> Transaction? {
+        var output: WallyTx!
+        defer {
+            wally_tx_free(output)
+        }
+
+        guard wally_psbt_extract(psbt, &output) == WALLY_OK else {
+            return nil
+        }
+        return Transaction(tx: output)
+    }
+    
+    public static func getLength(psbt: WallyPSBT) -> Int {
         var len = 0
         precondition(wally_psbt_get_length(psbt, 0, &len) == WALLY_OK)
+        return len
+    }
+    
+    public static func serialized(psbt: WallyPSBT) -> Data {
+        let len = getLength(psbt: psbt)
         var result = Data(count: len)
         result.withUnsafeMutableBytes {
             var written = 0
@@ -134,14 +167,6 @@ extension Wally {
     private static func copy(psbt: WallyPSBT) -> WallyPSBT {
         let data = serialized(psbt: psbt)
         return Self.psbt(from: data)!
-    }
-    
-    public static func finalized(psbt: WallyPSBT) -> WallyPSBT? {
-        let final = copy(psbt: psbt)
-        guard wally_psbt_finalize(final) == WALLY_OK else {
-            return nil
-        }
-        return final
     }
     
     public static func signed(psbt: WallyPSBT, ecPrivateKey: Data) -> WallyPSBT? {

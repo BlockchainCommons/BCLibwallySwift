@@ -22,7 +22,7 @@ public struct PSBT : Equatable {
         }
 
         deinit {
-            wally_psbt_free(psbt)
+            Wally.free(psbt: psbt)
         }
     }
 
@@ -31,9 +31,7 @@ public struct PSBT : Equatable {
     }
 
     private static func clone(psbt: WallyPSBT) -> WallyPSBT {
-        var new_psbt: WallyPSBT!
-        precondition(wally_psbt_clone_alloc(psbt, 0, &new_psbt) == WALLY_OK)
-        return new_psbt
+        Wally.clone(psbt: psbt)
     }
 
     private mutating func prepareForWrite() {
@@ -63,16 +61,11 @@ public struct PSBT : Equatable {
     }
 
     public init?(_ data: Data) {
-        var output: WallyPSBT!
-        let result = data.withUnsafeByteBuffer { buf in
-            // libwally-core returns WALLY_EINVAL regardless of why parsing fails
-            wally_psbt_from_bytes(buf.baseAddress, buf.count, &output)
-        }
-        guard result == WALLY_OK else {
+        guard let psbt = Wally.psbt(from: data) else {
             return nil
         }
-        precondition(output.pointee.tx != nil)
-        self.init(ownedPSBT: output)
+        precondition(psbt.pointee.tx != nil)
+        self.init(ownedPSBT: psbt)
     }
 
     public init?(base64 string: String) {
@@ -95,14 +88,7 @@ public struct PSBT : Equatable {
     }
 
     public var data: Data {
-        var len = 0
-        precondition(wally_psbt_get_length(_psbt, 0, &len) == WALLY_OK)
-        var result = Data(repeating: 0, count: len)
-        result.withUnsafeMutableBytes { resultBuffer in
-            var written = 0
-            precondition(wally_psbt_to_bytes(_psbt, 0, resultBuffer.bindMemory(to: UInt8.self).baseAddress, resultBuffer.count, &written) == WALLY_OK)
-        }
-        return result
+        return Wally.serialized(psbt: _psbt)
     }
     
     public var base64: String {
@@ -114,9 +100,7 @@ public struct PSBT : Equatable {
     }
 
     public var isFinalized: Bool {
-        var result = 0
-        precondition(wally_psbt_is_finalized(_psbt, &result) == WALLY_OK)
-        return result != 0
+        Wally.isFinalized(psbt: _psbt)
     }
 
     public var transaction: Transaction {
@@ -125,62 +109,55 @@ public struct PSBT : Equatable {
     }
 
     public var fee: Satoshi? {
-        guard let valueOut = self.transaction.totalOut else { return nil }
-        var tally: Satoshi = 0
-        for input in self.inputs {
+        guard let valueOut = self.transaction.totalOut else {
+            return nil
+        }
+        let tally = inputs.reduce(into: Satoshi(0)) { (total, input) in
             guard input.isSegwit, let amount = input.amount else {
-                return nil
+                return
             }
-            tally += amount
+            total += amount
         }
         precondition(tally >= valueOut)
         return tally - valueOut
     }
 
     public func finalizedTransaction() -> Transaction? {
-        var output: WallyTx!
-        defer {
-            wally_tx_free(output)
-        }
-
-        guard wally_psbt_extract(_psbt, &output) == WALLY_OK else {
-            return nil
-        }
-        return Transaction(tx: output)
+        Wally.finalizedTransaction(psbt: _psbt)
     }
 
     public func signed(with privKey: ECPrivateKey) -> PSBT? {
-        // TODO: sanity key for network
-        let clonedPSBT = Self.clone(psbt: self._psbt)
-        privKey.data.withUnsafeByteBuffer { buf in
-            precondition(wally_psbt_sign(clonedPSBT, buf.baseAddress, buf.count, 0) == WALLY_OK)
+        guard let signedPSBT = Wally.signed(psbt: _psbt, ecPrivateKey: privKey.data) else {
+            return nil
         }
-        return PSBT(ownedPSBT: clonedPSBT)
+        return PSBT(ownedPSBT: signedPSBT)
     }
 
     public func signed(with hdKey: HDKey) -> PSBT? {
-        var psbt: PSBT? = self
+        var psbt = self
         for input in self.inputs {
-            if let origins: [ECCompressedPublicKey : DerivationPath] = input.canSignOrigins(with: hdKey) {
-                for origin in origins {
-                    if let childKey = hdKey.derive(path: origin.value) {
-                        if let privKey = childKey.privKey {
-                            precondition(privKey.public == origin.key)
-                            psbt = psbt?.signed(with: privKey)
-                        }
-                    }
+            for origin in input.signableOrigins(with: hdKey) {
+                if
+                    let childKey = hdKey.derive(path: origin.value),
+                    let privKey = childKey.privKey,
+                    privKey.public == origin.key,
+                    let signedPSBT = psbt.signed(with: privKey)
+                {
+                    psbt = signedPSBT
                 }
             }
+        }
+        guard self != psbt else {
+            return nil
         }
         return psbt
     }
 
     public func finalized() -> PSBT? {
-        let clonedPSBT = Self.clone(psbt: _psbt)
-        guard wally_psbt_finalize(clonedPSBT) == WALLY_OK else {
+        guard let psbt = Wally.finalized(psbt: _psbt) else {
             return nil
         }
-        return PSBT(ownedPSBT: clonedPSBT)
+        return PSBT(ownedPSBT: psbt)
     }
 }
 

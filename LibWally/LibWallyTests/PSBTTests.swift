@@ -153,29 +153,23 @@ class PSBTTests: XCTestCase {
         let expectedOrigin3 = DerivationPath(steps: path3.steps, origin: .fingerprint(fingerprint))
         let expectedOrigin4 = DerivationPath(steps: path4.steps, origin: .fingerprint(fingerprint))
         let expectedOrigin5 = DerivationPath(steps: path5.steps, origin: .fingerprint(fingerprint))
-//        let expectedOrigin0 = KeyOrigin(fingerprint: fingerprint, path: path0)
-//        let expectedOrigin1 = KeyOrigin(fingerprint: fingerprint, path: path1)
-//        let expectedOrigin2 = KeyOrigin(fingerprint: fingerprint, path: path2)
-//        let expectedOrigin3 = KeyOrigin(fingerprint: fingerprint, path: path3)
-//        let expectedOrigin4 = KeyOrigin(fingerprint: fingerprint, path: path4)
-//        let expectedOrigin5 = KeyOrigin(fingerprint: fingerprint, path: path5)
         let psbt = PSBT(base64: unsignedPSBT)!
         // Check inputs
         XCTAssertEqual(psbt.inputs.count, 2)
-        let inOrigins0 = psbt.inputs[0].origins!
+        let inOrigins0 = psbt.inputs[0].origins
         XCTAssertEqual(inOrigins0.count, 2)
         XCTAssertEqual(inOrigins0[pubKey0], expectedOrigin0)
         XCTAssertEqual(inOrigins0[pubKey1], expectedOrigin1)
-        let inOrigins1 = psbt.inputs[1].origins!
+        let inOrigins1 = psbt.inputs[1].origins
         XCTAssertEqual(inOrigins1.count, 2)
         XCTAssertEqual(inOrigins1[pubKey3], expectedOrigin3)
         XCTAssertEqual(inOrigins1[pubKey2], expectedOrigin2)
         // Check outputs
         XCTAssertEqual(psbt.outputs.count, 2)
-        let outOrigins0 = psbt.outputs[0].origins!
+        let outOrigins0 = psbt.outputs[0].origins
         XCTAssertEqual(outOrigins0.count, 1)
         XCTAssertEqual(outOrigins0[pubKey4], expectedOrigin4)
-        let outOrigins1 = psbt.outputs[1].origins!
+        let outOrigins1 = psbt.outputs[1].origins
         XCTAssertEqual(outOrigins1.count, 1)
         XCTAssertEqual(outOrigins1[pubKey5], expectedOrigin5)
     }
