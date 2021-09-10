@@ -20,11 +20,11 @@ public struct TxOutput {
         self.amount = amount
     }
 
-    public func createWallyOutput() -> UnsafeMutablePointer<wally_tx_output> {
-        var output: UnsafeMutablePointer<wally_tx_output>!
-        scriptPubKey.script.data.withUnsafeByteBuffer { buf in
-            precondition(wally_tx_output_init_alloc(amount, buf.baseAddress, buf.count, &output) == WALLY_OK)
+    public func createWallyOutput() -> WallyTxOutput {
+        scriptPubKey.script.data.withUnsafeByteBuffer { scriptPubKeyBytes in
+            var output: WallyTxOutput!
+            precondition(wally_tx_output_init_alloc(amount, scriptPubKeyBytes.baseAddress, scriptPubKeyBytes.count, &output) == WALLY_OK)
+            return output
         }
-        return output
     }
 }

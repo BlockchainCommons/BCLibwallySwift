@@ -8,17 +8,17 @@
 import Foundation
 
 public struct HDKey : CustomStringConvertible {
-    public private(set) var wally_ext_key: ext_key
+    public private(set) var wallyExtKey: WallyExtKey
     public let parent: DerivationPath
     public let children: DerivationPath
 
-    public init(key: ext_key, parent: DerivationPath, children: DerivationPath) {
-        self.wally_ext_key = key
+    public init(key: WallyExtKey, parent: DerivationPath, children: DerivationPath) {
+        self.wallyExtKey = key
         self.parent = parent
         self.children = children
     }
     
-    public init(key: ext_key, masterKeyFingerprint: UInt32? = nil) {
+    public init(key: WallyExtKey, masterKeyFingerprint: UInt32? = nil) {
         let origin: DerivationPath.Origin?
         if let fingerprint = masterKeyFingerprint {
             origin = .fingerprint(fingerprint)
@@ -65,7 +65,7 @@ public struct HDKey : CustomStringConvertible {
     }
 
     public var network: Network {
-        wally_ext_key.network!
+        wallyExtKey.network!
     }
 
     public var description: String {
@@ -89,11 +89,11 @@ public struct HDKey : CustomStringConvertible {
     }
 
     public var isPrivate: Bool {
-        wally_ext_key.version == BIP32_VER_MAIN_PRIVATE || wally_ext_key.version == BIP32_VER_TEST_PRIVATE
+        wallyExtKey.version == BIP32_VER_MAIN_PRIVATE || wallyExtKey.version == BIP32_VER_TEST_PRIVATE
     }
 
     public var xpub: String {
-        var hdkey = wally_ext_key
+        var hdkey = wallyExtKey
         var output: UnsafeMutablePointer<Int8>?
         defer {
             wally_free_string(output)
@@ -105,14 +105,14 @@ public struct HDKey : CustomStringConvertible {
     }
 
     public var pubKey: ECCompressedPublicKey {
-        ECCompressedPublicKey(Data(of: wally_ext_key.pub_key))!
+        ECCompressedPublicKey(Data(of: wallyExtKey.pub_key))!
     }
 
     public var privKey: ECPrivateKey? {
         if !isPrivate {
             return nil
         }
-        var data = Data(of: wally_ext_key.priv_key)
+        var data = Data(of: wallyExtKey.priv_key)
         // skip prefix byte 0
         precondition(data.popFirst() != nil)
         return ECPrivateKey(data)!
@@ -122,7 +122,7 @@ public struct HDKey : CustomStringConvertible {
         if !isPrivate {
             return nil
         }
-        var hdkey = wally_ext_key
+        var hdkey = wallyExtKey
         var output: UnsafeMutablePointer<Int8>?
         defer {
             wally_free_string(output)
@@ -138,7 +138,7 @@ public struct HDKey : CustomStringConvertible {
     }
     
     public var `public`: HDKey {
-        var hdkey = wally_ext_key
+        var hdkey = wallyExtKey
         precondition(bip32_key_strip_private_key(&hdkey) == WALLY_OK)
         switch network {
         case .mainnet:
@@ -150,11 +150,11 @@ public struct HDKey : CustomStringConvertible {
     }
 
     public var fingerprintData: Data {
-        Wally.fingerprintData(for: wally_ext_key)
+        Wally.fingerprintData(for: wallyExtKey)
     }
     
     public var fingerprint: UInt32 {
-        Wally.fingerprint(for: wally_ext_key)
+        Wally.fingerprint(for: wallyExtKey)
     }
 
     public func derive(
@@ -167,7 +167,7 @@ public struct HDKey : CustomStringConvertible {
             return self
         }
         
-        let depth = wally_ext_key.depth
+        let depth = wallyExtKey.depth
         var tmpPath = path
         if path.origin != nil {
             guard let p = path.chop(depth: Int(depth)) else {
@@ -190,7 +190,7 @@ public struct HDKey : CustomStringConvertible {
             workingKey = privateKey
         }
 
-        var hdkey = workingKey.wally_ext_key
+        var hdkey = workingKey.wallyExtKey
         var output = ext_key()
         let rawPath = tmpPath.rawPath(wildcardChildNum: wildcardChildNum).compactMap({ $0 })
         guard rawPath.count == tmpPath.steps.count else {

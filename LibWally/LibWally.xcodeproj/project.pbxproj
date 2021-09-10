@@ -58,6 +58,7 @@
 		79B02BFB26E59E3100950779 /* ScriptOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFA26E59E3100950779 /* ScriptOperation.swift */; };
 		79B02BFD26E59E5400950779 /* Script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFC26E59E5400950779 /* Script.swift */; };
 		79B02BFF26E681CF00950779 /* ScriptOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */; };
+		79B2F0C426EB31E7008BB1FE /* TxHash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B2F0C326EB31E7008BB1FE /* TxHash.swift */; };
 		79C7CE0F26E1C35700C5CD75 /* DescriptorError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */; };
 		79C7CE1126E1C56500C5CD75 /* Descriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1026E1C56500C5CD75 /* Descriptor.swift */; };
 		79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */; };
@@ -131,6 +132,7 @@
 		79B02BFA26E59E3100950779 /* ScriptOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOperation.swift; sourceTree = "<group>"; };
 		79B02BFC26E59E5400950779 /* Script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Script.swift; sourceTree = "<group>"; };
 		79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOperationTests.swift; sourceTree = "<group>"; };
+		79B2F0C326EB31E7008BB1FE /* TxHash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxHash.swift; sourceTree = "<group>"; };
 		79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorError.swift; sourceTree = "<group>"; };
 		79C7CE1026E1C56500C5CD75 /* Descriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptor.swift; sourceTree = "<group>"; };
 		79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorKeyExpression.swift; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 				030A63F92503702700A1D27E /* Address.swift */,
 				030A63F82503702700A1D27E /* BIP39Mnemonic.swift */,
 				030A63F32503702700A1D27E /* Transaction.swift */,
+				79B2F0C326EB31E7008BB1FE /* TxHash.swift */,
 				03A5610825691F3100181CB8 /* TxInput.swift */,
 				03A5610425691F1600181CB8 /* TxOutput.swift */,
 				03A56110256A397600181CB8 /* PSBTInput.swift */,
@@ -437,6 +440,7 @@
 				796FE5D826D7764C00DDB32A /* UseInfo.swift in Sources */,
 				030A63FF2503702700A1D27E /* BIP39Mnemonic.swift in Sources */,
 				79865C5026E068EB00897441 /* DescriptorToken.swift in Sources */,
+				79B2F0C426EB31E7008BB1FE /* TxHash.swift in Sources */,
 				03A5610925691F3100181CB8 /* TxInput.swift in Sources */,
 				030A64002503702700A1D27E /* Address.swift in Sources */,
 				79B02BFD26E59E5400950779 /* Script.swift in Sources */,

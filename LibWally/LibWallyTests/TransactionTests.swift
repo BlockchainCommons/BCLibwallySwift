@@ -15,8 +15,8 @@ class TransactionTests: XCTestCase {
 
     func testFromHash() {
         let hash = "0000000000000000000000000000000000000000000000000000000000000000"
-        let tx = Transaction(hex: hash)!
-        XCTAssertEqual(tx.hash!.hex, hash)
+        let txHash = TxHash(hex: hash)!
+        XCTAssertEqual(txHash.hex, hash)
 
         XCTAssertNil(Transaction(hex: "00")) // Wrong length
     }
@@ -29,13 +29,13 @@ class TransactionTests: XCTestCase {
     }
 
     func testInput() {
-        let prevTx = Transaction(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
+        let prevTx = TxHash(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
         let vout: UInt32 = 0
         let amount: Satoshi = 1000
         let scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
 
-        let input = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey)
-        XCTAssertEqual(input.txHash, prevTx.hash)
+        let input = TxInput(prevTx: prevTx, vout: vout, amount: amount, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey)
+        XCTAssertEqual(input.prevTx, prevTx)
         XCTAssertEqual(input.vout, 0)
         XCTAssertEqual(input.sequence, 0xFFFFFFFF)
         guard case let .scriptSig(ss) = input.sig else {
@@ -47,18 +47,17 @@ class TransactionTests: XCTestCase {
 
     func testComposeTransaction() {
         // Input
-        let prevTx = Transaction(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
+        let prevTx = TxHash(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
         let vout: UInt32 = 0
         let amount: Satoshi = 1000
         let scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
-        let txInput = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey)
+        let txInput = TxInput(prevTx: prevTx, vout: vout, amount: amount, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey)
 
         // Output:
         let txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: 1000)
 
         // Transaction
         let tx = Transaction(inputs: [txInput], outputs: [txOutput])
-        XCTAssertNil(tx.hash)
         let wtx = tx.tx!.pointee
         XCTAssertEqual(wtx.version, 1)
         XCTAssertEqual(wtx.num_inputs, 1)
@@ -89,23 +88,23 @@ class TransactionInstanceTests: XCTestCase {
     
     override func setUp() {
         // Input (legacy P2PKH)
-        let prevTx = Transaction(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
+        let prevTx = TxHash(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
         let vout: UInt32 = 0
         let amount1: Satoshi = 1000 + Satoshi(legacyInputBytes)
         let scriptSig = ScriptSig(type: .payToPubKeyHash(pubKey))
-        let txInput1 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount1, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey1)
+        let txInput1 = TxInput(prevTx: prevTx, vout: vout, amount: amount1, sig: .scriptSig(scriptSig), scriptPubKey: scriptPubKey1)
 
         // Input (native SegWit)
         let witness = Witness(type: .payToWitnessPubKeyHash, pubKey: pubKey)
         let amount2: Satoshi = 1000 + Satoshi(nativeSegWitInputBytes)
         let scriptPubKey2 = ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")!
-        let txInput2 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount2, sig: .witness(witness), scriptPubKey: scriptPubKey2)
+        let txInput2 = TxInput(prevTx: prevTx, vout: vout, amount: amount2, sig: .witness(witness), scriptPubKey: scriptPubKey2)
 
         // Input (wrapped SegWit)
         let witness3 = Witness(type: .payToScriptHashPayToWitnessPubKeyHash, pubKey: pubKey)
         let amount3: Satoshi = 1000 + Satoshi(wrappedSegWitInputBytes)
         let scriptPubKey3 = ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")!
-        let txInput3 = TxInput(txHash: prevTx.hash!, vout: vout, amount: amount3, sig: .witness(witness3), scriptPubKey: scriptPubKey3)
+        let txInput3 = TxInput(prevTx: prevTx, vout: vout, amount: amount3, sig: .witness(witness3), scriptPubKey: scriptPubKey3)
         
         // Output:
         let txOutput = TxOutput(scriptPubKey: scriptPubKey1, amount: 1000)
@@ -127,18 +126,10 @@ class TransactionInstanceTests: XCTestCase {
         XCTAssertEqual(tx1.totalIn, 1000 + Satoshi(legacyInputBytes))
         XCTAssertEqual(tx2.totalIn, 1000 + Satoshi(nativeSegWitInputBytes))
         XCTAssertEqual(tx3.totalIn, 1000 + Satoshi(wrappedSegWitInputBytes))
-        
-        let tx4 = Transaction(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
-        XCTAssertNil(tx4.totalIn)
-        
     }
     
     func testTotalOut() {
         XCTAssertEqual(tx1.totalOut, 1000)
-        
-        let tx2 = Transaction(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
-        XCTAssertNil(tx2.totalOut)
-
     }
     
     func testFunded() {
@@ -149,10 +140,6 @@ class TransactionInstanceTests: XCTestCase {
         XCTAssertEqual(tx1.vbytes, legacyInputBytes)
         XCTAssertEqual(tx2.vbytes, nativeSegWitInputBytes)
         XCTAssertEqual(tx3.vbytes, wrappedSegWitInputBytes)
-
-        let tx4 = Transaction(hex: "0000000000000000000000000000000000000000000000000000000000000000")!
-        XCTAssertNil(tx4.vbytes)
-        
     }
     
     func testFee() {

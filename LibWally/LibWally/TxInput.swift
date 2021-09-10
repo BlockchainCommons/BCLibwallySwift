@@ -8,7 +8,7 @@
 import Foundation
 
 public struct TxInput {
-    public let txHash: Data
+    public let prevTx: TxHash
     public let vout: UInt32
     public let sequence: UInt32
     public let amount: Satoshi
@@ -21,8 +21,8 @@ public struct TxInput {
     }
 
     // For P2SH wrapped SegWit, we set scriptSig automatically
-    public init(txHash: Data, vout: UInt32, sequence: UInt32 = 0xffffffff, amount: Satoshi, sig: Sig, scriptPubKey: ScriptPubKey) {
-        self.txHash = txHash
+    public init(prevTx: TxHash, vout: UInt32, sequence: UInt32 = 0xffffffff, amount: Satoshi, sig: Sig, scriptPubKey: ScriptPubKey) {
+        self.prevTx = prevTx
         self.vout = vout
         self.sequence = sequence
         self.amount = amount
@@ -30,9 +30,9 @@ public struct TxInput {
         self.scriptPubKey = scriptPubKey
     }
 
-    public func createWallyInput() -> UnsafeMutablePointer<wally_tx_input> {
-        txHash.withUnsafeByteBuffer { hashBuf in
-            var wti: UnsafeMutablePointer<wally_tx_input>!
+    public func createWallyInput() -> WallyTxInput {
+        prevTx.data.withUnsafeByteBuffer { prevTxBytes in
+            var wti: WallyTxInput!
             
             let witness: UnsafeMutablePointer<wally_tx_witness_stack>?
             if case let .witness(w) = sig {
@@ -41,7 +41,7 @@ public struct TxInput {
                 witness = nil
             }
             
-            precondition(wally_tx_input_init_alloc(hashBuf.baseAddress, hashBuf.count, vout, sequence, nil, 0, witness, &wti) == WALLY_OK)
+            precondition(wally_tx_input_init_alloc(prevTxBytes.baseAddress, prevTxBytes.count, vout, sequence, nil, 0, witness, &wti) == WALLY_OK)
 
             return wti
         }

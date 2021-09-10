@@ -10,47 +10,41 @@ import Foundation
 @_implementationOnly import WolfBase
 
 public struct Transaction {
-    public let hash: Data?
     public let inputs: [TxInput]?
     public let outputs: [TxOutput]?
 
     private var storage: Storage
 
     private final class Storage {
-        var tx: UnsafeMutablePointer<wally_tx>?
+        var tx: WallyTx?
 
-        init(tx: UnsafeMutablePointer<wally_tx>) {
-            self.tx = tx
-        }
+        init(tx: WallyTx) { self.tx = tx }
 
-        init() {
-            self.tx = nil
-        }
+        init() { self.tx = nil }
 
-        deinit {
-            wally_tx_free(tx)
-        }
+        deinit { wally_tx_free(tx) }
     }
 
-    var tx: UnsafeMutablePointer<wally_tx>? {
+    var tx: WallyTx? {
         storage.tx
     }
 
-    private static func clone(tx: UnsafeMutablePointer<wally_tx>) -> UnsafeMutablePointer<wally_tx> {
-        var newTx: UnsafeMutablePointer<wally_tx>!
+    private static func clone(tx: WallyTx) -> WallyTx {
+        var newTx: WallyTx!
         precondition(wally_tx_clone_alloc(tx, 0, &newTx) == WALLY_OK)
         return newTx
     }
 
     private mutating func prepareForWrite() {
-        if !isKnownUniquelyReferenced(&storage),
-           let tx = storage.tx {
+        if
+            !isKnownUniquelyReferenced(&storage),
+            let tx = storage.tx
+        {
             storage.tx = Self.clone(tx: tx)
         }
     }
 
-    init(tx: UnsafeMutablePointer<wally_tx>) {
-        hash = nil
+    init(tx: WallyTx) {
         inputs = nil
         outputs = nil
         storage = Storage(tx: Self.clone(tx: tx))
@@ -59,50 +53,37 @@ public struct Transaction {
     public init?(hex: String) {
         inputs = nil
         outputs = nil
-        guard let data = Data(hex: hex) else {
+        guard
+            let data = Data(hex: hex),
+            let newTx = Wally.txFromBytes(data)
+        else {
             return nil
         }
-        if data.count != SHA256_LEN { // Not a transaction hash
-            var newTx: UnsafeMutablePointer<wally_tx>!
-            let result = data.withUnsafeByteBuffer { buf in
-                wally_tx_from_bytes(buf.baseAddress, buf.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &newTx)
-            }
-            guard result == WALLY_OK else {
-                return nil
-            }
-            storage = Storage(tx: newTx)
-            hash = nil
-        } else { // 32 bytes, but not a valid transaction, so treat as a hash
-            hash = Data(data.reversed())
-            storage = Storage()
-        }
+        storage = Storage(tx: newTx)
     }
 
     public init(inputs: [TxInput], outputs: [TxOutput]) {
-        self.hash = nil
-
         self.inputs = inputs
         self.outputs = outputs
         
         let version: UInt32 = 1
         let lockTime: UInt32 = 0
 
-        var wtx: UnsafeMutablePointer<wally_tx>!
+        var wtx: WallyTx!
         precondition(wally_tx_init_alloc(version, lockTime, inputs.count, outputs.count, &wtx) == WALLY_OK)
 
         for input in inputs {
-            precondition(wally_tx_add_input(wtx, input.createWallyInput()) == WALLY_OK)
+            Wally.txAddInput(tx: wtx, input: input.createWallyInput())
         }
 
         for output in outputs {
-            precondition(wally_tx_add_output(wtx, output.createWallyOutput()) == WALLY_OK)
+            Wally.txAddOutput(tx: wtx, output: output.createWallyOutput())
         }
 
         storage = Storage(tx: wtx)
     }
 
-    private init(inputs: [TxInput]?, outputs: [TxOutput]?, tx: UnsafeMutablePointer<wally_tx>) {
-        self.hash = nil
+    private init(inputs: [TxInput]?, outputs: [TxOutput]?, tx: WallyTx) {
         self.inputs = inputs
         self.outputs = outputs
         self.storage = Storage(tx: tx)
@@ -121,13 +102,7 @@ public struct Transaction {
             }
         }
         
-        var output: UnsafeMutablePointer<Int8>!
-        defer {
-            wally_free_string(output)
-        }
-        
-        precondition(wally_tx_to_hex(tx, UInt32(WALLY_TX_FLAG_USE_WITNESS), &output) == WALLY_OK)
-        return String(cString: output!)
+        return Wally.txToHex(tx: tx)
     }
 
     var totalIn: Satoshi? {
@@ -139,11 +114,7 @@ public struct Transaction {
     
     var totalOut: Satoshi? {
         guard let tx = tx else { return nil }
-
-        var value_out: UInt64 = 0
-        precondition(wally_tx_get_total_output_satoshi(tx, &value_out) == WALLY_OK)
-        
-        return value_out;
+        return Wally.txGetTotalOutputSatoshi(tx: tx)
     }
     
     var isFunded: Bool? {
@@ -180,17 +151,13 @@ public struct Transaction {
                 }
                 
                 if let scriptSig = scriptSig {
-                    let scriptSigWorstCase = scriptSig.render(purpose: .feeWorstCase)!
-                    scriptSigWorstCase.data.withUnsafeByteBuffer { buf in
-                        precondition(wally_tx_set_input_script(cloned_tx, index, buf.baseAddress, buf.count) == WALLY_OK)
-                    }
+                    let scriptSigWorstCase = scriptSig.render(purpose: .feeWorstCase)!.data
+                    Wally.txSetInputScript(tx: cloned_tx, index: index, script: scriptSigWorstCase)
                 }
             }
         }
         
-        var value_out = 0
-        precondition(wally_tx_get_vsize(cloned_tx, &value_out) == WALLY_OK)
-        return value_out;
+        return Wally.txGetVsize(tx: cloned_tx)
     }
     
     public var fee: Satoshi? {
@@ -224,68 +191,52 @@ public struct Transaction {
 
         // Loop through inputs to sign:
         for i in 0 ..< inputs.count {
-            var message_bytes = [UInt8](repeating: 0, count: Int(SHA256_LEN))
+            let messageHash: Data
 
             switch inputs[i].sig {
             case .witness(let witness):
                 switch witness.type {
                 case .payToScriptHashPayToWitnessPubKeyHash:
-                    let scriptSig = ScriptSig(type: .payToScriptHashPayToWitnessPubKeyHash(witness.pubKey)).render(purpose: .signed)!
-                    scriptSig.data.withUnsafeByteBuffer { buf in
-                        precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
-                    }
+                    let scriptSig = ScriptSig(type: .payToScriptHashPayToWitnessPubKeyHash(witness.pubKey)).render(purpose: .signed)!.data
+                    Wally.txSetInputScript(tx: cloned_tx, index: i, script: scriptSig)
                     
                     fallthrough
                 case .payToWitnessPubKeyHash:
                     // Check that we're using the right public key:
-                    let pubKeyData = Data(of: privKeys[i].wally_ext_key.pub_key)
+                    let pubKeyData = Data(of: privKeys[i].wallyExtKey.pub_key)
                     precondition(witness.pubKey.data == pubKeyData)
                     
-                    let script = witness.script
-                    script.data.withUnsafeByteBuffer { buf in
-                        precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, inputs[i].amount, UInt32(WALLY_SIGHASH_ALL), UInt32(WALLY_TX_FLAG_USE_WITNESS), &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
-                    }
+                    messageHash = Wally.txGetBTCSignatureHash(tx: cloned_tx, index: i, script: witness.script.data, amount: inputs[i].amount, isWitness: true)
                 }
             case .scriptSig:
                 // Prep input for signing:
-                let scriptPubKey = inputs[i].scriptPubKey.script.data
-                scriptPubKey.withUnsafeByteBuffer { buf in
-                    // Create hash for signing
-                    precondition(wally_tx_get_btc_signature_hash(cloned_tx, i, buf.baseAddress, buf.count, 0, UInt32(WALLY_SIGHASH_ALL), 0, &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
-                }
+                messageHash = Wally.txGetBTCSignatureHash(tx: cloned_tx, index: i, script: inputs[i].scriptPubKey.script.data, amount: 0, isWitness: false)
             }
 
-            var compact_sig_bytes = [UInt8](repeating: 0, count: Int(EC_SIGNATURE_LEN))
+            let compactSig: Data
 
             // Sign hash using private key (without 0 prefix)
             precondition(EC_MESSAGE_HASH_LEN == SHA256_LEN)
             
-            var data = Data(of: privKeys[i].wally_ext_key.priv_key)
+            var privKey = Data(of: privKeys[i].wallyExtKey.priv_key)
             // skip prefix byte 0
-            precondition(data.popFirst() != nil)
-            let privKey = [UInt8](data)
+            precondition(privKey.popFirst() != nil)
 
             // Ensure private key is valid
-            precondition(wally_ec_private_key_verify(privKey, Int(EC_PRIVATE_KEY_LEN)) == WALLY_OK)
+            precondition(Wally.ecPrivateKeyVerify(privKey))
         
-            precondition(wally_ec_sig_from_bytes(privKey, Int(EC_PRIVATE_KEY_LEN), &message_bytes, Int(EC_MESSAGE_HASH_LEN), UInt32(EC_FLAG_ECDSA | EC_FLAG_GRIND_R), &compact_sig_bytes, Int(EC_SIGNATURE_LEN)) == WALLY_OK)
+            compactSig = Wally.ecSigFromBytes(privKey: privKey, messageHash: messageHash)
         
             // Check that signature is valid and for the correct public key:
-            withUnsafeByteBuffer(of: privKeys[i].wally_ext_key.pub_key) { buf in
-                precondition(wally_ec_sig_verify(buf.baseAddress, buf.count, &message_bytes, Int(EC_MESSAGE_HASH_LEN), UInt32(EC_FLAG_ECDSA), &compact_sig_bytes, Int(EC_SIGNATURE_LEN)) == WALLY_OK)
-            }
+            precondition(Wally.ecSigVerify(key: privKeys[i].wallyExtKey, messageHash: messageHash, compactSig: compactSig))
 
             // Convert to low s form:
-            var sig_norm_bytes = [UInt8](repeating: 0, count: Int(EC_SIGNATURE_LEN))
-            precondition(wally_ec_sig_normalize(&compact_sig_bytes, Int(EC_SIGNATURE_LEN), &sig_norm_bytes, Int(EC_SIGNATURE_LEN)) == WALLY_OK)
+            let sigNorm = Wally.ecSigNormalize(compactSig: compactSig)
             
             // Convert normalized signature to DER
-            var sig_bytes = [UInt8](repeating: 0, count: Int(EC_SIGNATURE_DER_MAX_LEN))
-            var sig_bytes_written = 0;
-            precondition(wally_ec_sig_to_der(sig_norm_bytes, Int(EC_SIGNATURE_LEN), &sig_bytes, Int(EC_SIGNATURE_DER_MAX_LEN), &sig_bytes_written) == WALLY_OK)
-            
+            let signature = Wally.ecSigToDer(sigNorm: sigNorm)
+
             // Store signature in TxInput
-            let signature =  Data(bytes: sig_bytes, count: sig_bytes_written)
             switch inputs[i].sig {
             case .witness(let witness):
                 let witness = witness.signed(signature: signature)
@@ -296,10 +247,8 @@ public struct Transaction {
                 updatedInputs[i].sig = .scriptSig(scriptSig)
                 
                 // Update scriptSig:
-                let signedScriptSig = scriptSig.render(purpose: .signed)!
-                signedScriptSig.data.withUnsafeByteBuffer { buf in
-                    precondition(wally_tx_set_input_script(cloned_tx, i, buf.baseAddress, buf.count) == WALLY_OK)
-                }
+                let signedScriptSig = scriptSig.render(purpose: .signed)!.data
+                Wally.txSetInputScript(tx: cloned_tx, index: i, script: signedScriptSig)
             }
         }
 

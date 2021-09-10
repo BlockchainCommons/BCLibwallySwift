@@ -313,7 +313,7 @@ final class DescriptorParser: Parser {
             let key = token.hdKey
             let childSteps = try parseDerivationSteps(allowFinalWildcard: true)
             let children = DerivationPath(steps: childSteps)
-            let key2 = HDKey(key: key.wally_ext_key, parent: origin, children: children)
+            let key2 = HDKey(key: key.wallyExtKey, parent: origin, children: children)
             resultKey = .hdKey(key2)
         default:
             resultKey = nil

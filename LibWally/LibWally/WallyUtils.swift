@@ -8,11 +8,17 @@
 import Foundation
 @_implementationOnly import WolfBase
 
+public typealias WallyTx = UnsafeMutablePointer<wally_tx>
+public typealias WallyTxInput = UnsafeMutablePointer<wally_tx_input>
+public typealias WallyTxOutput = UnsafeMutablePointer<wally_tx_output>
+public typealias WallyExtKey = ext_key
+public typealias WallyPSBT = UnsafeMutablePointer<wally_psbt>
+
 public enum Wally {
 }
 
 extension Wally {
-    public static func base58(from key: ext_key, isPrivate: Bool) -> String? {
+    public static func base58(from key: WallyExtKey, isPrivate: Bool) -> String? {
         guard
             !Data(of: key.chain_code).isAllZero,
             key.version != 0
@@ -31,10 +37,10 @@ extension Wally {
         }
     }
     
-    public static func key(from parentKey: ext_key, childNum: UInt32, isPrivate: Bool) -> ext_key? {
+    public static func key(from parentKey: WallyExtKey, childNum: UInt32, isPrivate: Bool) -> WallyExtKey? {
         withUnsafePointer(to: parentKey) { parentPointer in
             let flags = UInt32(isPrivate ? BIP32_FLAG_KEY_PRIVATE : BIP32_FLAG_KEY_PUBLIC)
-            var derivedKey = ext_key()
+            var derivedKey = WallyExtKey()
             guard bip32_key_from_parent(parentPointer, childNum, flags, &derivedKey) == WALLY_OK else {
                 return nil
             }
@@ -42,7 +48,7 @@ extension Wally {
         }
     }
     
-    public static func fingerprintData(for key: ext_key) -> Data {
+    public static func fingerprintData(for key: WallyExtKey) -> Data {
         // This doesn't work with a non-derivable key, because LibWally thinks it's invalid.
         //var bytes = [UInt8](repeating: 0, count: Int(BIP32_KEY_FINGERPRINT_LEN))
         //precondition(bip32_key_get_fingerprint(&hdkey, &bytes, bytes.count) == WALLY_OK)
@@ -51,11 +57,11 @@ extension Wally {
         hash160(key.pub_key).prefix(Int(BIP32_KEY_FINGERPRINT_LEN))
     }
     
-    public static func fingerprint(for key: ext_key) -> UInt32 {
+    public static func fingerprint(for key: WallyExtKey) -> UInt32 {
         deserialize(UInt32.self, fingerprintData(for: key))!
     }
     
-    public static func updateHash160(in key: inout ext_key) {
+    public static func updateHash160(in key: inout WallyExtKey) {
         let hash160Size = MemoryLayout.size(ofValue: key.hash160)
         withUnsafeByteBuffer(of: key.pub_key) { pub_key in
             withUnsafeMutableByteBuffer(of: &key.hash160) { hash160 in
@@ -67,7 +73,7 @@ extension Wally {
         }
     }
     
-    public static func updatePublicKey(in key: inout ext_key) {
+    public static func updatePublicKey(in key: inout WallyExtKey) {
         withUnsafeByteBuffer(of: key.priv_key) { priv_key in
             withUnsafeMutableByteBuffer(of: &key.pub_key) { pub_key in
                 precondition(wally_ec_public_key_from_private_key(
@@ -93,9 +99,9 @@ extension Wally {
 }
 
 extension Wally {
-    public static func psbt(from data: Data) -> UnsafeMutablePointer<wally_psbt>? {
+    public static func psbt(from data: Data) -> WallyPSBT? {
         data.withUnsafeByteBuffer { bytes in
-            var p: UnsafeMutablePointer<wally_psbt>? = nil
+            var p: WallyPSBT? = nil
             guard wally_psbt_from_bytes(bytes.baseAddress!, data.count, &p) == WALLY_OK else {
                 return nil
             }
@@ -103,17 +109,17 @@ extension Wally {
         }
     }
     
-    public static func free(psbt: UnsafeMutablePointer<wally_psbt>) {
+    public static func free(psbt: WallyPSBT) {
         wally_psbt_free(psbt)
     }
     
-    public static func isFinalized(psbt: UnsafePointer<wally_psbt>) -> Bool {
+    public static func isFinalized(psbt: WallyPSBT) -> Bool {
         var result = 0
         precondition(wally_psbt_is_finalized(psbt, &result) == WALLY_OK)
         return result != 0
     }
     
-    public static func serialized(psbt: UnsafePointer<wally_psbt>) -> Data {
+    public static func serialized(psbt: WallyPSBT) -> Data {
         var len = 0
         precondition(wally_psbt_get_length(psbt, 0, &len) == WALLY_OK)
         var result = Data(count: len)
@@ -125,12 +131,12 @@ extension Wally {
         return result
     }
     
-    private static func copy(psbt: UnsafePointer<wally_psbt>) -> UnsafeMutablePointer<wally_psbt> {
+    private static func copy(psbt: WallyPSBT) -> WallyPSBT {
         let data = serialized(psbt: psbt)
         return Self.psbt(from: data)!
     }
     
-    public static func finalized(psbt: UnsafePointer<wally_psbt>) -> UnsafeMutablePointer<wally_psbt>? {
+    public static func finalized(psbt: WallyPSBT) -> WallyPSBT? {
         let final = copy(psbt: psbt)
         guard wally_psbt_finalize(final) == WALLY_OK else {
             return nil
@@ -138,7 +144,7 @@ extension Wally {
         return final
     }
     
-    public static func signed(psbt: UnsafePointer<wally_psbt>, ecPrivateKey: Data) -> UnsafeMutablePointer<wally_psbt>? {
+    public static func signed(psbt: WallyPSBT, ecPrivateKey: Data) -> WallyPSBT? {
         ecPrivateKey.withUnsafeByteBuffer { keyBytes in
             let signedPSBT = copy(psbt: psbt)
             let ret = wally_psbt_sign(signedPSBT, keyBytes.baseAddress, keyBytes.count, 0)
@@ -361,7 +367,7 @@ extension Wally {
     }
     
     public static func hdKeyToAddress(hdKey: HDKey, type: Address.AddressType) -> String {
-        var key = hdKey.wally_ext_key
+        var key = hdKey.wallyExtKey
         var output: UnsafeMutablePointer<Int8>!
         defer {
             wally_free_string(output)
@@ -384,17 +390,17 @@ extension Wally {
         return String(cString: output)
     }
     
-    public static func hdKey(fromBase58 base58: String) -> ext_key? {
-        var result = ext_key()
+    public static func hdKey(fromBase58 base58: String) -> WallyExtKey? {
+        var result = WallyExtKey()
         guard bip32_key_from_base58(base58, &result) == WALLY_OK else {
             return nil
         }
         return result
     }
     
-    public static func hdKey(fromSeed seed: BIP39Mnemonic.Seed, network: Network) -> ext_key? {
+    public static func hdKey(fromSeed seed: BIP39Mnemonic.Seed, network: Network) -> WallyExtKey? {
         let flags = network.wallyBIP32Version(isPrivate: true)
-        var key = ext_key()
+        var key = WallyExtKey()
         let result = seed.data.withUnsafeByteBuffer { buf in
             bip32_key_from_seed(buf.baseAddress, buf.count, flags, 0, &key)
         }
@@ -402,6 +408,106 @@ extension Wally {
             return nil
         }
         return key
+    }
+}
+
+extension Wally {
+    public static func txFromBytes(_ data: Data) -> WallyTx? {
+        var newTx: WallyTx!
+        let result = data.withUnsafeByteBuffer { buf in
+            wally_tx_from_bytes(buf.baseAddress, buf.count, UInt32(WALLY_TX_FLAG_USE_WITNESS), &newTx)
+        }
+        guard result == WALLY_OK else {
+            return nil
+        }
+        return newTx
+    }
+    
+    public static func txSetInputScript(tx: WallyTx, index: Int, script: Data) {
+        script.withUnsafeByteBuffer {
+            precondition(wally_tx_set_input_script(tx, index, $0.baseAddress, $0.count) == WALLY_OK)
+        }
+    }
+    
+    public static func txAddInput(tx: WallyTx, input: WallyTxInput) {
+        precondition(wally_tx_add_input(tx, input) == WALLY_OK)
+    }
+    
+    public static func txAddOutput(tx: WallyTx, output: WallyTxOutput) {
+        precondition(wally_tx_add_output(tx, output) == WALLY_OK)
+    }
+    
+    public static func txToHex(tx: WallyTx) -> String {
+        var output: UnsafeMutablePointer<Int8>!
+        defer {
+            wally_free_string(output)
+        }
+        
+        precondition(wally_tx_to_hex(tx, UInt32(WALLY_TX_FLAG_USE_WITNESS), &output) == WALLY_OK)
+        return String(cString: output!)
+    }
+    
+    public static func txGetTotalOutputSatoshi(tx: WallyTx) -> Satoshi {
+        var value_out: UInt64 = 0
+        precondition(wally_tx_get_total_output_satoshi(tx, &value_out) == WALLY_OK)
+        return value_out
+    }
+    
+    public static func txGetVsize(tx: WallyTx) -> Int {
+        var value_out = 0
+        precondition(wally_tx_get_vsize(tx, &value_out) == WALLY_OK)
+        return value_out
+    }
+    
+    public static func txGetBTCSignatureHash(tx: WallyTx, index: Int, script: Data, amount: Satoshi, isWitness: Bool) -> Data {
+        script.withUnsafeByteBuffer { buf in
+            var message_bytes = [UInt8](repeating: 0, count: Int(SHA256_LEN))
+            precondition(wally_tx_get_btc_signature_hash(tx, index, buf.baseAddress, buf.count, amount, UInt32(WALLY_SIGHASH_ALL), isWitness ? UInt32(WALLY_TX_FLAG_USE_WITNESS) : 0, &message_bytes, Int(SHA256_LEN)) == WALLY_OK)
+            return Data(message_bytes)
+        }
+    }
+    
+    public static func ecPrivateKeyVerify(_ privKey: Data) -> Bool {
+        privKey.withUnsafeByteBuffer {
+            wally_ec_private_key_verify($0.baseAddress, $0.count) == WALLY_OK
+        }
+    }
+    
+    public static func ecSigFromBytes(privKey: Data, messageHash: Data) -> Data {
+        privKey.withUnsafeByteBuffer { privKeyBytes in
+            messageHash.withUnsafeByteBuffer { messageHashBytes in
+                var compactSig = [UInt8](repeating: 0, count: Int(EC_SIGNATURE_LEN))
+                precondition(wally_ec_sig_from_bytes(privKeyBytes.baseAddress, privKeyBytes.count, messageHashBytes.baseAddress, messageHashBytes.count, UInt32(EC_FLAG_ECDSA | EC_FLAG_GRIND_R), &compactSig, compactSig.count) == WALLY_OK)
+                return Data(compactSig)
+            }
+        }
+    }
+    
+    public static func ecSigVerify(key: WallyExtKey, messageHash: Data, compactSig: Data) -> Bool {
+        withUnsafeByteBuffer(of: key.pub_key) { pubKeyBytes in
+            messageHash.withUnsafeByteBuffer { messageHashBytes in
+                compactSig.withUnsafeByteBuffer { compactSigBytes in
+                    wally_ec_sig_verify(pubKeyBytes.baseAddress, pubKeyBytes.count, messageHashBytes.baseAddress, messageHashBytes.count, UInt32(EC_FLAG_ECDSA), compactSigBytes.baseAddress, compactSigBytes.count) == WALLY_OK
+                }
+            }
+        }
+    }
+    
+    public static func ecSigNormalize(compactSig: Data) -> Data {
+        compactSig.withUnsafeByteBuffer { compactSigBytes in
+            var sigNormBytes = [UInt8](repeating: 0, count: Int(EC_SIGNATURE_LEN))
+            precondition(wally_ec_sig_normalize(compactSigBytes.baseAddress, compactSigBytes.count, &sigNormBytes, Int(EC_SIGNATURE_LEN)) == WALLY_OK)
+            return Data(sigNormBytes)
+        }
+    }
+    
+    public static func ecSigToDer(sigNorm: Data) -> Data {
+        sigNorm.withUnsafeByteBuffer { sigNormBytes in
+            var sig_bytes = [UInt8](repeating: 0, count: Int(EC_SIGNATURE_DER_MAX_LEN))
+            var sig_bytes_written = 0
+            precondition(wally_ec_sig_to_der(sigNormBytes.baseAddress, sigNormBytes.count, &sig_bytes, Int(EC_SIGNATURE_DER_MAX_LEN), &sig_bytes_written) == WALLY_OK)
+            return Data(bytes: sig_bytes, count: sig_bytes_written)
+        }
     }
 }
 
@@ -417,7 +523,7 @@ extension Data {
     }
 }
 
-extension ext_key: CustomStringConvertible {
+extension WallyExtKey: CustomStringConvertible {
     public var description: String {
         let chain_code = Data(of: self.chain_code).hex
         let parent160 = Data(of: self.parent160).hex
@@ -428,7 +534,7 @@ extension ext_key: CustomStringConvertible {
         let version = self.version
         let pub_key = Data(of: self.pub_key).hex
         
-        return "ext_key(chain_code: \(chain_code), parent160: \(parent160), depth: \(depth), priv_key: \(priv_key), child_num: \(child_num), hash160: \(hash160), version: \(version), pub_key: \(pub_key))"
+        return "WallyExtKey(chain_code: \(chain_code), parent160: \(parent160), depth: \(depth), priv_key: \(priv_key), child_num: \(child_num), hash160: \(hash160), version: \(version), pub_key: \(pub_key))"
     }
     
     public var isPrivate: Bool {

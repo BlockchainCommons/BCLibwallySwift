@@ -15,9 +15,9 @@ public struct PSBT : Equatable {
     private var storage: Storage
 
     private final class Storage {
-        var psbt: UnsafeMutablePointer<wally_psbt>
+        var psbt: WallyPSBT
 
-        init(psbt: UnsafeMutablePointer<wally_psbt>) {
+        init(psbt: WallyPSBT) {
             self.psbt = psbt
         }
 
@@ -26,12 +26,12 @@ public struct PSBT : Equatable {
         }
     }
 
-    private var _psbt: UnsafeMutablePointer<wally_psbt> {
+    private var _psbt: WallyPSBT {
         storage.psbt
     }
 
-    private static func clone(psbt: UnsafeMutablePointer<wally_psbt>) -> UnsafeMutablePointer<wally_psbt> {
-        var new_psbt: UnsafeMutablePointer<wally_psbt>!
+    private static func clone(psbt: WallyPSBT) -> WallyPSBT {
+        var new_psbt: WallyPSBT!
         precondition(wally_psbt_clone_alloc(psbt, 0, &new_psbt) == WALLY_OK)
         return new_psbt
     }
@@ -46,7 +46,7 @@ public struct PSBT : Equatable {
         lhs.data == rhs.data
     }
 
-    private init(ownedPSBT: UnsafeMutablePointer<wally_psbt>) {
+    private init(ownedPSBT: WallyPSBT) {
         self.storage = Storage(psbt: ownedPSBT)
 
         var inputs: [PSBTInput] = []
@@ -63,7 +63,7 @@ public struct PSBT : Equatable {
     }
 
     public init?(_ data: Data) {
-        var output: UnsafeMutablePointer<wally_psbt>!
+        var output: WallyPSBT!
         let result = data.withUnsafeByteBuffer { buf in
             // libwally-core returns WALLY_EINVAL regardless of why parsing fails
             wally_psbt_from_bytes(buf.baseAddress, buf.count, &output)
@@ -138,7 +138,7 @@ public struct PSBT : Equatable {
     }
 
     public func finalizedTransaction() -> Transaction? {
-        var output: UnsafeMutablePointer<wally_tx>!
+        var output: WallyTx!
         defer {
             wally_tx_free(output)
         }
