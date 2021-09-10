@@ -525,6 +525,10 @@ struct DescriptorPK: DescriptorFunction {
         }
         return ScriptPubKey(Script(ops: [.data(data), .op(.op_checksig)]))
     }
+    
+    var requiresWildcardChildNum: Bool {
+        key.requiresWildcardChildNum
+    }
 }
 
 struct DescriptorPKH: DescriptorFunction {
@@ -536,6 +540,10 @@ struct DescriptorPKH: DescriptorFunction {
         }
         return ScriptPubKey(Script(ops: [.op(.op_dup), .op(.op_hash160), .data(data.hash160), .op(.op_equalverify), .op(.op_checksig)]))
     }
+
+    var requiresWildcardChildNum: Bool {
+        key.requiresWildcardChildNum
+    }
 }
 
 struct DescriptorWPKH: DescriptorFunction {
@@ -546,6 +554,10 @@ struct DescriptorWPKH: DescriptorFunction {
             return nil
         }
         return ScriptPubKey(Script(ops: [.op(.op_0), .data(data.hash160)]))
+    }
+
+    var requiresWildcardChildNum: Bool {
+        key.requiresWildcardChildNum
     }
 }
 
@@ -574,6 +586,10 @@ struct DescriptorCombo: DescriptorFunction {
             let redeemScript = DescriptorWPKH(key: key)
             return DescriptorSH(redeemScript: redeemScript).scriptPubKey(wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider, comboOutput: nil)
         }
+    }
+
+    var requiresWildcardChildNum: Bool {
+        key.requiresWildcardChildNum
     }
 }
 
@@ -606,6 +622,10 @@ struct DescriptorMulti: DescriptorFunction {
         ops.append(.op(.op_checkmultisig))
         return ScriptPubKey(Script(ops: ops))
     }
+
+    var requiresWildcardChildNum: Bool {
+        keys.contains(where: { $0.requiresWildcardChildNum })
+    }
 }
 
 struct DescriptorWSH: DescriptorFunction {
@@ -617,6 +637,10 @@ struct DescriptorWSH: DescriptorFunction {
         }
         return ScriptPubKey(Script(ops: [.op(.op_0), .data(redeemScript.script.data.sha256Digest)]))
     }
+
+    var requiresWildcardChildNum: Bool {
+        redeemScript.requiresWildcardChildNum
+    }
 }
 
 struct DescriptorSH: DescriptorFunction {
@@ -627,5 +651,9 @@ struct DescriptorSH: DescriptorFunction {
             return nil
         }
         return ScriptPubKey(Script(ops: [.op(.op_hash160), .data(redeemScript.script.data.hash160), .op(.op_equal)]))
+    }
+
+    var requiresWildcardChildNum: Bool {
+        redeemScript.requiresWildcardChildNum
     }
 }

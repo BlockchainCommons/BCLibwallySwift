@@ -149,6 +149,7 @@ class DescriptorParserTests: XCTestCase {
     func testHDKey1() throws {
         let source = "pkh([d34db33f/44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)"
         let desc = try Descriptor(source)
+        XCTAssertTrue(desc.requiresWildcardChildNum)
         XCTAssertNil(desc.scriptPubKey()) // requires wildcard
         XCTAssertEqual(desc.scriptPubKey(wildcardChildNum: 0)?.description, "pkh:OP_DUP OP_HASH160 2a05c214617c9b0434c92d0583200a85ef61818f OP_EQUALVERIFY OP_CHECKSIG")
         XCTAssertEqual(desc.scriptPubKey(wildcardChildNum: 1)?.description, "pkh:OP_DUP OP_HASH160 49b2f81eea1ecb5bc97d78f2d8f89d9c861c3cf2 OP_EQUALVERIFY OP_CHECKSIG")
@@ -169,6 +170,7 @@ class DescriptorParserTests: XCTestCase {
         
         let source = "pkh(\(accountPublicKey.fullDescription))"
         let desc = try Descriptor(source)
+        XCTAssertTrue(desc.requiresWildcardChildNum)
         XCTAssertNil(desc.scriptPubKey(wildcardChildNum: 0)) // requires private key.
         
         let lookup: [UInt32 : HDKey] = [
@@ -224,12 +226,16 @@ class DescriptorParserTests: XCTestCase {
     
     func test_SH_WSH_MULTI() throws {
         let a = "sh(wsh(multi(1,03f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8,03499fdf9e895e719cfd64e67f07d38e3226aa7b63678949e6e49b241a60e823e4,02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e)))"
-        try XCTAssertEqual(Descriptor(a).scriptPubKey()!.description, "sh:OP_HASH160 aec509e284f909f769bb7dda299a717c87cc97ac OP_EQUAL")
+        let desc = try Descriptor(a)
+        XCTAssertFalse(desc.requiresWildcardChildNum)
+        XCTAssertEqual(desc.scriptPubKey()!.description, "sh:OP_HASH160 aec509e284f909f769bb7dda299a717c87cc97ac OP_EQUAL")
     }
     
     func test_WSH_MULTI_HD() throws {
         let a = "wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))"
-        try XCTAssertEqual(Descriptor(a).scriptPubKey(wildcardChildNum: 0)!.description, "wsh:OP_0 64969d8cdca2aa0bb72cfe88427612878db98a5f07f9a7ec6ec87b85e9f9208b")
+        let desc = try Descriptor(a)
+        XCTAssertTrue(desc.requiresWildcardChildNum)
+        XCTAssertEqual(desc.scriptPubKey(wildcardChildNum: 0)!.description, "wsh:OP_0 64969d8cdca2aa0bb72cfe88427612878db98a5f07f9a7ec6ec87b85e9f9208b")
     }
     
     func test_WSH_MULTI_HD_2() throws {
@@ -247,6 +253,7 @@ class DescriptorParserTests: XCTestCase {
         let comboCompressed = "combo(022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01)"
         let desc = try Descriptor(comboCompressed)
         XCTAssertTrue(desc.isCombo)
+        XCTAssertFalse(desc.requiresWildcardChildNum)
         XCTAssertEqual(desc.scriptPubKey(comboOutput: .pk)?.description, "pk:022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01 OP_CHECKSIG")
         XCTAssertEqual(desc.scriptPubKey(comboOutput: .pkh)?.description, "pkh:OP_DUP OP_HASH160 9652d86bedf43ad264362e6e6eba6eb764508127 OP_EQUALVERIFY OP_CHECKSIG")
         XCTAssertEqual(desc.scriptPubKey(comboOutput: .wpkh)?.description, "wpkh:OP_0 9652d86bedf43ad264362e6e6eba6eb764508127")

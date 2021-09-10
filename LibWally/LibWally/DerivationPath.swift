@@ -17,6 +17,10 @@ public struct DerivationStep : Equatable {
         case wildcard
     }
     
+    public var isWildcard: Bool {
+        index == .wildcard
+    }
+    
     public init?(_ index: Index, isHardened: Bool = false) {
         if case let .childNum(i) = index {
             guard i < BIP32_INITIAL_HARDENED_CHILD else {
@@ -130,7 +134,11 @@ public struct DerivationPath : Equatable {
     }
     
     public var isHardened: Bool {
-        return steps.first(where: { $0.isHardened } ) != nil
+        steps.first(where: { $0.isHardened } ) != nil
+    }
+    
+    public var hasWildcard: Bool {
+        steps.contains(where: { $0.isWildcard })
     }
     
     public func rawPath(wildcardChildNum: UInt32? = nil) -> [UInt32?] {

@@ -91,6 +91,10 @@ public struct HDKey : CustomStringConvertible {
     public var isPrivate: Bool {
         wallyExtKey.version == BIP32_VER_MAIN_PRIVATE || wallyExtKey.version == BIP32_VER_TEST_PRIVATE
     }
+    
+    public var requiresWildcardChildNum: Bool {
+        children.hasWildcard
+    }
 
     public var xpub: String {
         var hdkey = wallyExtKey

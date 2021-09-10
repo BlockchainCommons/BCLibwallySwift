@@ -43,6 +43,13 @@ extension DescriptorKeyExpression {
         }
         return data
     }
+    
+    var requiresWildcardChildNum: Bool {
+        guard case let .hdKey(k) = key else {
+            return false
+        }
+        return k.requiresWildcardChildNum
+    }
 }
 
 extension DescriptorKeyExpression : CustomStringConvertible {
