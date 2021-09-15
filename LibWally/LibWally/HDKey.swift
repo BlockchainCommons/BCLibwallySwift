@@ -47,14 +47,19 @@ public struct HDKey : CustomStringConvertible {
         self.init(key: key, masterKeyFingerprint: masterKeyFingerprint)
     }
 
-    public init?(seed: BIP39Mnemonic.Seed, network: Network = .mainnet) {
-        guard let key = Wally.hdKey(fromSeed: seed, network: network) else {
+    public init?(bip39Seed: BIP39.Seed, network: Network = .mainnet) {
+        guard let key = Wally.hdKey(bip39Seed: bip39Seed, network: network) else {
             // From libwally-core docs:
             // The entropy passed in may produce an invalid key. If this happens, WALLY_ERROR will be returned
             // and the caller should retry with new entropy.
             return nil
         }
         self.init(key: key, masterKeyFingerprint: Wally.fingerprint(for: key))
+    }
+    
+    public init?(seed: Seed, network: Network = .mainnet) {
+        let bip39Seed = BIP39.Seed(bip39: seed.bip39)
+        self.init(bip39Seed: bip39Seed, network: network)
     }
     
     public var masterKeyFingerprint: UInt32? {

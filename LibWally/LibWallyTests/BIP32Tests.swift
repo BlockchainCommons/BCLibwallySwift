@@ -10,10 +10,10 @@ import XCTest
 @testable import LibWally
 
 class BIP32Tests: XCTestCase {
-    let seed = BIP39Mnemonic.Seed(hex: "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")!
+    let bip39Seed = BIP39.Seed(hex: "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")!
     
     func testSeedToHDKey() {
-        let hdKey = HDKey(seed: seed)!
+        let hdKey = HDKey(bip39Seed: bip39Seed)!
         XCTAssertEqual(hdKey.description, "xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF")
     }
     
@@ -71,15 +71,15 @@ class BIP32Tests: XCTestCase {
     }
     
     func testFingerPint() {
-        let hdKey = HDKey(seed: seed)!
+        let hdKey = HDKey(bip39Seed: bip39Seed)!
         XCTAssertEqual(hdKey.fingerprintData.hex, "b4e3f5ed")
     }
     
     func testMasterKeyFingerPint() {
-        let hdKey = HDKey(seed: seed)!
+        let hdKey = HDKey(bip39Seed: bip39Seed)!
         XCTAssertEqual(hdKey.masterKeyFingerprint?.hex, "b4e3f5ed")
 
-        let childKey = HDKey(seed: seed)!.derive(path: DerivationPath(index: 0)!)!
+        let childKey = HDKey(bip39Seed: bip39Seed)!.derive(path: DerivationPath(index: 0)!)!
         XCTAssertEqual(childKey.masterKeyFingerprint?.hex, "b4e3f5ed")
         
         let tpub = "tpubDDgEAMpHn8tX5Bs19WWJLZBeFzbpE7BYuP3Qo71abZnQ7FmN3idRPg4oPWt2Q6Uf9huGv7AGMTu8M2BaCxAdThQArjLWLDLpxVX2gYfh2YJ"

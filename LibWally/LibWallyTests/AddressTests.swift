@@ -76,4 +76,47 @@ class AddressTests: XCTestCase {
         let key = ECPrivateKey(data)!
         XCTAssertEqual(WIF(key: key, network: .mainnet, isPublicKeyCompressed: false).description, "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ")
     }
+    
+    func testMine() {
+//        let wif1 = "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ"
+//        let w1 = WIF(wif1)!
+//        print(w1.key.hex)
+
+        func toAddress(_ wif: String) -> String {
+            let w = WIF(wif)!
+            let pubKey = w.key.public
+            let desc = try! Descriptor("pkh(\(pubKey.hex))")
+            let scriptPubKey = desc.scriptPubKey()!
+            let address = Address(scriptPubKey: scriptPubKey, network: .mainnet)!.string
+            return address
+        }
+        
+        let addresses = """
+            5KSSEo99WYVjgSa3eukSzqNL8eXDHL9J1jUEX1VavcCmrg6dE6C
+            5KCHFf1L7GahZPZxssymoGxz2mmYkcJPWVjhopwmYDmYi9EpJiu
+            5K51suMPKbkqfw9hJvPi2mhFQ65Y2Fc8wjPdcYDG2sTb6bu5pJq
+            5KfKUMkWSrNUnPwr34nD9FFE1z77A1dw15PQJUf4wxccJZJ4L2o
+            5KW9ta5ZYMk2KceXqD8iGGApmiZG8ZWVfEhPBdmiDvw8fqd3TDh
+            5Httr2kbSqCsqrZNjnf29DKsnx1ReAA8XNV7Wga5mdjx637JQvw
+            5HwBUa9u7RhAHxU9t8NJmetBRXjbHGnueamLxJ4NGy7yr8L54d2
+            5KHedzqMAMYMo1V1qatHvh5TxQ56q6QxFYetsbZByHaUdfqgqyb
+            5JPQWa846FHCgJX2Hmvg4qF3aL4WssCPn2XDgodqCrazssfu4Mp
+            5KTnvr6YaFb8RDVhCZmo9YuYzGVje4VJYppiaufjdrEf4jP7oY4
+            5JmpUk6NfqV9Ne7jvmmWEnfBwSD4c6wPMQGKXr8NdLuFMQqjupf
+            5JrtksFt4Qi5exxbj552FgjgMp5WitFvJDk2qbmPAPJJBDtRbm6
+            5KaWNdgVm7CLzv8QoNitkpM6a9chh5iH4SD8XeQ2hf2aXoGrgzu
+            5JEK6PDvDjHJYBBYZjEi3LbJ1bFbPD1aeMtAVWi4bC8EJZWkyBV
+            5Jq1hnC49kwVbpAwEnjw3PxrhKBXAPdBTjUhyYHzW13nm6vmine
+            5KXPoGdCquDhBT1q6Aem3Q5dCsnkRQYap591a6RGjYtq45RMBx2
+            5KbBYhos5KPYUM1nWpt1NERETk2i9T7L2tM4qxPV9D9C6RRZrRm
+            """.split(separator: "\n").map({toAddress(String($0))})
+        addresses.forEach {
+            print($0)
+        }
+//        print(w.key.hex)
+//        print(w.key.public)
+//        print(w.network)
+//        print(w.isPublicKeyCompressed)
+        
+    }
 }
