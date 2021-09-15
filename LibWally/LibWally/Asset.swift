@@ -11,7 +11,6 @@ public enum Asset: UInt32, CaseIterable, Equatable {
     // Values from [SLIP44] with high bit turned off
     case btc = 0
     case eth = 0x3c
-//    case bch = 0x91
 }
 
 extension Asset: Identifiable {
@@ -20,15 +19,30 @@ extension Asset: Identifiable {
     }
 }
 
-extension Asset: CustomStringConvertible {
-    public var description: String {
+extension Asset {
+    public init?(_ symbol: String) {
+        switch symbol {
+        case "btc":
+            self = .btc
+        case "eth":
+            self = .eth
+        default:
+            return nil
+        }
+    }
+
+    public var symbol: String {
         switch self {
         case .btc:
             return "btc"
         case .eth:
             return "eth"
-//        case .bch:
-//            return "bch"
         }
+    }
+}
+
+extension Asset: CustomStringConvertible {
+    public var description: String {
+        symbol
     }
 }
