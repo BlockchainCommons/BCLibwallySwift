@@ -41,6 +41,17 @@ extension Asset {
     }
 }
 
+extension Asset {
+    public var name: String {
+        switch self {
+        case .btc:
+            return "Bitcoin"
+        case .eth:
+            return "Ethereum"
+        }
+    }
+}
+
 extension Asset: CustomStringConvertible {
     public var description: String {
         symbol
