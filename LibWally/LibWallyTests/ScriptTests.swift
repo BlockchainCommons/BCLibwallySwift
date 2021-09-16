@@ -8,6 +8,7 @@
 
 import XCTest
 @testable import LibWally
+import WolfBase
 
 class ScriptTests: XCTestCase {
     func testInit() {
@@ -101,20 +102,20 @@ class ScriptTests: XCTestCase {
     func testScriptPubKeyAddress() {
         let scriptPubKeyPKH = ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac")!
         XCTAssertEqual(scriptPubKeyPKH.type, .pkh)
-        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyPKH, network: .mainnet)!.description, "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")
-        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyPKH, network: .testnet)!.description, "mxvewdhKCenLkYgNa8irv1UM2omEWPMdEE")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyPKH, network: .mainnet)†, "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyPKH, network: .testnet)†, "mxvewdhKCenLkYgNa8irv1UM2omEWPMdEE")
     
         let scriptPubKeyP2SH = ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987")!
         XCTAssertEqual(scriptPubKeyP2SH.type, .sh)
-        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyP2SH, network: .mainnet)!.description, "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")
-        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyP2SH, network: .testnet)!.description, "2N5XyEfAXtVde7mv6idZDXp5NFwajYEj9TD")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyP2SH, network: .mainnet)†, "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")
+        XCTAssertEqual(Address(scriptPubKey: scriptPubKeyP2SH, network: .testnet)†, "2N5XyEfAXtVde7mv6idZDXp5NFwajYEj9TD")
 
         let scriptP2WPKH = ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe")!
         XCTAssertEqual(scriptP2WPKH.type, .wpkh)
-        XCTAssertEqual(Address(scriptPubKey: scriptP2WPKH, network: .mainnet)!.description, "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")
+        XCTAssertEqual(Address(scriptPubKey: scriptP2WPKH, network: .mainnet)†, "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")
         
         let scriptP2WSH = ScriptPubKey(hex: "0020f8608e6e5b537f8fc8182eb113cf40f564b99cf99d87170c4f1ac259074ee8fd")!
         XCTAssertEqual(scriptP2WSH.type, .wsh)
-        XCTAssertEqual(Address(scriptPubKey: scriptP2WSH, network: .mainnet)!.description, "bc1qlpsgumjm2dlcljqc96c38n6q74jtn88enkr3wrz0rtp9jp6war7s2h4lrs")
+        XCTAssertEqual(Address(scriptPubKey: scriptP2WSH, network: .mainnet)†, "bc1qlpsgumjm2dlcljqc96c38n6q74jtn88enkr3wrz0rtp9jp6war7s2h4lrs")
     }
 }

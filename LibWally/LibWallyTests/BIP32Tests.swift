@@ -8,19 +8,20 @@
 
 import XCTest
 @testable import LibWally
+import WolfBase
 
 class BIP32Tests: XCTestCase {
     let bip39Seed = BIP39.Seed(hex: "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")!
     
     func testSeedToHDKey() {
         let hdKey = HDKey(bip39Seed: bip39Seed)!
-        XCTAssertEqual(hdKey.description, "xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF")
+        XCTAssertEqual(hdKey†, "xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF")
     }
     
     func testBase58ToHDKey() {
         let xpriv = "xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF"
         let hdKey = HDKey(base58: xpriv)!
-        XCTAssertEqual(hdKey.description, xpriv)
+        XCTAssertEqual(hdKey†, xpriv)
         
         XCTAssertNil(HDKey(base58: "invalid"))
     }
@@ -57,7 +58,7 @@ class BIP32Tests: XCTestCase {
     func testParseXpub() {
         let xpub = "xpub661MyMwAqRbcGB88KaFbLGiYAat55APKhtWg4uYMkXAmfuSTbq2QYsn9sKJCj1YqZPafsboef4h4YbXXhNhPwMbkHTpkf3zLhx7HvFw1NDy"
         let hdKey = HDKey(base58: xpub)!
-        XCTAssertEqual(hdKey.description, xpub)
+        XCTAssertEqual(hdKey†, xpub)
         XCTAssertEqual(hdKey.xpub, xpub)
         XCTAssertNil(hdKey.xpriv)
     }
@@ -65,7 +66,7 @@ class BIP32Tests: XCTestCase {
     func testParseTpub() {
         let tpub = "tpubDDgEAMpHn8tX5Bs19WWJLZBeFzbpE7BYuP3Qo71abZnQ7FmN3idRPg4oPWt2Q6Uf9huGv7AGMTu8M2BaCxAdThQArjLWLDLpxVX2gYfh2YJ"
         let hdKey = HDKey(base58: tpub)!
-        XCTAssertEqual(hdKey.description, tpub)
+        XCTAssertEqual(hdKey†, tpub)
         XCTAssertEqual(hdKey.xpub, tpub)
         XCTAssertNil(hdKey.xpriv)
     }
@@ -96,27 +97,27 @@ class BIP32Tests: XCTestCase {
     func testRelativePathFromString() {
         let path = DerivationPath(string: "0'/0")!
         XCTAssertEqual(path.steps, [.init(0, isHardened: true)!, .init(0)!])
-        XCTAssertEqual(path.description, "0h/0")
+        XCTAssertEqual(path†, "0h/0")
     }
     
     func testAbsolutePathFromString() {
         let path = DerivationPath(string: "m/0'/0")! // 0' and 0h are treated the same
         XCTAssertEqual(path.steps, [.init(0, isHardened: true)!, .init(0)!])
-        XCTAssertEqual(path.description, "m/0h/0") // description always uses h instead of '
+        XCTAssertEqual(path†, "m/0h/0") // description always uses h instead of '
     }
     
     func testRelativePathFromInt() {
         var path: DerivationPath
         path = DerivationPath(index: 0)!
         XCTAssertEqual(path.steps, [.init(0)!])
-        XCTAssertEqual(path.description, "0")
+        XCTAssertEqual(path†, "0")
         XCTAssertNil(DerivationPath(index: Int(UINT32_MAX)))
     }
     
     func testAbsolutePathFromInt() {
         var path: DerivationPath
         path = DerivationPath(index: 0, origin: .master)!
-        XCTAssertEqual(path.description, "m/0")
+        XCTAssertEqual(path†, "m/0")
         XCTAssertNil(DerivationPath(index: Int(UINT32_MAX)))
     }
     

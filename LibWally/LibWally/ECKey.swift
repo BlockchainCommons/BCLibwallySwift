@@ -23,6 +23,10 @@ extension ECKey {
     public var hex: String {
         data.hex
     }
+
+    public var description: String {
+        hex
+    }
 }
 
 public protocol ECPublicKey: ECKey {
@@ -58,9 +62,6 @@ public struct ECPrivateKey: ECKey {
 }
 
 extension ECPrivateKey: CustomStringConvertible {
-    public var description: String {
-        "ECPrivateKey(\(data.hex))"
-    }
 }
 
 public struct ECXOnlyPublicKey: Hashable {
@@ -128,9 +129,6 @@ public struct ECCompressedPublicKey: ECPublicKey, Hashable {
 }
 
 extension ECCompressedPublicKey: CustomStringConvertible {
-    public var description: String {
-        "ECCompressedPublicKey(\(data.hex))"
-    }
 }
 
 public struct ECUncompressedPublicKey: ECPublicKey {
@@ -165,7 +163,4 @@ public struct ECUncompressedPublicKey: ECPublicKey {
 }
 
 extension ECUncompressedPublicKey: CustomStringConvertible {
-    public var description: String {
-        "ECUncompressedPublicKey(\(data.hex))"
-    }
 }

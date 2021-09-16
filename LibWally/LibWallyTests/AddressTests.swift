@@ -16,34 +16,34 @@ class AddressTests: XCTestCase {
     
     func testDeriveLegacyAddress() {
         let address = hdKey.address(type: .payToPubKeyHash)
-        XCTAssertEqual(address.description, "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")
+        XCTAssertEqual(address†, "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")
     }
 
     func testDeriveLegacyAddressTestnet() {
         let address = hdKeyTestnet.address(type: .payToPubKeyHash)
-        XCTAssertEqual(address.description, "mnicNaAVzyGdFvDa9VkMrjgNdnr2wHBWxk")
+        XCTAssertEqual(address†, "mnicNaAVzyGdFvDa9VkMrjgNdnr2wHBWxk")
     }
 
     
     func testDeriveWrappedSegWitAddress() {
         let address = hdKey.address(type: .payToScriptHashPayToWitnessPubKeyHash)
-        XCTAssertEqual(address.description, "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")
+        XCTAssertEqual(address†, "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")
     }
     
     func testDeriveWrappedSegWitAddressTestnet() {
         let address = hdKeyTestnet.address(type: .payToScriptHashPayToWitnessPubKeyHash)
-        XCTAssertEqual(address.description, "2N6M3ah9EoggimNz5pnAmQwnpE1Z3ya3V7A")
+        XCTAssertEqual(address†, "2N6M3ah9EoggimNz5pnAmQwnpE1Z3ya3V7A")
     }
     
     
     func testDeriveNativeSegWitAddress() {
         let address = hdKey.address(type: .payToWitnessPubKeyHash)
-        XCTAssertEqual(address.description, "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")
+        XCTAssertEqual(address†, "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")
     }
     
     func testDeriveNativeSegWitAddressTestnet() {
         let address = hdKeyTestnet.address(type: .payToWitnessPubKeyHash)
-        XCTAssertEqual(address.description, "tb1qfm7nmm28m9n7gy3fsfpze8vymds9qwtjwn4w7y")
+        XCTAssertEqual(address†, "tb1qfm7nmm28m9n7gy3fsfpze8vymds9qwtjwn4w7y")
     }
     
     func testParseLegacyAddress() {
@@ -74,7 +74,7 @@ class AddressTests: XCTestCase {
         // https://en.bitcoin.it/wiki/Wallet_import_format
         let data = Data(hex: "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d")!
         let key = ECPrivateKey(data)!
-        XCTAssertEqual(WIF(key: key, network: .mainnet, isPublicKeyCompressed: false).description, "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ")
+        XCTAssertEqual(WIF(key: key, network: .mainnet, isPublicKeyCompressed: false)†, "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ")
     }
     
     func testMine() {

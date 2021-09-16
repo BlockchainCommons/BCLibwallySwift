@@ -7,16 +7,17 @@
 
 import XCTest
 import LibWally
+import WolfBase
 
 class ScriptOperationTests: XCTestCase {
     func testInit() {
         let ops: [ScriptOperation] = [.data(Data(hex: "00112233")!), .op(.op_equalverify)]
-        XCTAssertEqual(ops.description, "[00112233, OP_EQUALVERIFY]")
+        XCTAssertEqual(ops†, "[00112233, OP_EQUALVERIFY]")
     }
     
     func testInitFromString() {
         let ops: [ScriptOperation] = [.init("00112233")!, .init("OP_EQUALVERIFY")!]
-        XCTAssertEqual(ops.description, "[00112233, OP_EQUALVERIFY]")
+        XCTAssertEqual(ops†, "[00112233, OP_EQUALVERIFY]")
     }
     
     func testSerialize() {

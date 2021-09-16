@@ -9,6 +9,7 @@
 
 import XCTest
 @testable import LibWally
+import WolfBase
 
 class BIP39Tests: XCTestCase {
     let validMnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
@@ -47,7 +48,7 @@ class BIP39Tests: XCTestCase {
     
     func testMnemonicLosslessStringConvertible() {
         let mnemonic = BIP39(mnemonic: validMnemonic)!
-        XCTAssertEqual(mnemonic.description, validMnemonic)
+        XCTAssertEqual(mnemonic†, validMnemonic)
     }
     
     func testMnemonicToEntropy() {
@@ -66,9 +67,9 @@ class BIP39Tests: XCTestCase {
         
     func testMnemonicToSeedHexString() {
         let bip39 = BIP39(mnemonic: validMnemonic)!
-        XCTAssertEqual(BIP39.Seed(bip39: bip39, passphrase: "TREZOR").description, "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")
-        XCTAssertEqual(BIP39.Seed(bip39: bip39).description, "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4")
-        XCTAssertEqual(BIP39.Seed(bip39: bip39, passphrase: "").description, "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4")
+        XCTAssertEqual(BIP39.Seed(bip39: bip39, passphrase: "TREZOR")†, "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")
+        XCTAssertEqual(BIP39.Seed(bip39: bip39)†, "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4")
+        XCTAssertEqual(BIP39.Seed(bip39: bip39, passphrase: "")†, "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4")
     }
     
     func testSeedLosslessStringConvertible() {

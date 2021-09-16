@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "CryptoSwift",
+        "repositoryURL": "https://github.com/krzyzanowskim/CryptoSwift.git",
+        "state": {
+          "branch": null,
+          "revision": "8d4f6384e0a8cc41f2005247241dd553963a492a",
+          "version": "1.4.1"
+        }
+      },
+      {
         "package": "Flexer",
         "repositoryURL": "https://github.com/ChimeHQ/Flexer.git",
         "state": {
@@ -15,8 +24,8 @@
         "repositoryURL": "https://github.com/WolfMcNally/WolfBase.git",
         "state": {
           "branch": null,
-          "revision": "69de5531252314bef3aa5995dd4eb03fd6c37492",
-          "version": "2.3.1"
+          "revision": "cd637c8820c43116c80513ff12abbff6a995e440",
+          "version": "2.3.3"
         }
       }
     ]

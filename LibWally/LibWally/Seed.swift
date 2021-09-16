@@ -7,7 +7,7 @@
 
 import Foundation
 
-open class Seed {
+open class Seed: CustomStringConvertible {
     public let data: Data
     
     public init?(data: Data) {
@@ -19,6 +19,10 @@ open class Seed {
     
     public convenience init() {
         self.init(data: SecureRandomNumberGenerator.shared.data(count: 16))!
+    }
+
+    open var description: String {
+        hex
     }
 }
 

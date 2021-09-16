@@ -216,6 +216,6 @@ public struct HDKey : CustomStringConvertible {
     }
 
     public func address(type: Address.AddressType) -> Address {
-        Address(hdKey: self, type: type)!
+        Address(hdKey: self, type: type)
     }
 }

@@ -89,22 +89,6 @@ public struct Transaction {
         self.storage = Storage(tx: tx)
     }
 
-    public var description: String? {
-        guard let tx = tx else { return nil }
-
-        // If we have TxInput objects, make sure they're all signed. Otherwise we've been initialized
-        // from a hex string, so we'll just try to reserialize what we have.
-        if let inputs = inputs {
-            for input in inputs {
-                if !input.isSigned {
-                    return nil
-                }
-            }
-        }
-        
-        return Wally.txToHex(tx: tx)
-    }
-
     var totalIn: Satoshi? {
         guard let inputs = inputs else { return nil }
         return inputs.reduce(0) {
@@ -255,4 +239,22 @@ public struct Transaction {
         return Transaction(inputs: updatedInputs, outputs: outputs, tx: cloned_tx)
     }
 
+}
+
+extension Transaction: CustomStringConvertible {
+    public var description: String {
+        guard let tx = tx else { return "nil" }
+
+        // If we have TxInput objects, make sure they're all signed. Otherwise we've been initialized
+        // from a hex string, so we'll just try to reserialize what we have.
+        if let inputs = inputs {
+            for input in inputs {
+                if !input.isSigned {
+                    return "nil"
+                }
+            }
+        }
+        
+        return Wally.txToHex(tx: tx)
+    }
 }

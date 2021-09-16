@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct Address {
+open class Address: CustomStringConvertible {
     public let network: Network
     public let scriptPubKey: ScriptPubKey
     public let string: String
@@ -47,9 +47,9 @@ public struct Address {
         return nil
     }
     
-    public init?(hdKey: HDKey, type: AddressType) {
+    public convenience init(hdKey: HDKey, type: AddressType) {
         let address = Wally.hdKeyToAddress(hdKey: hdKey, type: type)
-        self.init(string: address)
+        self.init(string: address)!
     }
     
     public init?(scriptPubKey: ScriptPubKey, network: Network) {
@@ -65,10 +65,6 @@ public struct Address {
         default:
             return nil
         }
-    }
-    
-    public var description: String {
-        string
     }
 
     public enum AddressType {
@@ -86,5 +82,9 @@ public struct Address {
                 return UInt32(WALLY_ADDRESS_TYPE_P2WPKH)
             }
         }
+    }
+
+    open var description: String {
+        string
     }
 }
