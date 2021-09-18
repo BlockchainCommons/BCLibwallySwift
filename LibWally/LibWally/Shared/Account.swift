@@ -13,20 +13,12 @@ open class Account {
     public let account: UInt32?
     public let seed: Seed?
     
-    public var coinType: UInt32 {
-        useInfo.asset.coinType(for: useInfo.network)
-    }
-    
-    public var bip39: BIP39? {
-        seed?.bip39
-    }
-    
     public private(set) lazy var accountPath: DerivationPath = {
-        return useInfo.asset.accountDerivationPath(network: useInfo.network, account: account!)
+        return useInfo.accountDerivationPath(account: account!)
     }()
     
     public private(set) lazy var bip39Seed: BIP39.Seed? = {
-        guard let bip39 = bip39 else {
+        guard let bip39 = seed?.bip39 else {
             return nil
         }
         return BIP39.Seed(bip39: bip39)

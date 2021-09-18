@@ -16,34 +16,29 @@ public struct UseInfo: Equatable {
         self.asset = asset
         self.network = network
     }
-    
+}
+
+extension UseInfo {
     public var coinType: UInt32 {
-        switch asset {
-        case .btc:
-            switch network {
-            case .mainnet:
-                return Asset.btc.rawValue
-            case .testnet:
-                return 1
-            }
-        case .eth:
-            switch network {
-            case .mainnet:
-                return Asset.eth.rawValue
-            case .testnet:
-                return 1
-            }
+        switch network {
+        case .mainnet:
+            return asset.coinType
+        case .testnet:
+            return 1
         }
-//        case .bch:
-//            switch network {
-//            case .mainnet:
-//                return Asset.bch.rawValue
-//            case .testnet:
-//                return 1
-//            }
-//        }
     }
     
+    public func accountDerivationPath(account: UInt32) -> DerivationPath {
+        switch asset {
+        case .btc:
+            return DerivationPath(string: "44'/\(coinType)'/\(account)'")!
+        case .eth:
+            return DerivationPath(string: "44'/\(coinType)'/\(account)'/0/0")!
+        }
+    }
+}
+
+extension UseInfo {
     public var versionSH: UInt8 {
         precondition(asset == .btc)
         switch network {

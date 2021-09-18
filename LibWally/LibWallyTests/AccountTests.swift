@@ -13,7 +13,7 @@ class AccountTests: XCTestCase {
     func testBitcoinAccount() {
         let mnemonic = "surge mind remove galaxy define nephew surge helmet shine hurry voyage dawn"
         let account = Account(mnemonic: mnemonic, useInfo: UseInfo(asset: .btc, network: .mainnet), account: 0)!
-        XCTAssertEqual(account.bip39†, mnemonic)
+        XCTAssertEqual(account.seed!.bip39†, mnemonic)
         XCTAssertEqual(account.bip39Seed†, "414e34710a1ed4e25fb9f3568c6a81e8b7823f3f6ebd83012a7b8d9305914db074b68bf4b9b162c11a90648498736a527c2fb3f58693eada4b9c88c7f00f00a4")
         XCTAssertEqual(account.masterKey†, "xprv9s21ZrQH143K4TAgo7AZM1q8qTsQdfwMBeDHkzvbn7nadYjGPhqCzZrSTw72ykMRdUnUzvuJyfCH5W3NA7AK5MnWuBL8BYms3GSX7CHQth2")
         XCTAssertEqual(account.accountKey†, "xprv9yrG3hhrfp5KxBk8R5wbJQ7aCWq3Y4FmrLyJ6x9RiQ1Gzihjj1NBd2Bk92RmHUsKyiuXV3CjaDGNkvxaM1WRQZcLvVCq1WyMHxiTFmzw5F2")
@@ -26,7 +26,7 @@ class AccountTests: XCTestCase {
     func testEthereumAccount() {
         let mnemonic = "surge mind remove galaxy define nephew surge helmet shine hurry voyage dawn"
         let account = Account(mnemonic: mnemonic, useInfo: UseInfo(asset: .eth, network: .mainnet), account: 0)!
-        XCTAssertEqual(account.bip39†, mnemonic)
+        XCTAssertEqual(account.seed!.bip39†, mnemonic)
         XCTAssertEqual(account.bip39Seed†, "414e34710a1ed4e25fb9f3568c6a81e8b7823f3f6ebd83012a7b8d9305914db074b68bf4b9b162c11a90648498736a527c2fb3f58693eada4b9c88c7f00f00a4")
         XCTAssertEqual(account.masterKey†, "xprv9s21ZrQH143K4TAgo7AZM1q8qTsQdfwMBeDHkzvbn7nadYjGPhqCzZrSTw72ykMRdUnUzvuJyfCH5W3NA7AK5MnWuBL8BYms3GSX7CHQth2")
         XCTAssertEqual(account.accountKey†, "xprvA3Feztt4T2Y2HFVzytE7xak14RkeMeEGSQNQV6CwY8UKg2GpgJPepTN8qFKT2dJrvjDiRkCj4FbmLpszVja4Rdhmu2MQPPspKrD82iinDNp")
