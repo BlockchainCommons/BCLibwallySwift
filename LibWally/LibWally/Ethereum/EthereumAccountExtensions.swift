@@ -9,7 +9,10 @@ import Foundation
 
 extension Account {
     public var ethereumAddress: Ethereum.Address? {
-        guard let accountECPublicKey = accountECPublicKey else {
+        guard
+            useInfo.asset == .eth,
+            let accountECPublicKey = accountECPublicKey
+        else {
             return nil
         }
         return Ethereum.Address(key: accountECPublicKey, network: useInfo.network)
