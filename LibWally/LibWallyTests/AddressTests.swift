@@ -15,49 +15,49 @@ class AddressTests: XCTestCase {
     let hdKeyTestnet = HDKey(base58: "tpubDDgEAMpHn8tX5Bs19WWJLZBeFzbpE7BYuP3Qo71abZnQ7FmN3idRPg4oPWt2Q6Uf9huGv7AGMTu8M2BaCxAdThQArjLWLDLpxVX2gYfh2YJ")!
     
     func testDeriveLegacyAddress() {
-        let address = hdKey.address(type: .payToPubKeyHash)
+        let address = Bitcoin.Address(hdKey: hdKey, type: .payToPubKeyHash)
         XCTAssertEqual(address†, "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")
     }
 
     func testDeriveLegacyAddressTestnet() {
-        let address = hdKeyTestnet.address(type: .payToPubKeyHash)
+        let address = Bitcoin.Address(hdKey: hdKeyTestnet, type: .payToPubKeyHash)
         XCTAssertEqual(address†, "mnicNaAVzyGdFvDa9VkMrjgNdnr2wHBWxk")
     }
 
     
     func testDeriveWrappedSegWitAddress() {
-        let address = hdKey.address(type: .payToScriptHashPayToWitnessPubKeyHash)
+        let address = Bitcoin.Address(hdKey: hdKey, type: .payToScriptHashPayToWitnessPubKeyHash)
         XCTAssertEqual(address†, "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")
     }
     
     func testDeriveWrappedSegWitAddressTestnet() {
-        let address = hdKeyTestnet.address(type: .payToScriptHashPayToWitnessPubKeyHash)
+        let address = Bitcoin.Address(hdKey: hdKeyTestnet, type: .payToScriptHashPayToWitnessPubKeyHash)
         XCTAssertEqual(address†, "2N6M3ah9EoggimNz5pnAmQwnpE1Z3ya3V7A")
     }
     
     
     func testDeriveNativeSegWitAddress() {
-        let address = hdKey.address(type: .payToWitnessPubKeyHash)
+        let address = Bitcoin.Address(hdKey: hdKey, type: .payToWitnessPubKeyHash)
         XCTAssertEqual(address†, "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")
     }
     
     func testDeriveNativeSegWitAddressTestnet() {
-        let address = hdKeyTestnet.address(type: .payToWitnessPubKeyHash)
+        let address = Bitcoin.Address(hdKey: hdKeyTestnet, type: .payToWitnessPubKeyHash)
         XCTAssertEqual(address†, "tb1qfm7nmm28m9n7gy3fsfpze8vymds9qwtjwn4w7y")
     }
     
     func testParseLegacyAddress() {
-        let address = Address(string: "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")!
+        let address = Bitcoin.Address(string: "1JQheacLPdM5ySCkrZkV66G2ApAXe1mqLj")!
         XCTAssertEqual(address.scriptPubKey, ScriptPubKey(hex: "76a914bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe88ac"))
     }
     
     func testParseWrappedSegWitAddress() {
-        let address = Address(string: "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")!
+        let address = Bitcoin.Address(string: "3DymAvEWH38HuzHZ3VwLus673bNZnYwNXu")!
         XCTAssertEqual(address.scriptPubKey, ScriptPubKey(hex: "a91486cc442a97817c245ce90ed0d31d6dbcde3841f987"))
     }
     
     func testParseNativeSegWitAddress() {
-        let address = Address(string: "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")!
+        let address = Bitcoin.Address(string: "bc1qhm6697d9d2224vfyt8mj4kw03ncec7a7fdafvt")!
         XCTAssertEqual(address.scriptPubKey, ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe"))
     }
     
@@ -87,7 +87,7 @@ class AddressTests: XCTestCase {
             let pubKey = w.key.public
             let desc = try! Descriptor("pkh(\(pubKey.hex))")
             let scriptPubKey = desc.scriptPubKey()!
-            let address = Address(scriptPubKey: scriptPubKey, network: .mainnet)!.string
+            let address = Bitcoin.Address(scriptPubKey: scriptPubKey, network: .mainnet)!.string
             return address
         }
         

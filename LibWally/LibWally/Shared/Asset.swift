@@ -13,6 +13,21 @@ public enum Asset: UInt32, CaseIterable, Equatable {
     case eth = 0x3c
 }
 
+extension Asset {
+    public var coinType: UInt32 {
+        rawValue
+    }
+    
+    public func coinType(for network: Network) -> UInt32 {
+        switch network {
+        case .mainnet:
+            return coinType
+        case .testnet:
+            return 1
+        }
+    }
+}
+
 extension Asset: Identifiable {
     public var id: String {
         "asset-\(description)"
@@ -48,6 +63,18 @@ extension Asset {
             return "Bitcoin"
         case .eth:
             return "Ethereum"
+        }
+    }
+}
+
+extension Asset {
+    public func accountDerivationPath(network: Network, account: UInt32) -> DerivationPath {
+        let coinType = coinType(for: network)
+        switch self {
+        case .btc:
+            return DerivationPath(string: "44'/\(coinType)'/\(account)'")!
+        case .eth:
+            return DerivationPath(string: "44'/\(coinType)'/\(account)'/0/0")!
         }
     }
 }

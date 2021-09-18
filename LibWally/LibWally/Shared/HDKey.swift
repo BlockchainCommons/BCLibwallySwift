@@ -214,8 +214,4 @@ public struct HDKey : CustomStringConvertible {
         }
         return HDKey(key: output, parent: newParent, children: children ?? .init())
     }
-
-    public func address(type: Address.AddressType) -> Address {
-        Address(hdKey: self, type: type)
-    }
 }

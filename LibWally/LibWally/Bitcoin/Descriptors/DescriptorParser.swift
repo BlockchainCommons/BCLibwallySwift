@@ -347,7 +347,7 @@ final class DescriptorParser: Parser {
         return result
     }
     
-    func parseAddress() -> Address? {
+    func parseAddress() -> Bitcoin.Address? {
         let transaction = Transaction(self)
         guard
             let token = tokens.next(),
@@ -359,7 +359,7 @@ final class DescriptorParser: Parser {
         return token.address
     }
 
-    func expectAddress() throws -> Address {
+    func expectAddress() throws -> Bitcoin.Address {
         guard let address = parseAddress() else {
             throw error("Expected address.")
         }
@@ -481,7 +481,7 @@ final class DescriptorParser: Parser {
         return DescriptorSH(redeemScript: redeemScript)
     }
 
-    func parseAddr() throws -> Address? {
+    func parseAddr() throws -> Bitcoin.Address? {
         guard parseKind(.addr) else {
             return nil
         }
@@ -593,7 +593,7 @@ struct DescriptorCombo: DescriptorFunction {
     }
 }
 
-extension Address: DescriptorFunction {
+extension Bitcoin.Address: DescriptorFunction {
     func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey? {
         scriptPubKey
     }

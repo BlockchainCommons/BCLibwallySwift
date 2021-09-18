@@ -61,8 +61,8 @@ struct DescriptorToken: TokenProtocol {
         lhs.kind == rhs.kind && lhs.range == rhs.range
     }
     
-    var address: Address {
-        payload as! Address
+    var address: Bitcoin.Address {
+        payload as! Bitcoin.Address
     }
     
     var data: Data {

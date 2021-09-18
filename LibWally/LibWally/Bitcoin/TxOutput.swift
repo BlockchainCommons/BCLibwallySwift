@@ -12,7 +12,7 @@ public struct TxOutput {
     public var amount: Satoshi
 
     public func address(network: Network) -> String {
-        Address(scriptPubKey: self.scriptPubKey, network: network)!.description
+        Bitcoin.Address(scriptPubKey: self.scriptPubKey, network: network)!.description
     }
 
     public init(scriptPubKey: ScriptPubKey, amount: Satoshi) {

@@ -76,7 +76,7 @@ class DescriptorParserTests: XCTestCase {
             let desc = try Descriptor("sortedmulti(2,\(k))")
             XCTAssertEqual(desc.scriptPubKey()?.hex, expectedScript)
 //            let address = Wally.address(from: desc.scriptPubKey()!, network: .mainnet)
-            let address = Address(scriptPubKey: desc.scriptPubKey()!, network: .mainnet)!.string
+            let address = Bitcoin.Address(scriptPubKey: desc.scriptPubKey()!, network: .mainnet)!.string
 //            print(address)
             XCTAssertEqual(address, expectedAddress)
         }
@@ -136,13 +136,13 @@ class DescriptorParserTests: XCTestCase {
     func testAddr() throws {
         let tprv = "tprv8gzC1wn3dmCrBiqDFrqhw9XXgy5t4mzeL5SdWayHBHz1GmWbRKoqDBSwDLfunPAWxMqZ9bdGsdpTiYUfYiWypv4Wfj9g7AYX5K3H9gRYNCA"
         let hdKey = HDKey(base58: tprv)!
-        let addressp2pkh = Address(hdKey: hdKey, type: .payToPubKeyHash).string
+        let addressp2pkh = Bitcoin.Address(hdKey: hdKey, type: .payToPubKeyHash).string
         XCTAssertEqual(addressp2pkh, "mnicNaAVzyGdFvDa9VkMrjgNdnr2wHBWxk")
         try XCTAssertEqual(Descriptor("addr(\(addressp2pkh))").scriptPubKey()†, "pkh:OP_DUP OP_HASH160 4efd3ded47d967e4122982422c9d84db60503972 OP_EQUALVERIFY OP_CHECKSIG")
-        let p2shp2wpkh = Address(hdKey: hdKey, type: .payToScriptHashPayToWitnessPubKeyHash).string
+        let p2shp2wpkh = Bitcoin.Address(hdKey: hdKey, type: .payToScriptHashPayToWitnessPubKeyHash).string
         XCTAssertEqual(p2shp2wpkh, "2N6M3ah9EoggimNz5pnAmQwnpE1Z3ya3V7A")
         try XCTAssertEqual(Descriptor("addr(\(p2shp2wpkh))").scriptPubKey()†, "sh:OP_HASH160 8fb371a0195598d96e634b9eddb645fa1f128e11 OP_EQUAL")
-        let p2wpkh = Address(hdKey: hdKey, type: .payToWitnessPubKeyHash).string
+        let p2wpkh = Bitcoin.Address(hdKey: hdKey, type: .payToWitnessPubKeyHash).string
         XCTAssertEqual(p2wpkh, "tb1qfm7nmm28m9n7gy3fsfpze8vymds9qwtjwn4w7y")
         try XCTAssertEqual(Descriptor("addr(\(p2wpkh))").scriptPubKey()†, "wpkh:OP_0 4efd3ded47d967e4122982422c9d84db60503972")
     }
@@ -245,8 +245,8 @@ class DescriptorParserTests: XCTestCase {
         let desc = try Descriptor(a)
         let scriptPubKey0 = desc.scriptPubKey(wildcardChildNum: 0)!
         let scriptPubKey1 = desc.scriptPubKey(wildcardChildNum: 1)!
-        XCTAssertEqual(Address(scriptPubKey: scriptPubKey0, network: .testnet)!.string, "tb1qqsat6c82fvdy73rfzye8f7nwxcz3xny7t56azl73g95mt3tmzvgs9a8vjs")
-        XCTAssertEqual(Address(scriptPubKey: scriptPubKey1, network: .testnet)!.string, "tb1q7sgx6gscgtau57jduend6a8l445ahpk3dt3u5zu58rx5qm27lhkqgfdjdr")
+        XCTAssertEqual(Bitcoin.Address(scriptPubKey: scriptPubKey0, network: .testnet)!.string, "tb1qqsat6c82fvdy73rfzye8f7nwxcz3xny7t56azl73g95mt3tmzvgs9a8vjs")
+        XCTAssertEqual(Bitcoin.Address(scriptPubKey: scriptPubKey1, network: .testnet)!.string, "tb1q7sgx6gscgtau57jduend6a8l445ahpk3dt3u5zu58rx5qm27lhkqgfdjdr")
     }
     
     func testCombo1() throws {

@@ -205,7 +205,7 @@ public final class DescriptorLexer: Parser {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        guard let address = Address(string: substring(of: range)) else {
+        guard let address = Bitcoin.Address(string: substring(of: range)) else {
             return nil
         }
         transaction.commit()
