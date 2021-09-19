@@ -130,7 +130,7 @@ public struct DerivationPath : Equatable {
     }
     
     public var isEmpty: Bool {
-        steps.isEmpty && origin == nil
+        steps.isEmpty
     }
     
     public var isHardened: Bool {
