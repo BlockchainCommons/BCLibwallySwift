@@ -73,8 +73,8 @@ struct DescriptorToken: TokenProtocol {
         payload as! Int
     }
     
-    var hdKey: ProtoHDKey {
-        payload as! ProtoHDKey
+    var hdKey: HDKey {
+        payload as! HDKey
     }
     
     var wif: WIF {

@@ -55,7 +55,7 @@ public struct PSBTInput {
     }
 
     // Can we provide at least one signature, assuming we have the private key?
-    public func signableOrigins(with hdKey: ProtoHDKey) -> [ECCompressedPublicKey: DerivationPath] {
+    public func signableOrigins(with hdKey: HDKey) -> [ECCompressedPublicKey: DerivationPath] {
         var result: [ECCompressedPublicKey: DerivationPath] = [:]
         for origin in origins {
             guard let masterKeyFingerprint = hdKey.originFingerprint else {
@@ -69,7 +69,7 @@ public struct PSBTInput {
                 continue
             }
             if masterKeyFingerprint == originFingerprint {
-                if let childKey = try? ProtoHDKey(parent: hdKey, childDerivationPath: path) {
+                if let childKey = try? HDKey(parent: hdKey, childDerivationPath: path) {
                     if childKey.ecPublicKey == origin.key {
                         result[origin.key] = origin.value
                     }
@@ -79,7 +79,7 @@ public struct PSBTInput {
         return result
     }
 
-    public func canSign(with hdKey: ProtoHDKey) -> Bool {
+    public func canSign(with hdKey: HDKey) -> Bool {
         !signableOrigins(with: hdKey).isEmpty
     }
 }

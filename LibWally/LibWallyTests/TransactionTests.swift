@@ -85,7 +85,7 @@ class TransactionInstanceTests: XCTestCase {
     var tx1: Transaction! = nil
     var tx2: Transaction! = nil
     var tx3: Transaction! = nil
-    var hdKey: ProtoHDKey! = nil // private key for signing
+    var hdKey: HDKey! = nil // private key for signing
     
     override func setUp() {
         // Input (legacy P2PKH)
@@ -120,7 +120,7 @@ class TransactionInstanceTests: XCTestCase {
         tx3 = Transaction(inputs: [txInput3], outputs: [txOutput])
         
         // Corresponding private key
-        hdKey = try! ProtoHDKey(base58: "xprv9wTYmMFdV23N2TdNG573QoEsfRrWKQgWeibmLntzniatZvR9BmLnvSxqu53Kw1UmYPxLgboyZQaXwTCg8MSY3H2EU4pWcQDnRnrVA1xe8fs")
+        hdKey = try! HDKey(base58: "xprv9wTYmMFdV23N2TdNG573QoEsfRrWKQgWeibmLntzniatZvR9BmLnvSxqu53Kw1UmYPxLgboyZQaXwTCg8MSY3H2EU4pWcQDnRnrVA1xe8fs")
     }
 
     func testTotalIn() {

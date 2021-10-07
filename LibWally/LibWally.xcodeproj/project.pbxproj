@@ -19,11 +19,9 @@
 		030A640A250382A300A1D27E /* TransactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6403250382A300A1D27E /* TransactionTests.swift */; };
 		030A640B250382A300A1D27E /* AddressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6404250382A300A1D27E /* AddressTests.swift */; };
 		030A640C250382A300A1D27E /* PSBTTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6405250382A300A1D27E /* PSBTTests.swift */; };
-		030A640D250382A300A1D27E /* BIP32Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6406250382A300A1D27E /* BIP32Tests.swift */; };
 		030A640E250382A300A1D27E /* ScriptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A6407250382A300A1D27E /* ScriptTests.swift */; };
 		03A560EF2568FE1E00181CB8 /* ECKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560EE2568FE1E00181CB8 /* ECKey.swift */; };
 		03A560F72568FE9D00181CB8 /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560F62568FE9D00181CB8 /* Network.swift */; };
-		03A560FD2568FEFD00181CB8 /* HDKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A560FC2568FEFD00181CB8 /* HDKey.swift */; };
 		03A5610125691F0400181CB8 /* Satoshi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5610025691F0400181CB8 /* Satoshi.swift */; };
 		03A5610525691F1600181CB8 /* TxOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5610425691F1600181CB8 /* TxOutput.swift */; };
 		03A5610925691F3100181CB8 /* TxInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5610825691F3100181CB8 /* TxInput.swift */; };
@@ -31,7 +29,7 @@
 		03A56115256A399700181CB8 /* PSBTOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A56114256A399700181CB8 /* PSBTOutput.swift */; };
 		03A5611B256A802900181CB8 /* ScriptSig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611A256A802900181CB8 /* ScriptSig.swift */; };
 		03A5611F256A805E00181CB8 /* Witness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611E256A805E00181CB8 /* Witness.swift */; };
-		793CFCAF270C152B005792A1 /* ProtoHDKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793CFCAE270C152A005792A1 /* ProtoHDKey.swift */; };
+		793CFCAF270C152B005792A1 /* HDKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793CFCAE270C152A005792A1 /* HDKey.swift */; };
 		793CFCB1270C155B005792A1 /* KeyType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793CFCB0270C155B005792A1 /* KeyType.swift */; };
 		795F8C2526F1E70F009D90FB /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 795F8C2426F1E70F009D90FB /* CryptoSwift */; };
 		795F8C2826F1E739009D90FB /* Ethereum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795F8C2726F1E739009D90FB /* Ethereum.swift */; };
@@ -119,11 +117,9 @@
 		030A6403250382A300A1D27E /* TransactionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransactionTests.swift; sourceTree = "<group>"; };
 		030A6404250382A300A1D27E /* AddressTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressTests.swift; sourceTree = "<group>"; };
 		030A6405250382A300A1D27E /* PSBTTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PSBTTests.swift; sourceTree = "<group>"; };
-		030A6406250382A300A1D27E /* BIP32Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BIP32Tests.swift; sourceTree = "<group>"; };
 		030A6407250382A300A1D27E /* ScriptTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScriptTests.swift; sourceTree = "<group>"; };
 		03A560EE2568FE1E00181CB8 /* ECKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ECKey.swift; sourceTree = "<group>"; };
 		03A560F62568FE9D00181CB8 /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
-		03A560FC2568FEFD00181CB8 /* HDKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDKey.swift; sourceTree = "<group>"; };
 		03A5610025691F0400181CB8 /* Satoshi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Satoshi.swift; sourceTree = "<group>"; };
 		03A5610425691F1600181CB8 /* TxOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxOutput.swift; sourceTree = "<group>"; };
 		03A5610825691F3100181CB8 /* TxInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxInput.swift; sourceTree = "<group>"; };
@@ -131,7 +127,7 @@
 		03A56114256A399700181CB8 /* PSBTOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSBTOutput.swift; sourceTree = "<group>"; };
 		03A5611A256A802900181CB8 /* ScriptSig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptSig.swift; sourceTree = "<group>"; };
 		03A5611E256A805E00181CB8 /* Witness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Witness.swift; sourceTree = "<group>"; };
-		793CFCAE270C152A005792A1 /* ProtoHDKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoHDKey.swift; sourceTree = "<group>"; };
+		793CFCAE270C152A005792A1 /* HDKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDKey.swift; sourceTree = "<group>"; };
 		793CFCB0270C155B005792A1 /* KeyType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyType.swift; sourceTree = "<group>"; };
 		795F8C2726F1E739009D90FB /* Ethereum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ethereum.swift; sourceTree = "<group>"; };
 		795F8C2926F1E7F8009D90FB /* EthereumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EthereumTests.swift; sourceTree = "<group>"; };
@@ -247,7 +243,6 @@
 			isa = PBXGroup;
 			children = (
 				030A6404250382A300A1D27E /* AddressTests.swift */,
-				030A6406250382A300A1D27E /* BIP32Tests.swift */,
 				79E7630A270C32A300FC0F03 /* HDKeyTests.swift */,
 				030A6401250382A200A1D27E /* BIP39Tests.swift */,
 				030A6405250382A300A1D27E /* PSBTTests.swift */,
@@ -319,8 +314,7 @@
 				796FE5D526D7756800DDB32A /* Asset.swift */,
 				03A560F62568FE9D00181CB8 /* Network.swift */,
 				796FE5D726D7764C00DDB32A /* UseInfo.swift */,
-				03A560FC2568FEFD00181CB8 /* HDKey.swift */,
-				793CFCAE270C152A005792A1 /* ProtoHDKey.swift */,
+				793CFCAE270C152A005792A1 /* HDKey.swift */,
 				793CFCB0270C155B005792A1 /* KeyType.swift */,
 				795F8C2B26F1EC6E009D90FB /* Seed.swift */,
 				030A63F82503702700A1D27E /* BIP39.swift */,
@@ -515,7 +509,6 @@
 				030A63FA2503702700A1D27E /* Transaction.swift in Sources */,
 				79B02BF826E59DDA00950779 /* FlexerExtensions.swift in Sources */,
 				03A560EF2568FE1E00181CB8 /* ECKey.swift in Sources */,
-				03A560FD2568FEFD00181CB8 /* HDKey.swift in Sources */,
 				796FE5D626D7756800DDB32A /* Asset.swift in Sources */,
 				79C7CE0F26E1C35700C5CD75 /* DescriptorError.swift in Sources */,
 				79865C5326E06DA200897441 /* DescriptorParser.swift in Sources */,
@@ -548,7 +541,7 @@
 				79B44F55270AF4B6008FED77 /* DerivationStep.swift in Sources */,
 				03A5610525691F1600181CB8 /* TxOutput.swift in Sources */,
 				795F8C4A26F5B966009D90FB /* BitcoinAccountExtensions.swift in Sources */,
-				793CFCAF270C152B005792A1 /* ProtoHDKey.swift in Sources */,
+				793CFCAF270C152B005792A1 /* HDKey.swift in Sources */,
 				03A5611F256A805E00181CB8 /* Witness.swift in Sources */,
 				796FE5D826D7764C00DDB32A /* UseInfo.swift in Sources */,
 				030A63FF2503702700A1D27E /* BIP39.swift in Sources */,
@@ -584,7 +577,6 @@
 				79865C4B26DEF3BB00897441 /* DescriptorLexerTests.swift in Sources */,
 				795F8C3226F1F1F5009D90FB /* RandomTests.swift in Sources */,
 				79C7CE1926E21D3E00C5CD75 /* ScriptOpcodeTests.swift in Sources */,
-				030A640D250382A300A1D27E /* BIP32Tests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -66,7 +66,7 @@ extension Wally {
 }
 
 extension Wally {
-    public static func hdKeyToAddress(hdKey: ProtoHDKey, type: Bitcoin.Address.AddressType) -> String {
+    public static func hdKeyToAddress(hdKey: HDKey, type: Bitcoin.Address.AddressType) -> String {
         var key = hdKey.wallyExtKey
         var output: UnsafeMutablePointer<Int8>!
         defer {

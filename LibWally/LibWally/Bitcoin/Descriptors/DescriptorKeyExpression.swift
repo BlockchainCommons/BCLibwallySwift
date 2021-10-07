@@ -16,7 +16,7 @@ struct DescriptorKeyExpression {
         case ecUncompressedPublicKey(ECUncompressedPublicKey)
         //case ecXOnlyPublicKey(ECXOnlyPublicKey)
         case wif(WIF)
-        case hdKey(ProtoHDKey)
+        case hdKey(HDKey)
     }
 }
 
@@ -36,7 +36,7 @@ extension DescriptorKeyExpression {
         case .wif(let k):
             data = k.key.public.data
         case .hdKey(let k):
-            guard let k2 = try? ProtoHDKey(parent: k, childDerivationPath: k.children, wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
+            guard let k2 = try? HDKey(parent: k, childDerivationPath: k.children, wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
                 return nil
             }
             data = k2.ecPublicKey.data

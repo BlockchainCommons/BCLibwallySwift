@@ -30,7 +30,7 @@ extension Ethereum {
             self.useInfo = UseInfo(asset: .eth, network: network)
         }
         
-        public convenience init(hdKey: ProtoHDKey) {
+        public convenience init(hdKey: HDKey) {
             self.init(key: hdKey.ecPublicKey, network: hdKey.useInfo.network)
         }
 

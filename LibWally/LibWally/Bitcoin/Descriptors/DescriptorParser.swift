@@ -320,7 +320,7 @@ final class DescriptorParser: Parser {
         case .hdKey:
             let key = token.hdKey
             let children = try parseChildren()
-            let key2 = try ProtoHDKey(key: key, parent: origin, children: children)
+            let key2 = try HDKey(key: key, parent: origin, children: children)
             resultKey = .hdKey(key2)
         default:
             resultKey = nil
