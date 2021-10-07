@@ -16,7 +16,7 @@ class SeedTests: XCTestCase {
         XCTAssertEqual(seed.data.hex, "da519ed7af739928b69357c5edf7d81b")
         XCTAssertEqual(seed.bip39.mnemonic, mnemonic)
         
-        let key = HDKey(seed: seed)!
-        XCTAssertEqual(key.base58, "xprv9s21ZrQH143K4TAgo7AZM1q8qTsQdfwMBeDHkzvbn7nadYjGPhqCzZrSTw72ykMRdUnUzvuJyfCH5W3NA7AK5MnWuBL8BYms3GSX7CHQth2")
+        let key = try? ProtoHDKey(seed: seed)
+        XCTAssertEqual(key?.base58, "xprv9s21ZrQH143K4TAgo7AZM1q8qTsQdfwMBeDHkzvbn7nadYjGPhqCzZrSTw72ykMRdUnUzvuJyfCH5W3NA7AK5MnWuBL8BYms3GSX7CHQth2")
     }
 }

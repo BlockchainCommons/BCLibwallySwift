@@ -241,7 +241,7 @@ public final class DescriptorLexer: Parser {
             return nil
         }
         let range = token.startIndex ..< endingToken.endIndex
-        guard let hdKey = HDKey(base58: substring(of: range)) else {
+        guard let hdKey = try? ProtoHDKey(base58: substring(of: range)) else {
             return nil
         }
         transaction.commit()

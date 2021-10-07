@@ -155,7 +155,7 @@ public struct Transaction {
         return Float64(fee) / Float64(vbytes)
     }
     
-    public func signed(with privKeys: [HDKey]) -> Transaction? {
+    public func signed(with privKeys: [ProtoHDKey]) -> Transaction? {
         guard let tx = tx else {
             // No transaction to sign.
             return nil

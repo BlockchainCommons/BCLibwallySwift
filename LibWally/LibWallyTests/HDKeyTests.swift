@@ -78,7 +78,7 @@ class HDKeyTests: XCTestCase {
         let hdKey = try ProtoHDKey(bip39Seed: bip39Seed)
         XCTAssertEqual(hdKey.originFingerprint?.hex, "b4e3f5ed")
 
-        let childKey = try ProtoHDKey(parent: hdKey, derivedKeyType: .private, childDerivation: 0)
+        let childKey = try ProtoHDKey(parent: hdKey, childDerivation: 0)
         XCTAssertEqual(childKey.originFingerprint?.hex, "b4e3f5ed")
 
         let tpub = "tpubDDgEAMpHn8tX5Bs19WWJLZBeFzbpE7BYuP3Qo71abZnQ7FmN3idRPg4oPWt2Q6Uf9huGv7AGMTu8M2BaCxAdThQArjLWLDLpxVX2gYfh2YJ"
@@ -90,7 +90,7 @@ class HDKeyTests: XCTestCase {
         let masterKeyXpriv = "tprv8ZgxMBicQKsPd9TeAdPADNnSyH9SSUUbTVeFszDE23Ki6TBB5nCefAdHkK8Fm3qMQR6sHwA56zqRmKmxnHk37JkiFzvncDqoKmPWubu7hDF"
         let key = try ProtoHDKey(base58: masterKeyXpriv)
         XCTAssertEqual(key.originFingerprint?.hex, "d90c6a4f")
-        XCTAssertEqual(key.parent!.origin, .fingerprint(0xd90c6a4f))
+        XCTAssertEqual(key.parent.origin, .fingerprint(0xd90c6a4f))
     }
     
     func testRelativePathFromString() {
@@ -128,7 +128,7 @@ class HDKeyTests: XCTestCase {
         let hdKey = try ProtoHDKey(base58: xpriv)
         
         let derivation = DerivationPath(index: 0)
-        let childKey = try ProtoHDKey(parent: hdKey, derivedKeyType: .private, childDerivationPath: derivation)
+        let childKey = try ProtoHDKey(parent: hdKey, childDerivationPath: derivation)
 
         XCTAssertEqual(childKey.base58PrivateKey, "xprv9vEG8CuCbvqnJXhr1ZTHZYJcYqGMZ8dkphAUT2CDZsfqewNpq42oSiFgBXXYwDWAHXVbHew4uBfiHNAahRGJ8kUWwqwTGSXUb4wrbWz9eqo")
     }
@@ -138,7 +138,7 @@ class HDKeyTests: XCTestCase {
         let hdKey = try ProtoHDKey(base58: xpriv)
         
         let derivation = DerivationPath(step: .init(0, isHardened: true))
-        let childKey = try ProtoHDKey(parent: hdKey, derivedKeyType: .private, childDerivationPath: derivation)
+        let childKey = try ProtoHDKey(parent: hdKey, childDerivationPath: derivation)
 
         XCTAssertEqual(childKey.base58PrivateKey, "xprv9vEG8CuLwbNkVNhb56dXckENNiU1SZEgwEAokv1yLodVwsHMRbAFyUMoMd5uyKEgPDgEPBwNfa42v5HYvCvT1ymQo1LQv9h5LtkBMvQD55b")
     }
@@ -148,7 +148,7 @@ class HDKeyTests: XCTestCase {
         let hdKey = try ProtoHDKey(base58: xpriv)
 
         let path = DerivationPath(string: "m/0'/0")!
-        let childKey = try ProtoHDKey(parent: hdKey, derivedKeyType: .private, childDerivationPath: path)
+        let childKey = try ProtoHDKey(parent: hdKey, childDerivationPath: path)
 
         XCTAssertEqual(childKey.base58PrivateKey, "xprv9xcgxEx7PAbqP2YSijYjX38Vo6dV4i7g9ApmPRAkofDzQ6Hf4c3nBNRfW4EKSm2uhk4FBbjNFGjhZrATqLVKM2JjhsxSrUsDdJYK4UKhyQt")
     }
@@ -158,13 +158,13 @@ class HDKeyTests: XCTestCase {
         let hdKey = try ProtoHDKey(base58: xpub)
         
         let path = DerivationPath(string: "m/0")!
-        let childKey = try ProtoHDKey(parent: hdKey, derivedKeyType: .public, childDerivationPath: path)
+        let childKey = try ProtoHDKey(parent: hdKey, childDerivationPath: path)
 
         XCTAssertEqual(childKey.base58PublicKey, "xpub69DcXiS6SJQ5X1nK7azHvgFM6s6qxbMcBv65FQbq8DCpXjhyNbM3zWaA2p4L7Na2siUqFvyuK9W11J6GjqQhtPeJkeadtSpFcf6XLdKsZLZ")
         XCTAssertNil(childKey.base58PrivateKey)
         
         let hardenedPath = DerivationPath(string: "m/0'")!
-        XCTAssertThrowsError(try ProtoHDKey(parent: hdKey, derivedKeyType: .private, childDerivationPath: hardenedPath))
+        XCTAssertThrowsError(try ProtoHDKey(parent: hdKey, childDerivationPath: hardenedPath))
     }
 
     func testDeriveWithAbsolutePath() throws {

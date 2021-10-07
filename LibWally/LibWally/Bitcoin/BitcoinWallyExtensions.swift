@@ -66,7 +66,7 @@ extension Wally {
 }
 
 extension Wally {
-    public static func hdKeyToAddress(hdKey: HDKey, type: Bitcoin.Address.AddressType) -> String {
+    public static func hdKeyToAddress(hdKey: ProtoHDKey, type: Bitcoin.Address.AddressType) -> String {
         var key = hdKey.wallyExtKey
         var output: UnsafeMutablePointer<Int8>!
         defer {
@@ -76,7 +76,7 @@ extension Wally {
         switch type {
         case .payToPubKeyHash, .payToScriptHashPayToWitnessPubKeyHash:
             var version: UInt32
-            switch hdKey.network {
+            switch hdKey.useInfo.network {
             case .mainnet:
                 version = type == .payToPubKeyHash ? 0x00 : 0x05
             case .testnet:
@@ -84,7 +84,7 @@ extension Wally {
             }
             precondition(wally_bip32_key_to_address(&key, type.wallyType, version, &output) == WALLY_OK)
         case .payToWitnessPubKeyHash:
-            precondition(wally_bip32_key_to_addr_segwit(&key, hdKey.network.segwitFamily, 0, &output) == WALLY_OK)
+            precondition(wally_bip32_key_to_addr_segwit(&key, hdKey.useInfo.network.segwitFamily, 0, &output) == WALLY_OK)
         }
         
         return String(cString: output)

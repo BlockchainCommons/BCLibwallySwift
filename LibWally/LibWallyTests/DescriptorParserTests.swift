@@ -17,11 +17,11 @@ class DescriptorParserTests: XCTestCase {
     func testPK() throws {
         let tprv = "tprv8gzC1wn3dmCrBiqDFrqhw9XXgy5t4mzeL5SdWayHBHz1GmWbRKoqDBSwDLfunPAWxMqZ9bdGsdpTiYUfYiWypv4Wfj9g7AYX5K3H9gRYNCA"
         
-        let hdKey = HDKey(base58: tprv)!
+        let hdKey = try ProtoHDKey(base58: tprv)
         let ecPub = hdKey.ecPublicKey.hex
         let ecPubUncompressed = hdKey.ecPublicKey.uncompressed.hex
         let wif = hdKey.ecPrivateKey!.wif
-        let tpub = hdKey.base58PublicKey
+        let tpub = hdKey.base58PublicKey!
         
         try XCTAssertEqual(Descriptor("pk(\(ecPub))").scriptPubKey()†, "pk:03e220e776d811c44075a4a260734445c8967865f5357ba98ead3bc6a6552c36f2 OP_CHECKSIG")
         try XCTAssertEqual(Descriptor("pk(\(ecPubUncompressed))").scriptPubKey()†, "pk:04e220e776d811c44075a4a260734445c8967865f5357ba98ead3bc6a6552c36f22fa358bbfca32197efabe42755e5ab36c73b9bfee5b6ada22807cb125c1b7a27 OP_CHECKSIG")
@@ -33,11 +33,11 @@ class DescriptorParserTests: XCTestCase {
     func testPKH() throws {
         let tprv = "tprv8gzC1wn3dmCrBiqDFrqhw9XXgy5t4mzeL5SdWayHBHz1GmWbRKoqDBSwDLfunPAWxMqZ9bdGsdpTiYUfYiWypv4Wfj9g7AYX5K3H9gRYNCA"
         
-        let hdKey = HDKey(base58: tprv)!
+        let hdKey = try ProtoHDKey(base58: tprv)
         let ecPub = hdKey.ecPublicKey.hex
         let ecPubUncompressed = hdKey.ecPublicKey.uncompressed.hex
         let wif = hdKey.ecPrivateKey!.wif
-        let tpub = hdKey.base58PublicKey
+        let tpub = hdKey.base58PublicKey!
         
         try XCTAssertEqual(Descriptor("pkh(\(ecPub))").scriptPubKey()†, "pkh:OP_DUP OP_HASH160 4efd3ded47d967e4122982422c9d84db60503972 OP_EQUALVERIFY OP_CHECKSIG")
         try XCTAssertEqual(Descriptor("pkh(\(ecPubUncompressed))").scriptPubKey()†, "pkh:OP_DUP OP_HASH160 335f3a94aeed3518f0baedc04330945e3dd0744b OP_EQUALVERIFY OP_CHECKSIG")
@@ -49,11 +49,11 @@ class DescriptorParserTests: XCTestCase {
     func testWPKH() throws {
         let tprv = "tprv8gzC1wn3dmCrBiqDFrqhw9XXgy5t4mzeL5SdWayHBHz1GmWbRKoqDBSwDLfunPAWxMqZ9bdGsdpTiYUfYiWypv4Wfj9g7AYX5K3H9gRYNCA"
         
-        let hdKey = HDKey(base58: tprv)!
+        let hdKey = try ProtoHDKey(base58: tprv)
         let ecPub = hdKey.ecPublicKey.hex
         let ecPubUncompressed = hdKey.ecPublicKey.uncompressed.hex
         let wif = hdKey.ecPrivateKey!.wif
-        let tpub = hdKey.base58PublicKey
+        let tpub = hdKey.base58PublicKey!
         
         try XCTAssertEqual(Descriptor("wpkh(\(ecPub))").scriptPubKey()†, "wpkh:OP_0 4efd3ded47d967e4122982422c9d84db60503972")
         try XCTAssertEqual(Descriptor("wpkh(\(ecPubUncompressed))").scriptPubKey()†, "wpkh:OP_0 335f3a94aeed3518f0baedc04330945e3dd0744b")
@@ -135,7 +135,7 @@ class DescriptorParserTests: XCTestCase {
 
     func testAddr() throws {
         let tprv = "tprv8gzC1wn3dmCrBiqDFrqhw9XXgy5t4mzeL5SdWayHBHz1GmWbRKoqDBSwDLfunPAWxMqZ9bdGsdpTiYUfYiWypv4Wfj9g7AYX5K3H9gRYNCA"
-        let hdKey = HDKey(base58: tprv)!
+        let hdKey = try ProtoHDKey(base58: tprv)
         let addressp2pkh = Bitcoin.Address(hdKey: hdKey, type: .payToPubKeyHash).string
         XCTAssertEqual(addressp2pkh, "mnicNaAVzyGdFvDa9VkMrjgNdnr2wHBWxk")
         try XCTAssertEqual(Descriptor("addr(\(addressp2pkh))").scriptPubKey()†, "pkh:OP_DUP OP_HASH160 4efd3ded47d967e4122982422c9d84db60503972 OP_EQUALVERIFY OP_CHECKSIG")
@@ -157,35 +157,37 @@ class DescriptorParserTests: XCTestCase {
     }
     
     func testHDKey2() throws {
-        let masterKey = HDKey(base58: "tprv8gzC1wn3dmCrBiqDFrqhw9XXgy5t4mzeL5SdWayHBHz1GmWbRKoqDBSwDLfunPAWxMqZ9bdGsdpTiYUfYiWypv4Wfj9g7AYX5K3H9gRYNCA")!
+        // This base58 key is actually not a master key; it is a level 3 key. So here we force it to become a master key.
+        let masterKey = try ProtoHDKey(base58: "tprv8gzC1wn3dmCrBiqDFrqhw9XXgy5t4mzeL5SdWayHBHz1GmWbRKoqDBSwDLfunPAWxMqZ9bdGsdpTiYUfYiWypv4Wfj9g7AYX5K3H9gRYNCA", parent: .init(origin: .master))
         let purposePath = DerivationPath(string: "44'")!
-        let purposePrivateKey = masterKey.derive(path: purposePath)!
-        
+        let purposePrivateKey = try ProtoHDKey(parent: masterKey, childDerivationPath: purposePath)
+        XCTAssertEqual(purposePrivateKey.fullDescription, "[4efd3ded/44']tprv8c9mJ6Pkmf4eC93951CVmVVJBMnVPt4BoEsXVckBK4LeJ6dkPmDC1YEjLQSMGVAuUiHMbTTXYuosFLC3gdN5AjwXSjir94Tew4Pbh8V7mNM")
+
         let accountPath = DerivationPath(string: "0'/0'")!
         let children = DerivationPath(string: "1'/*")!
-        let accountPrivateKey = purposePrivateKey.derive(path: accountPath, children: children)!
-        XCTAssertEqual(accountPrivateKey.fullDescription, "[4efd3ded/44'/0'/0']tprv8m6wpfnU18pDmiCbMcw9TmBJmYZASBbh7id31gAaszC2uuX7WysJYxj3yUztBSa38gmxiSLU6czfx3RTNmBC9ctr9XpmHxcFEMYUHEbSksf/1'/*")
+        let accountPrivateKey = try ProtoHDKey(parent: purposePrivateKey, childDerivationPath: accountPath, children: children)
+        XCTAssertEqual(accountPrivateKey.fullDescription, "[4efd3ded/44'/0'/0']tprv8fTYFKEQNDoECQKCFeYrXMtHNspLL1GLv2Ept6YasB7KdAggQ8MHBuzFimBMxdMeJbUWoETLKWNUucxXmgtJyNb3uaLzCxidmAY88AwYtmX/1'/*")
 
         let accountPublicKey = accountPrivateKey.public
-        XCTAssertEqual(accountPublicKey.fullDescription, "[4efd3ded/44'/0'/0']tpubDHnyy5pi9WVtfBEPFGbjsAqRLa56bWnbh2DpJCCtJFzRkPmt9NgtjTLv9bkDqLaNr6PgYE1Ki1QhQXWVmSTJUVkTVavpEvH4vr2UWwzq18k/1'/*")
+        XCTAssertEqual(accountPublicKey.fullDescription, "[4efd3ded/44'/0'/0']tpubDC9aPjGeWbUu5sLz9JDSvmYPwuLGVLTFVKqcAcatHSuiTewT2XAsNQc7tsvhcXMz216Ed28BvtnWN73aANARJFSfFdT39vPTTf28Mtbkn7D/1'/*")
         
         let source = "pkh(\(accountPublicKey.fullDescription))"
         let desc = try Descriptor(source)
         XCTAssertTrue(desc.requiresWildcardChildNum)
         XCTAssertNil(desc.scriptPubKey(wildcardChildNum: 0)) // requires private key.
         
-        let lookup: [UInt32 : HDKey] = [
-            masterKey.fingerprint : masterKey
+        let lookup: [UInt32 : ProtoHDKey] = [
+            masterKey.keyFingerprint : masterKey
         ]
         
         let fullPath = purposePath + accountPath
         XCTAssertEqual(fullPath†, "44'/0'/0'")
         
-        func privateKeyProvider(key: HDKey) -> HDKey? {
+        func privateKeyProvider(key: ProtoHDKey) -> ProtoHDKey? {
             guard
                 case let .fingerprint(originFingerprint) = key.parent.origin,
                 let masterKey = lookup[originFingerprint],
-                let privateKey = masterKey.derive(path: fullPath)
+                let privateKey = try? ProtoHDKey(parent: masterKey, childDerivationPath: fullPath)
             else {
                 return nil
             }

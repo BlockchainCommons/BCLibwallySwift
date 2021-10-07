@@ -13,6 +13,19 @@ public struct DerivationPath : Equatable {
     public var steps: [DerivationStep]
     public var depth: Int?
     
+    public var isMaster: Bool {
+        guard depth == nil || depth! == 0 else {
+            return false
+        }
+        guard steps.isEmpty else {
+            return false
+        }
+        guard origin == nil || origin! == .master else {
+            return false
+        }
+        return true
+    }
+    
     public enum Origin: Equatable, CustomStringConvertible {
         case fingerprint(UInt32)
         case master
@@ -56,6 +69,12 @@ public struct DerivationPath : Equatable {
     public init(index: ChildIndex, origin: Origin? = nil, depth: Int? = nil) {
         let step = DerivationStep(.index(index))
         self.init(steps: [step], origin: origin, depth: depth)
+    }
+    
+    public init(originFingerprint: UInt32, depth: Int? = nil) {
+        self.steps = []
+        self.origin = .fingerprint(originFingerprint)
+        self.depth = depth
     }
     
     public init?(string: String, requireFixed: Bool = false) {

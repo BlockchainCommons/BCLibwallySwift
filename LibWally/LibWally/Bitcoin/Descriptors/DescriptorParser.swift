@@ -249,14 +249,22 @@ final class DescriptorParser: Parser {
         return steps
     }
     
-    func parseOrigin() throws -> DerivationPath {
+    func parseOrigin() throws -> DerivationPath? {
         guard parseOpenBracket() else {
-            return .init()
+            return nil
         }
         let fingerprint = try expectFingerprint()
         let steps = try parseDerivationSteps(allowFinalWildcard: false)
         try expectCloseBracket()
         return DerivationPath(steps: steps, origin: .fingerprint(fingerprint))
+    }
+    
+    func parseChildren() throws -> DerivationPath? {
+        let childSteps = try parseDerivationSteps(allowFinalWildcard: true)
+        guard !childSteps.isEmpty else {
+            return nil
+        }
+        return DerivationPath(steps: childSteps)
     }
     
     func parseData() -> Data? {
@@ -311,9 +319,8 @@ final class DescriptorParser: Parser {
             resultKey = .wif(token.wif)
         case .hdKey:
             let key = token.hdKey
-            let childSteps = try parseDerivationSteps(allowFinalWildcard: true)
-            let children = DerivationPath(steps: childSteps)
-            let key2 = HDKey(key: key.wallyExtKey, parent: origin, children: children)
+            let children = try parseChildren()
+            let key2 = try ProtoHDKey(key: key, parent: origin, children: children)
             resultKey = .hdKey(key2)
         default:
             resultKey = nil

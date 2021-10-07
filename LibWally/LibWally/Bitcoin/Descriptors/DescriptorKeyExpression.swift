@@ -8,7 +8,7 @@
 import Foundation
 
 struct DescriptorKeyExpression {
-    let origin: DerivationPath
+    let origin: DerivationPath?
     let key: Key
 
     enum Key {
@@ -16,7 +16,7 @@ struct DescriptorKeyExpression {
         case ecUncompressedPublicKey(ECUncompressedPublicKey)
         //case ecXOnlyPublicKey(ECXOnlyPublicKey)
         case wif(WIF)
-        case hdKey(HDKey)
+        case hdKey(ProtoHDKey)
     }
 }
 
@@ -36,7 +36,7 @@ extension DescriptorKeyExpression {
         case .wif(let k):
             data = k.key.public.data
         case .hdKey(let k):
-            guard let k2 = k.derive(path: k.children, wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
+            guard let k2 = try? ProtoHDKey(parent: k, childDerivationPath: k.children, wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
                 return nil
             }
             data = k2.ecPublicKey.data
@@ -55,7 +55,7 @@ extension DescriptorKeyExpression {
 extension DescriptorKeyExpression : CustomStringConvertible {
     var description: String {
         var comps: [String] = []
-        if !origin.isEmpty {
+        if let origin = origin, !origin.isEmpty {
             comps.append("[\(origin)]")
         }
         comps.append(key.description)

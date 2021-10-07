@@ -35,7 +35,7 @@ public struct PSBTOutput {
         self.txOutput = TxOutput(scriptPubKey: scriptPubKey, amount: wallyTxOutput.satoshi)
     }
 
-    static func commonOriginChecks(originPath: DerivationPath, rootPathLength: Int, pubKey: ECCompressedPublicKey, signer: HDKey, cosigners: [HDKey]) ->  Bool {
+    static func commonOriginChecks(originPath: DerivationPath, rootPathLength: Int, pubKey: ECCompressedPublicKey, signer: ProtoHDKey, cosigners: [ProtoHDKey]) ->  Bool {
         // Check that origin ends with 0/* or 1/*
         let steps = originPath.steps
         if steps.count < 2 ||
@@ -46,8 +46,8 @@ public struct PSBTOutput {
         }
 
         // Find matching HDKey
-        var hdKey: HDKey? = nil
-        guard let signerMasterKeyFingerprint = signer.masterKeyFingerprint else {
+        var hdKey: ProtoHDKey? = nil
+        guard let signerMasterKeyFingerprint = signer.originFingerprint else {
             return false
         }
         guard
@@ -59,7 +59,7 @@ public struct PSBTOutput {
             hdKey = signer
         } else {
             for cosigner in cosigners {
-                guard let cosignerMasterKeyFingerprint = cosigner.masterKeyFingerprint else {
+                guard let cosignerMasterKeyFingerprint = cosigner.originFingerprint else {
                     return false
                 }
                 if cosignerMasterKeyFingerprint == originFingerprint {
@@ -73,7 +73,7 @@ public struct PSBTOutput {
         }
 
         // Check that origin pubkey is correct
-        guard let childKey = hdKey.derive(path: originPath) else {
+        guard let childKey = try? ProtoHDKey(parent: hdKey, childDerivationPath: originPath) else {
             return false
         }
 
@@ -84,7 +84,7 @@ public struct PSBTOutput {
         return true
     }
 
-    public func isChange(signer: HDKey, inputs:[PSBTInput], cosigners: [HDKey], threshold: UInt) -> Bool {
+    public func isChange(signer: ProtoHDKey, inputs:[PSBTInput], cosigners: [ProtoHDKey], threshold: UInt) -> Bool {
         // Transaction must have at least one input
         if inputs.count < 1 {
             return false

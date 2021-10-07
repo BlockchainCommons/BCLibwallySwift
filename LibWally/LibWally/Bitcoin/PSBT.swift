@@ -133,12 +133,12 @@ public struct PSBT : Equatable {
         return PSBT(ownedPSBT: signedPSBT)
     }
 
-    public func signed(with hdKey: HDKey) -> PSBT? {
+    public func signed(with hdKey: ProtoHDKey) -> PSBT? {
         var psbt = self
         for input in self.inputs {
             for origin in input.signableOrigins(with: hdKey) {
                 if
-                    let childKey = hdKey.derive(path: origin.value),
+                    let childKey = try? ProtoHDKey(parent: hdKey, childDerivationPath: origin.value),
                     let privKey = childKey.ecPrivateKey,
                     privKey.public == origin.key,
                     let signedPSBT = psbt.signed(with: privKey)

@@ -48,7 +48,7 @@ extension Bitcoin {
             return nil
         }
         
-        public convenience init(hdKey: HDKey, type: AddressType) {
+        public convenience init(hdKey: ProtoHDKey, type: AddressType) {
             let address = Wally.hdKeyToAddress(hdKey: hdKey, type: type)
             self.init(string: address)!
         }

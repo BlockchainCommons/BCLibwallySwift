@@ -7,7 +7,7 @@
 
 import Foundation
 
-public typealias PrivateKeyProvider = (HDKey) -> HDKey?
+public typealias PrivateKeyProvider = (ProtoHDKey) -> ProtoHDKey?
 
 protocol DescriptorFunction {
     func scriptPubKey(wildcardChildNum: UInt32?, privateKeyProvider: PrivateKeyProvider?, comboOutput: Descriptor.ComboOutput?) -> ScriptPubKey?

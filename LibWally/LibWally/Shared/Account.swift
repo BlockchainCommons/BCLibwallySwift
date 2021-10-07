@@ -24,18 +24,18 @@ open class Account {
         return BIP39.Seed(bip39: bip39)
     }()
     
-    public private(set) lazy var masterKey: HDKey? = {
+    public private(set) lazy var masterKey: ProtoHDKey? = {
         guard let bip39Seed = bip39Seed else {
             return nil
         }
-        return HDKey(bip39Seed: bip39Seed)
+        return try? ProtoHDKey(bip39Seed: bip39Seed)
     }()
     
-    public private(set) lazy var accountKey: HDKey? = {
+    public private(set) lazy var accountKey: ProtoHDKey? = {
         guard let masterKey = masterKey else {
             return nil
         }
-        return masterKey.derive(path: accountPath)
+        return try? ProtoHDKey(parent: masterKey, childDerivationPath: accountPath)
     }()
     
     public private(set) lazy var accountECPrivateKey: ECPrivateKey? = {
@@ -74,7 +74,7 @@ open class Account {
         self.bip39Seed = bip39Seed
     }
     
-    public init(masterKey: HDKey, useInfo: UseInfo, account: UInt32) {
+    public init(masterKey: ProtoHDKey, useInfo: UseInfo, account: UInt32) {
         self.seed = nil
         self.useInfo = useInfo
         self.account = account
@@ -83,7 +83,7 @@ open class Account {
         self.masterKey = masterKey
     }
     
-    public init(accountKey: HDKey, useInfo: UseInfo) {
+    public init(accountKey: ProtoHDKey, useInfo: UseInfo) {
         self.seed = nil
         self.useInfo = useInfo
         self.account = nil

@@ -7,15 +7,16 @@
 
 import Foundation
 @_implementationOnly import WolfBase
+@_implementationOnly import CryptoSwift
 
-open class ProtoHDKey {
+open class ProtoHDKey: CustomStringConvertible {
     public let isMaster: Bool
     public let keyType: KeyType
     public let keyData: Data
     public let chainCode: Data?
     public let useInfo: UseInfo
-    public let parent: DerivationPath?
-    public let children: DerivationPath?
+    public let parent: DerivationPath
+    public let children: DerivationPath
     public let parentFingerprint: UInt32?
     
     public enum Error: Swift.Error {
@@ -29,45 +30,44 @@ open class ProtoHDKey {
         case unknownDerivationError
     }
 
-    public init(isMaster: Bool, keyType: KeyType, keyData: Data, chainCode: Data?, useInfo: UseInfo, origin: DerivationPath?, children: DerivationPath?, parentFingerprint: UInt32?) {
+    public init(isMaster: Bool, keyType: KeyType, keyData: Data, chainCode: Data?, useInfo: UseInfo, parent: DerivationPath, children: DerivationPath, parentFingerprint: UInt32?) {
         self.isMaster = isMaster
         self.keyType = keyType
         self.keyData = keyData
         self.chainCode = chainCode
         self.useInfo = useInfo
-        self.parent = origin
+        self.parent = parent
         self.children = children
         self.parentFingerprint = parentFingerprint
     }
     
-    public init(parent: ProtoHDKey, derivedKeyType: KeyType, isDerivable: Bool = true) throws {
-        guard parent.keyType == .private || derivedKeyType == .public else {
+    public init(key: ProtoHDKey, derivedKeyType: KeyType? = nil, isDerivable: Bool = true, parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
+        let derivedKeyType = derivedKeyType ?? key.keyType
+        
+        guard key.keyType == .private || derivedKeyType == .public else {
             // public -> private
             throw Error.cannotDerivePrivateFromPublic
         }
 
-        let chainCode = isDerivable ? parent.chainCode : nil
-        self.isMaster = parent.isMaster
+        let chainCode = isDerivable ? key.chainCode : nil
+        self.isMaster = key.isMaster
         self.keyType = derivedKeyType
         self.chainCode = chainCode
-        self.useInfo = parent.useInfo
-        self.parent = parent.parent
-        self.children = parent.children
-        self.parentFingerprint = parent.parentFingerprint
-        if parent.keyType == derivedKeyType {
+        self.useInfo = key.useInfo
+        self.parent = parent ?? key.parent
+        self.children = children ?? key.children
+        self.parentFingerprint = key.parentFingerprint
+        if key.keyType == derivedKeyType {
             // private -> private
             // public -> public
-            self.keyData = parent.keyData
+            self.keyData = key.keyData
         } else {
             // private -> public
-            self.keyData = Data(of: parent.wallyExtKey.pub_key)
+            self.keyData = Data(of: key.wallyExtKey.pub_key)
         }
     }
     
-    public init(base58: String, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
-        guard let key = Wally.hdKey(fromBase58: base58) else {
-            throw Error.invalidBase58
-        }
+    public init(wallyExtKey key: WallyExtKey, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
         self.isMaster = key.isMaster
         self.keyType = key.keyType
         if key.isPrivate {
@@ -90,11 +90,53 @@ open class ProtoHDKey {
             let o = DerivationPath.Origin.fingerprint(Wally.fingerprint(for: key))
             self.parent = DerivationPath(steps: steps, origin: o, depth: Int(key.depth))
         }
-        self.children = children
+        self.children = children ?? .init()
         self.parentFingerprint = deserialize(UInt32.self, Data(of: key.parent160))!
     }
+
+    public init(base58: String, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil, overrideOriginFingerprint: UInt32? = nil) throws {
+        guard let key = Wally.hdKey(fromBase58: base58) else {
+            throw Error.invalidBase58
+        }
+        let isMaster: Bool
+        if let parent = parent {
+            isMaster = parent.isMaster
+        } else {
+            isMaster = key.isMaster
+        }
+        self.isMaster = isMaster
+        self.keyType = key.keyType
+        if key.isPrivate {
+            self.keyData = Data(of: key.priv_key)
+        } else {
+            self.keyData = Data(of: key.pub_key)
+        }
+        self.chainCode = Data(of: key.chain_code)
+        self.useInfo = UseInfo(asset: useInfo.asset, network: key.network!)
+
+        if let parent = parent {
+            self.parent = parent
+        } else {
+            let steps: [DerivationStep]
+            if key.child_num == 0 {
+                steps = []
+            } else {
+                steps = [DerivationStep(rawValue: key.child_num)]
+            }
+            let originFingerprint = overrideOriginFingerprint ?? Wally.fingerprint(for: key)
+            let o = DerivationPath.Origin.fingerprint(originFingerprint)
+            self.parent = DerivationPath(steps: steps, origin: o, depth: Int(key.depth))
+        }
+        self.children = children ?? .init()
+        if isMaster {
+            self.parentFingerprint = nil
+        } else {
+            self.parentFingerprint = deserialize(UInt32.self, Data(of: key.parent160))!
+        }
+    }
     
-    public init(bip39Seed: BIP39.Seed, useInfo: UseInfo = .init(), children: DerivationPath? = nil) throws {
+    public init(bip39Seed: BIP39.Seed, useInfo: UseInfo? = nil, children: DerivationPath? = nil) throws {
+        let useInfo = useInfo ?? .init()
         guard let key = Wally.hdKey(bip39Seed: bip39Seed, network: useInfo.network) else {
             // From libwally-core docs:
             // The entropy passed in may produce an invalid key. If this happens, WALLY_ERROR will be returned
@@ -105,15 +147,15 @@ open class ProtoHDKey {
         self.keyType = .private
         self.keyData = Data(of: key.priv_key)
         self.chainCode = Data(of: key.chain_code)
-        self.useInfo = UseInfo(asset: useInfo.asset, network: useInfo.network)
+        self.useInfo = useInfo
         self.parent = DerivationPath(origin: .fingerprint(Wally.fingerprint(for: key)))
-        self.children = children
+        self.children = children ?? .init()
         self.parentFingerprint = nil
     }
     
     public init(seed: Seed, useInfo: UseInfo = .init(), origin: DerivationPath? = nil, children: DerivationPath? = nil) throws {
         let bip39Seed = BIP39.Seed(bip39: seed.bip39)
-        guard let key = LibWally.HDKey(bip39Seed: bip39Seed, network: useInfo.network) else {
+        guard let key = Wally.hdKey(bip39Seed: bip39Seed, network: useInfo.network) else {
             // From libwally-core docs:
             // The entropy passed in may produce an invalid key. If this happens, WALLY_ERROR will be returned
             // and the caller should retry with new entropy.
@@ -122,15 +164,17 @@ open class ProtoHDKey {
         
         self.isMaster = true
         self.keyType = .private
-        self.keyData = Data(of: key.wallyExtKey.priv_key)
-        self.chainCode = Data(of: key.wallyExtKey.chain_code)
+        self.keyData = Data(of: key.priv_key)
+        self.chainCode = Data(of: key.chain_code)
         self.useInfo = UseInfo(asset: useInfo.asset, network: useInfo.network)
-        self.parent = origin
-        self.children = children
+        self.parent = origin ?? .init()
+        self.children = children ?? .init()
         self.parentFingerprint = origin?.originFingerprint
     }
 
-    public init(parent: ProtoHDKey, derivedKeyType: KeyType, childDerivation: DerivationStep) throws {
+    public init(parent: ProtoHDKey, derivedKeyType: KeyType? = nil, childDerivation: DerivationStep, wildcardChildNum: UInt32? = nil) throws {
+        let derivedKeyType = derivedKeyType ?? parent.keyType
+        
         guard parent.keyType == .private || derivedKeyType == .public else {
             throw Error.cannotDerivePrivateFromPublic
         }
@@ -140,7 +184,7 @@ open class ProtoHDKey {
         
         self.isMaster = false
 
-        guard let childNum = childDerivation.rawValue() else {
+        guard let childNum = childDerivation.rawValue(wildcardChildNum: wildcardChildNum) else {
             throw Error.cannotDeriveInspecificStep
         }
         guard let derivedKey = Wally.key(from: parent.wallyExtKey, childNum: childNum, isPrivate: derivedKeyType.isPrivate) else {
@@ -154,7 +198,8 @@ open class ProtoHDKey {
 
         self.parentFingerprint = parent.keyFingerprint
         let origin: DerivationPath
-        if let parentOrigin = parent.parent {
+//        if let parentOrigin = parent.parent {
+        let parentOrigin = parent.parent
             var steps = parentOrigin.steps
             steps.append(childDerivation)
             let sourceFingerprint = parentOrigin.originFingerprint ?? parentFingerprint
@@ -166,39 +211,51 @@ open class ProtoHDKey {
                 depth = 1
             }
             origin = DerivationPath(steps: steps, origin: o, depth: depth)
-        } else {
-            let o: DerivationPath.Origin? = parentFingerprint != nil ? .fingerprint(parentFingerprint!) : nil
-            origin = DerivationPath(steps: [childDerivation], origin: o, depth: 1)
-        }
+//        } else {
+//            let o: DerivationPath.Origin? = parentFingerprint != nil ? .fingerprint(parentFingerprint!) : nil
+//            origin = DerivationPath(steps: [childDerivation], origin: o, depth: 1)
+//        }
         self.parent = origin
-        self.children = nil
+        self.children = .init()
     }
     
-    public init(parent: ProtoHDKey, derivedKeyType: KeyType, childDerivationPath: DerivationPath, isDerivable: Bool = true) throws {
+    public init(parent: ProtoHDKey, derivedKeyType: KeyType? = nil, childDerivationPath: DerivationPath, isDerivable: Bool = true, wildcardChildNum: UInt32? = nil, privateKeyProvider: PrivateKeyProvider? = nil, children: DerivationPath? = nil) throws {
+        let derivedKeyType = derivedKeyType ?? parent.keyType
+        
+        guard parent.isDerivable else {
+            throw Error.cannotDeriveFromNonDerivable
+        }
+
         var effectiveDerivationPath = childDerivationPath
         if effectiveDerivationPath.origin != nil {
-            let parentDepth = parent.parent?.effectiveDepth ?? 0
+            let parentDepth = parent.parent.effectiveDepth
             guard let p = childDerivationPath.dropFirst(parentDepth) else {
                 throw Error.invalidDepth
             }
             effectiveDerivationPath = p
         }
 
+        var workingKey = parent
         if parent.keyType == .public {
             if derivedKeyType == .private {
                 throw Error.cannotDerivePrivateFromPublic
             } else if effectiveDerivationPath.isHardened {
-                throw Error.cannotDeriveHardenedFromPublic
+                guard
+                    let privateKeyProvider = privateKeyProvider,
+                    let privateKey = privateKeyProvider(workingKey),
+                    privateKey.isPrivate
+                else {
+                    throw Error.cannotDeriveHardenedFromPublic
+                }
+                workingKey = privateKey
             }
         }
-        guard parent.isDerivable else {
-            throw Error.cannotDeriveFromNonDerivable
-        }
 
-        var derivedKey = parent
+        var derivedKey = workingKey
         for step in effectiveDerivationPath.steps {
-            derivedKey = try ProtoHDKey(parent: derivedKey, derivedKeyType: parent.keyType, childDerivation: step)
+            derivedKey = try ProtoHDKey(parent: derivedKey, derivedKeyType: parent.keyType, childDerivation: step, wildcardChildNum: wildcardChildNum)
         }
+        derivedKey = try ProtoHDKey(key: derivedKey, derivedKeyType: derivedKeyType)
         self.isMaster = false
         self.keyType = derivedKeyType
         self.keyData = derivedKey.keyData
@@ -206,7 +263,7 @@ open class ProtoHDKey {
         self.useInfo = parent.useInfo
         self.parentFingerprint = derivedKey.parentFingerprint
         self.parent = derivedKey.parent
-        self.children = derivedKey.children
+        self.children = children ?? derivedKey.children
     }
     
     public var isPrivate: Bool {
@@ -216,9 +273,13 @@ open class ProtoHDKey {
     public var isDerivable: Bool {
         chainCode != nil
     }
-    
+
+    public var requiresWildcardChildNum: Bool {
+        children.hasWildcard
+    }
+
     public var originFingerprint: UInt32? {
-        parent?.originFingerprint
+        parent.originFingerprint
     }
     
     public var keyFingerprintData: Data {
@@ -228,17 +289,17 @@ open class ProtoHDKey {
     public var keyFingerprint: UInt32 {
         Wally.fingerprint(for: wallyExtKey)
     }
-
-    public var wallyHDKey: LibWally.HDKey {
-        LibWally.HDKey(key: wallyExtKey, parent: parent ?? .init(), children: children ?? .init())
+    
+    public var `public`: ProtoHDKey {
+        try! ProtoHDKey(key: self, derivedKeyType: .public)
     }
     
-    public var base58: String? {
-        base58PrivateKey ?? base58PublicKey
+    public var base58: String {
+        base58PrivateKey ?? base58PublicKey ?? "invalid"
     }
     
-    public var base58PublicKey: String {
-        Wally.base58(from: wallyExtKey, isPrivate: false)!
+    public var base58PublicKey: String? {
+        Wally.base58(from: wallyExtKey, isPrivate: false)
     }
     
     public var base58PrivateKey: String? {
@@ -262,8 +323,9 @@ open class ProtoHDKey {
     public var wallyExtKey: ext_key {
         var k = ext_key()
         
-        if let parent = parent {
-            k.depth = UInt8(parent.effectiveDepth)
+        let effectiveDepth = parent.effectiveDepth
+        if effectiveDepth > 0 {
+            k.depth = UInt8(effectiveDepth)
 
             if let lastStep = parent.steps.last,
                case let ChildIndexSpec.index(childIndex) = lastStep.childIndexSpec {
@@ -307,5 +369,25 @@ open class ProtoHDKey {
         
         k.checkValid()
         return k
+    }
+
+    public var description: String {
+        base58
+    }
+
+    public func description(withParent: Bool = false, withChildren: Bool = false) -> String {
+        var comps: [String] = []
+        if withParent && !parent.isEmpty {
+            comps.append("[\(parent)]")
+        }
+        comps.append(base58)
+        if withChildren && !children.isEmpty {
+            comps.append("/\(children)")
+        }
+        return comps.joined()
+    }
+
+    public var fullDescription: String {
+        description(withParent: true, withChildren: true)
     }
 }
