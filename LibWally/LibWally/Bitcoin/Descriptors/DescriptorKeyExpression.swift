@@ -39,7 +39,7 @@ extension DescriptorKeyExpression {
             guard let k2 = k.derive(path: k.children, wildcardChildNum: wildcardChildNum, privateKeyProvider: privateKeyProvider) else {
                 return nil
             }
-            data = k2.pubKey.data
+            data = k2.ecPublicKey.data
         }
         return data
     }

@@ -266,11 +266,15 @@ extension WallyExtKey: CustomStringConvertible {
     }
     
     public var isPrivate: Bool {
-        return priv_key.0 == BIP32_FLAG_KEY_PRIVATE
+        priv_key.0 == BIP32_FLAG_KEY_PRIVATE
+    }
+    
+    public var keyType: KeyType {
+        KeyType(isPrivate: isPrivate)
     }
     
     public var isMaster: Bool {
-        return depth == 0
+        depth == 0
     }
     
     public static func version_is_valid(ver: UInt32, flags: UInt32) -> Bool

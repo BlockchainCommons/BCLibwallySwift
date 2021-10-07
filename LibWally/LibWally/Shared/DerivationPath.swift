@@ -8,102 +8,10 @@
 import Foundation
 @_implementationOnly import WolfBase
 
-public struct DerivationStep : Equatable {
-    public let index: Index
-    public let isHardened: Bool
-    
-    public enum Index: Equatable {
-        case childNum(UInt32)
-        case wildcard
-    }
-    
-    public var isWildcard: Bool {
-        index == .wildcard
-    }
-    
-    public init?(_ index: Index, isHardened: Bool = false) {
-        if case let .childNum(i) = index {
-            guard i < BIP32_INITIAL_HARDENED_CHILD else {
-                return nil
-            }
-        }
-        self.index = index
-        self.isHardened = isHardened
-    }
-    
-    public init?(_ index: UInt32, isHardened: Bool = false) {
-        self.init(.childNum(index), isHardened: isHardened)
-    }
-    
-    public init(rawValue: UInt32) {
-        if rawValue < BIP32_INITIAL_HARDENED_CHILD {
-            self.index = .childNum(rawValue)
-            self.isHardened = false
-        } else {
-            self.index = .childNum(rawValue - BIP32_INITIAL_HARDENED_CHILD)
-            self.isHardened = true
-        }
-    }
-    
-    public init?(string: String) {
-        guard !string.isEmpty else {
-            return nil
-        }
-        
-        var s = string
-        let isHardened: Bool
-        if "'h".contains(s.last!) {
-            isHardened = true
-            s.removeLast()
-        } else {
-            isHardened = false
-        }
-        
-        let index: Index
-        if s == "*" {
-            index = .wildcard
-        } else if let v = UInt32(s) {
-            index = .childNum(v)
-        } else {
-            return nil
-        }
-        
-        self.init(index, isHardened: isHardened)
-    }
-    
-    public func rawValue(wildcardChildNum: UInt32? = nil) -> UInt32? {
-        let childNum: UInt32?
-        if case let .childNum(num) = index {
-            childNum = num
-        } else {
-            childNum = wildcardChildNum
-        }
-        guard let childNum = childNum else {
-            return nil
-        }
-        if isHardened {
-            return childNum + BIP32_INITIAL_HARDENED_CHILD
-        } else {
-            return childNum
-        }
-    }
-}
-
-extension DerivationStep: CustomStringConvertible {
-    public var description: String {
-        let value: String
-        if case let .childNum(index) = index {
-            value = String(index)
-        } else {
-            value = "*"
-        }
-        return value + (isHardened ? "h" : "")
-    }
-}
-
 public struct DerivationPath : Equatable {
-    public let origin: Origin?
-    public let steps: [DerivationStep]
+    public var origin: Origin?
+    public var steps: [DerivationStep]
+    public var depth: Int?
     
     public enum Origin: Equatable, CustomStringConvertible {
         case fingerprint(UInt32)
@@ -124,49 +32,33 @@ public struct DerivationPath : Equatable {
         self.steps = []
     }
     
-    public init?(rawPath: [UInt32], origin: Origin? = nil) {
-        let steps = rawPath.map { DerivationStep(rawValue: $0) }
-        self.init(steps: steps, origin: origin)
-    }
-    
-    public var isEmpty: Bool {
-        steps.isEmpty
-    }
-    
-    public var isHardened: Bool {
-        steps.first(where: { $0.isHardened } ) != nil
-    }
-    
-    public var hasWildcard: Bool {
-        steps.contains(where: { $0.isWildcard })
-    }
-    
-    public func rawPath(wildcardChildNum: UInt32? = nil) -> [UInt32?] {
-        steps.map { $0.rawValue(wildcardChildNum: wildcardChildNum) }
-    }
-    
-    public init(origin: Origin?) {
-        self.steps = []
-        self.origin = origin
-    }
-    
-    public init(steps: [DerivationStep], origin: Origin? = nil) {
+    public init(steps: [DerivationStep], origin: Origin? = nil, depth: Int? = nil) {
         self.steps = steps
         self.origin = origin
+        self.depth = depth
+    }
+
+    public init?(rawPath: [UInt32], origin: Origin? = nil, depth: Int? = nil) {
+        let steps = rawPath.map { DerivationStep(rawValue: $0) }
+        self.init(steps: steps, origin: origin, depth: depth)
     }
     
-    public init?(step: DerivationStep, origin: Origin? = nil) {
-        self.init(steps: [step], origin: origin)
+    public init(origin: Origin?, depth: Int? = nil) {
+        self.steps = []
+        self.origin = origin
+        self.depth = depth
     }
     
-    public init?(index: Int, origin: Origin? = nil) {
-        guard let step = DerivationStep(UInt32(index)) else {
-            return nil
-        }
-        self.init(steps: [step], origin: origin)
+    public init(step: DerivationStep, origin: Origin? = nil, depth: Int? = nil) {
+        self.init(steps: [step], origin: origin, depth: depth)
     }
     
-    public init?(string: String) {
+    public init(index: ChildIndex, origin: Origin? = nil, depth: Int? = nil) {
+        let step = DerivationStep(.index(index))
+        self.init(steps: [step], origin: origin, depth: depth)
+    }
+    
+    public init?(string: String, requireFixed: Bool = false) {
         var components = string.split(separator: "/")
         guard !components.isEmpty else {
             return nil
@@ -195,29 +87,84 @@ public struct DerivationPath : Equatable {
             return nil
         }
         
+        guard !requireFixed || steps.allSatisfy({ !$0.isFixed }) else {
+            return nil
+        }
+        
         self.init(steps: steps, origin: origin)
     }
     
-    public func chop(depth: Int) -> DerivationPath? {
-        if depth > steps.count {
+    public var originFingerprint: UInt32? {
+        get {
+            guard case let .fingerprint(fingerprint) = origin else {
+                return nil
+            }
+            return fingerprint
+        }
+        
+        set {
+            if let f = newValue {
+                origin = .fingerprint(f)
+            } else {
+                origin = nil
+            }
+        }
+    }
+
+    public var effectiveDepth: Int {
+        return depth ?? steps.count
+    }
+
+    public var isEmpty: Bool {
+        steps.isEmpty
+    }
+    
+    public var hasWildcard: Bool {
+        steps.contains(where: { $0.isWildcard })
+    }
+    
+    public func rawPath(wildcardChildNum: UInt32? = nil) -> [UInt32?] {
+        steps.map { $0.rawValue(wildcardChildNum: wildcardChildNum) }
+    }
+    
+    public func dropFirst(_ k: Int) -> DerivationPath? {
+        if k > steps.count {
             return nil
         }
         var newSteps = self.steps
-        newSteps.removeFirst(Int(depth))
+        newSteps.removeFirst(k)
         return DerivationPath(steps: newSteps, origin: nil)
     }
-}
-
-extension DerivationPath: CustomStringConvertible {
-    public var description: String {
+    
+    public func toString(format: DerivationStepFormat = .tickMark) -> String {
         var comps: [String] = []
         if let origin = origin {
             comps.append(origin.description)
         }
         for step in steps {
-            comps.append(step.description)
+            comps.append(step.toString(format: format))
         }
         return comps.joined(separator: "/")
+    }
+    
+    var isFixed: Bool {
+        steps.allSatisfy { $0.isFixed }
+    }
+    
+    var isHardened: Bool {
+        steps.contains { $0.isHardened }
+    }
+}
+
+extension DerivationPath: ExpressibleByArrayLiteral {
+    public init(arrayLiteral elements: DerivationStep...) {
+        self.init(steps: elements)
+    }
+}
+
+extension DerivationPath: CustomStringConvertible {
+    public var description: String {
+        toString()
     }
 }
 

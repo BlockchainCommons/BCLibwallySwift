@@ -42,7 +42,7 @@ open class Account {
         guard let accountKey = accountKey else {
             return nil
         }
-        return accountKey.privKey
+        return accountKey.ecPrivateKey
     }()
     
     public private(set) lazy var accountECPublicKey: ECPublicKey? = {

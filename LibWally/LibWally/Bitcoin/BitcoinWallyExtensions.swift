@@ -31,7 +31,9 @@ extension Wally {
             wally_free_string(output)
         }
         return withUnsafePointer(to: key) {
-            precondition(bip32_key_to_base58($0, flags, &output) == WALLY_OK)
+            guard bip32_key_to_base58($0, flags, &output) == WALLY_OK else {
+                return nil
+            }
             return String(cString: output!)
         }
     }

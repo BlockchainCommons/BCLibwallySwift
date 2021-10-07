@@ -70,7 +70,7 @@ public struct PSBTInput {
             }
             if masterKeyFingerprint == originFingerprint {
                 if let childKey = hdKey.derive(path: path) {
-                    if childKey.pubKey == origin.key {
+                    if childKey.ecPublicKey == origin.key {
                         result[origin.key] = origin.value
                     }
                 }

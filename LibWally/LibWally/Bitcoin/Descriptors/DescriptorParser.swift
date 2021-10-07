@@ -125,7 +125,7 @@ final class DescriptorParser: Parser {
         return i
     }
 
-    func parseChildnum() -> UInt32? {
+    func parseChildnum() -> ChildIndex? {
         let transaction = Transaction(self)
         guard
             let token = tokens.next(),
@@ -138,7 +138,7 @@ final class DescriptorParser: Parser {
             return nil
         }
         transaction.commit()
-        return UInt32(i)
+        return ChildIndex(UInt32(i))
     }
 
     func parseWildcard() -> Bool {
@@ -189,17 +189,17 @@ final class DescriptorParser: Parser {
         }
     }
 
-    func parseIndex() -> DerivationStep.Index? {
+    func parseIndex() -> ChildIndexSpec? {
         if parseWildcard() {
-            return .wildcard
+            return .indexWildcard
         }
         if let childNum = parseChildnum() {
-            return .childNum(childNum)
+            return .index(childNum)
         }
         return nil
     }
     
-    func expectIndex() throws -> DerivationStep.Index {
+    func expectIndex() throws -> ChildIndexSpec {
         guard let index = parseIndex() else {
             throw error("Expected index.")
         }
@@ -233,7 +233,7 @@ final class DescriptorParser: Parser {
             steps.append(step)
         }
         if !steps.isEmpty {
-            guard steps.dropLast().allSatisfy({ $0.index != .wildcard }) else {
+            guard steps.dropLast().allSatisfy({ $0.childIndexSpec != .indexWildcard }) else {
                 if allowFinalWildcard {
                     throw error("Wildcard not allowed except on last step.")
                 } else {
@@ -241,7 +241,7 @@ final class DescriptorParser: Parser {
                 }
             }
             if !allowFinalWildcard {
-                guard steps.last!.index != .wildcard else {
+                guard steps.last!.childIndexSpec != .indexWildcard else {
                     throw error("Wildcard not allowed.")
                 }
             }

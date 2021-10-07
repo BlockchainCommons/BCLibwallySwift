@@ -39,7 +39,7 @@ public struct PSBTOutput {
         // Check that origin ends with 0/* or 1/*
         let steps = originPath.steps
         if steps.count < 2 ||
-                !(steps.reversed()[1] == .init(0)! || steps.reversed()[1] == .init(1)!) ||
+                !(steps.reversed()[1] == .init(0) || steps.reversed()[1] == .init(1)) ||
             steps.reversed()[0].isHardened
         {
             return false
@@ -77,7 +77,7 @@ public struct PSBTOutput {
             return false
         }
 
-        if childKey.pubKey != pubKey {
+        if childKey.ecPublicKey != pubKey {
             return false
         }
 
@@ -127,7 +127,7 @@ public struct PSBTOutput {
             return false
         }
 
-        var changeIndex: UInt32? = nil
+        var changeIndex: ChildIndex? = nil
         for origin in origins {
             if !(PSBTOutput.commonOriginChecks(originPath: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
                 return false
@@ -138,7 +138,7 @@ public struct PSBTOutput {
             // This needs less than 1 GB of RAM, but is fairly slow.
             let step = origin.value.steps.reversed()[0]
             if !step.isHardened {
-                guard case let .childNum(i) = step.index else {
+                guard case let .index(i) = step.childIndexSpec else {
                     return false
                 }
                 if i > 999999 {

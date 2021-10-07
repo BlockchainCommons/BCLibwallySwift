@@ -101,7 +101,7 @@ public struct HDKey : CustomStringConvertible {
         children.hasWildcard
     }
 
-    public var xpub: String {
+    public var base58PublicKey: String {
         var hdkey = wallyExtKey
         var output: UnsafeMutablePointer<Int8>?
         defer {
@@ -113,21 +113,7 @@ public struct HDKey : CustomStringConvertible {
         return String(cString: output!)
     }
 
-    public var pubKey: ECCompressedPublicKey {
-        ECCompressedPublicKey(Data(of: wallyExtKey.pub_key))!
-    }
-
-    public var privKey: ECPrivateKey? {
-        if !isPrivate {
-            return nil
-        }
-        var data = Data(of: wallyExtKey.priv_key)
-        // skip prefix byte 0
-        precondition(data.popFirst() != nil)
-        return ECPrivateKey(data)!
-    }
-
-    public var xpriv: String? {
+    public var base58PrivateKey: String? {
         if !isPrivate {
             return nil
         }
@@ -142,8 +128,22 @@ public struct HDKey : CustomStringConvertible {
         return String(cString: output!)
     }
     
+    public var ecPublicKey: ECCompressedPublicKey {
+        ECCompressedPublicKey(Data(of: wallyExtKey.pub_key))!
+    }
+
+    public var ecPrivateKey: ECPrivateKey? {
+        if !isPrivate {
+            return nil
+        }
+        var data = Data(of: wallyExtKey.priv_key)
+        // skip prefix byte 0
+        precondition(data.popFirst() != nil)
+        return ECPrivateKey(data)!
+    }
+
     public var base58: String {
-        xpriv ?? xpub
+        base58PrivateKey ?? base58PublicKey
     }
     
     public var `public`: HDKey {
@@ -176,10 +176,10 @@ public struct HDKey : CustomStringConvertible {
             return self
         }
         
-        let depth = wallyExtKey.depth
+        let depth = Int(wallyExtKey.depth)
         var tmpPath = path
         if path.origin != nil {
-            guard let p = path.chop(depth: Int(depth)) else {
+            guard let p = path.dropFirst(depth) else {
                 // Invalid depth.
                 return nil
             }

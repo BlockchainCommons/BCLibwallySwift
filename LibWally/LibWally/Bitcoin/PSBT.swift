@@ -139,7 +139,7 @@ public struct PSBT : Equatable {
             for origin in input.signableOrigins(with: hdKey) {
                 if
                     let childKey = hdKey.derive(path: origin.value),
-                    let privKey = childKey.privKey,
+                    let privKey = childKey.ecPrivateKey,
                     privKey.public == origin.key,
                     let signedPSBT = psbt.signed(with: privKey)
                 {

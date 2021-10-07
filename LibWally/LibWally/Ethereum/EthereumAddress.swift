@@ -31,7 +31,7 @@ extension Ethereum {
         }
         
         public convenience init(hdKey: HDKey) {
-            self.init(key: hdKey.pubKey, network: hdKey.network)
+            self.init(key: hdKey.ecPublicKey, network: hdKey.network)
         }
 
         open var description: String {

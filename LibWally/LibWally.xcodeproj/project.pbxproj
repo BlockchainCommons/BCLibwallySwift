@@ -31,6 +31,8 @@
 		03A56115256A399700181CB8 /* PSBTOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A56114256A399700181CB8 /* PSBTOutput.swift */; };
 		03A5611B256A802900181CB8 /* ScriptSig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611A256A802900181CB8 /* ScriptSig.swift */; };
 		03A5611F256A805E00181CB8 /* Witness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611E256A805E00181CB8 /* Witness.swift */; };
+		793CFCAF270C152B005792A1 /* ProtoHDKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793CFCAE270C152A005792A1 /* ProtoHDKey.swift */; };
+		793CFCB1270C155B005792A1 /* KeyType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793CFCB0270C155B005792A1 /* KeyType.swift */; };
 		795F8C2526F1E70F009D90FB /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 795F8C2426F1E70F009D90FB /* CryptoSwift */; };
 		795F8C2826F1E739009D90FB /* Ethereum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795F8C2726F1E739009D90FB /* Ethereum.swift */; };
 		795F8C2A26F1E7F8009D90FB /* EthereumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 795F8C2926F1E7F8009D90FB /* EthereumTests.swift */; };
@@ -76,12 +78,17 @@
 		79B02BFD26E59E5400950779 /* Script.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFC26E59E5400950779 /* Script.swift */; };
 		79B02BFF26E681CF00950779 /* ScriptOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */; };
 		79B2F0C426EB31E7008BB1FE /* TxHash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B2F0C326EB31E7008BB1FE /* TxHash.swift */; };
+		79B44F53270AF4A3008FED77 /* ChildIndexSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B44F52270AF4A3008FED77 /* ChildIndexSpec.swift */; };
+		79B44F55270AF4B6008FED77 /* DerivationStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B44F54270AF4B6008FED77 /* DerivationStep.swift */; };
+		79B44F57270AF509008FED77 /* ChildIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B44F56270AF509008FED77 /* ChildIndex.swift */; };
+		79B44F59270AFAAF008FED77 /* ChildIndexRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B44F58270AFAAF008FED77 /* ChildIndexRange.swift */; };
 		79C7CE0F26E1C35700C5CD75 /* DescriptorError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */; };
 		79C7CE1126E1C56500C5CD75 /* Descriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1026E1C56500C5CD75 /* Descriptor.swift */; };
 		79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */; };
 		79C7CE1526E1FBF100C5CD75 /* ParseTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1426E1FBF100C5CD75 /* ParseTransaction.swift */; };
 		79C7CE1726E217F700C5CD75 /* ScriptOpcode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1626E217F700C5CD75 /* ScriptOpcode.swift */; };
 		79C7CE1926E21D3E00C5CD75 /* ScriptOpcodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C7CE1826E21D3E00C5CD75 /* ScriptOpcodeTests.swift */; };
+		79E7630B270C32A300FC0F03 /* HDKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E7630A270C32A300FC0F03 /* HDKeyTests.swift */; };
 		79EC702526D75B2200A3D4E9 /* WallyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79EC702426D75B2200A3D4E9 /* WallyUtils.swift */; };
 /* End PBXBuildFile section */
 
@@ -124,6 +131,8 @@
 		03A56114256A399700181CB8 /* PSBTOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSBTOutput.swift; sourceTree = "<group>"; };
 		03A5611A256A802900181CB8 /* ScriptSig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptSig.swift; sourceTree = "<group>"; };
 		03A5611E256A805E00181CB8 /* Witness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Witness.swift; sourceTree = "<group>"; };
+		793CFCAE270C152A005792A1 /* ProtoHDKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoHDKey.swift; sourceTree = "<group>"; };
+		793CFCB0270C155B005792A1 /* KeyType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyType.swift; sourceTree = "<group>"; };
 		795F8C2726F1E739009D90FB /* Ethereum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ethereum.swift; sourceTree = "<group>"; };
 		795F8C2926F1E7F8009D90FB /* EthereumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EthereumTests.swift; sourceTree = "<group>"; };
 		795F8C2B26F1EC6E009D90FB /* Seed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Seed.swift; sourceTree = "<group>"; };
@@ -166,12 +175,17 @@
 		79B02BFC26E59E5400950779 /* Script.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Script.swift; sourceTree = "<group>"; };
 		79B02BFE26E681CF00950779 /* ScriptOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOperationTests.swift; sourceTree = "<group>"; };
 		79B2F0C326EB31E7008BB1FE /* TxHash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TxHash.swift; sourceTree = "<group>"; };
+		79B44F52270AF4A3008FED77 /* ChildIndexSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildIndexSpec.swift; sourceTree = "<group>"; };
+		79B44F54270AF4B6008FED77 /* DerivationStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DerivationStep.swift; sourceTree = "<group>"; };
+		79B44F56270AF509008FED77 /* ChildIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildIndex.swift; sourceTree = "<group>"; };
+		79B44F58270AFAAF008FED77 /* ChildIndexRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildIndexRange.swift; sourceTree = "<group>"; };
 		79C7CE0E26E1C35700C5CD75 /* DescriptorError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorError.swift; sourceTree = "<group>"; };
 		79C7CE1026E1C56500C5CD75 /* Descriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptor.swift; sourceTree = "<group>"; };
 		79C7CE1226E1C57600C5CD75 /* DescriptorKeyExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptorKeyExpression.swift; sourceTree = "<group>"; };
 		79C7CE1426E1FBF100C5CD75 /* ParseTransaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParseTransaction.swift; sourceTree = "<group>"; };
 		79C7CE1626E217F700C5CD75 /* ScriptOpcode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOpcode.swift; sourceTree = "<group>"; };
 		79C7CE1826E21D3E00C5CD75 /* ScriptOpcodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptOpcodeTests.swift; sourceTree = "<group>"; };
+		79E7630A270C32A300FC0F03 /* HDKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDKeyTests.swift; sourceTree = "<group>"; };
 		79EC702426D75B2200A3D4E9 /* WallyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallyUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -234,6 +248,7 @@
 			children = (
 				030A6404250382A300A1D27E /* AddressTests.swift */,
 				030A6406250382A300A1D27E /* BIP32Tests.swift */,
+				79E7630A270C32A300FC0F03 /* HDKeyTests.swift */,
 				030A6401250382A200A1D27E /* BIP39Tests.swift */,
 				030A6405250382A300A1D27E /* PSBTTests.swift */,
 				030A6407250382A300A1D27E /* ScriptTests.swift */,
@@ -305,8 +320,14 @@
 				03A560F62568FE9D00181CB8 /* Network.swift */,
 				796FE5D726D7764C00DDB32A /* UseInfo.swift */,
 				03A560FC2568FEFD00181CB8 /* HDKey.swift */,
+				793CFCAE270C152A005792A1 /* ProtoHDKey.swift */,
+				793CFCB0270C155B005792A1 /* KeyType.swift */,
 				795F8C2B26F1EC6E009D90FB /* Seed.swift */,
 				030A63F82503702700A1D27E /* BIP39.swift */,
+				79B44F56270AF509008FED77 /* ChildIndex.swift */,
+				79B44F58270AFAAF008FED77 /* ChildIndexRange.swift */,
+				79B44F52270AF4A3008FED77 /* ChildIndexSpec.swift */,
+				79B44F54270AF4B6008FED77 /* DerivationStep.swift */,
 				030A63F62503702700A1D27E /* DerivationPath.swift */,
 				795F8C2D26F1ED5A009D90FB /* SecureRandomNumberGenerator.swift */,
 				795F8C2F26F1EE83009D90FB /* DeterministicRandom.swift */,
@@ -503,13 +524,17 @@
 				795F8C4426F5A03F009D90FB /* DataExtensions.swift in Sources */,
 				030A63FE2503702700A1D27E /* PSBT.swift in Sources */,
 				79C7CE1526E1FBF100C5CD75 /* ParseTransaction.swift in Sources */,
+				79B44F53270AF4A3008FED77 /* ChildIndexSpec.swift in Sources */,
+				793CFCB1270C155B005792A1 /* KeyType.swift in Sources */,
 				03A560F72568FE9D00181CB8 /* Network.swift in Sources */,
 				795F8C2826F1E739009D90FB /* Ethereum.swift in Sources */,
+				79B44F57270AF509008FED77 /* ChildIndex.swift in Sources */,
 				795F8C4E26F5BAC6009D90FB /* EthereumAccountExtensions.swift in Sources */,
 				795F8C2C26F1EC6E009D90FB /* Seed.swift in Sources */,
 				030A63FD2503702700A1D27E /* DerivationPath.swift in Sources */,
 				79B02BFB26E59E3100950779 /* ScriptOperation.swift in Sources */,
 				79865C5726E0A4EC00897441 /* WIF.swift in Sources */,
+				79B44F59270AFAAF008FED77 /* ChildIndexRange.swift in Sources */,
 				030A63FB2503702700A1D27E /* ScriptPubKey.swift in Sources */,
 				79C7CE1326E1C57600C5CD75 /* DescriptorKeyExpression.swift in Sources */,
 				795F8C3E26F583B8009D90FB /* Bitcoin.swift in Sources */,
@@ -520,8 +545,10 @@
 				795F8C4026F59DA5009D90FB /* AddressProtocol.swift in Sources */,
 				79C7CE1726E217F700C5CD75 /* ScriptOpcode.swift in Sources */,
 				03A56115256A399700181CB8 /* PSBTOutput.swift in Sources */,
+				79B44F55270AF4B6008FED77 /* DerivationStep.swift in Sources */,
 				03A5610525691F1600181CB8 /* TxOutput.swift in Sources */,
 				795F8C4A26F5B966009D90FB /* BitcoinAccountExtensions.swift in Sources */,
+				793CFCAF270C152B005792A1 /* ProtoHDKey.swift in Sources */,
 				03A5611F256A805E00181CB8 /* Witness.swift in Sources */,
 				796FE5D826D7764C00DDB32A /* UseInfo.swift in Sources */,
 				030A63FF2503702700A1D27E /* BIP39.swift in Sources */,
@@ -545,6 +572,7 @@
 				795F8C2A26F1E7F8009D90FB /* EthereumTests.swift in Sources */,
 				798FDDFF26EAE8D100677B33 /* VarIntTests.swift in Sources */,
 				030A640C250382A300A1D27E /* PSBTTests.swift in Sources */,
+				79E7630B270C32A300FC0F03 /* HDKeyTests.swift in Sources */,
 				030A640A250382A300A1D27E /* TransactionTests.swift in Sources */,
 				795F8C4826F5B2CA009D90FB /* AccountTests.swift in Sources */,
 				030A640E250382A300A1D27E /* ScriptTests.swift in Sources */,
