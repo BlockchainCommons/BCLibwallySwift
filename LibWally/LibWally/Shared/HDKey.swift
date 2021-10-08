@@ -40,8 +40,20 @@ open class HDKey: CustomStringConvertible {
         self.children = children
         self.parentFingerprint = parentFingerprint
     }
+
+    // Copy constructor
+    public init(_ key: HDKey) {
+        self.isMaster = key.isMaster
+        self.keyType = key.keyType
+        self.keyData = key.keyData
+        self.chainCode = key.chainCode
+        self.useInfo = key.useInfo
+        self.parent = key.parent
+        self.children = key.children
+        self.parentFingerprint = key.parentFingerprint
+    }
     
-    public init(key: HDKey, derivedKeyType: KeyType? = nil, isDerivable: Bool = true, parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
+    public convenience init(key: HDKey, derivedKeyType: KeyType? = nil, isDerivable: Bool = true, parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
         let derivedKeyType = derivedKeyType ?? key.keyType
         
         guard key.keyType == .private || derivedKeyType == .public else {
@@ -49,34 +61,35 @@ open class HDKey: CustomStringConvertible {
             throw Error.cannotDerivePrivateFromPublic
         }
 
-        let chainCode = isDerivable ? key.chainCode : nil
-        self.isMaster = key.isMaster
-        self.keyType = derivedKeyType
-        self.chainCode = chainCode
-        self.useInfo = key.useInfo
-        self.parent = parent ?? key.parent
-        self.children = children ?? key.children
-        self.parentFingerprint = key.parentFingerprint
+        let keyData: Data
         if key.keyType == derivedKeyType {
             // private -> private
             // public -> public
-            self.keyData = key.keyData
+            keyData = key.keyData
         } else {
             // private -> public
-            self.keyData = Data(of: key.wallyExtKey.pub_key)
+            keyData = Data(of: key.wallyExtKey.pub_key)
         }
+        
+        self.init(
+            isMaster: key.isMaster,
+            keyType: derivedKeyType,
+            keyData: keyData,
+            chainCode: isDerivable ? key.chainCode : nil,
+            useInfo: key.useInfo,
+            parent: parent ?? key.parent,
+            children: children ?? key.children,
+            parentFingerprint: key.parentFingerprint
+        )
     }
     
-    public init(wallyExtKey key: WallyExtKey, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
-        self.isMaster = key.isMaster
-        self.keyType = key.keyType
+    public convenience init(wallyExtKey key: WallyExtKey, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
+        let keyData: Data
         if key.isPrivate {
-            self.keyData = Data(of: key.priv_key)
+            keyData = Data(of: key.priv_key)
         } else {
-            self.keyData = Data(of: key.pub_key)
+            keyData = Data(of: key.pub_key)
         }
-        self.chainCode = Data(of: key.chain_code)
-        self.useInfo = UseInfo(asset: useInfo.asset, network: key.network!)
 
         let steps: [DerivationStep]
         if key.child_num == 0 {
@@ -84,17 +97,26 @@ open class HDKey: CustomStringConvertible {
         } else {
             steps = [DerivationStep(rawValue: key.child_num)]
         }
+        let newParent: DerivationPath
         if let parent = parent {
-            self.parent = parent
+            newParent = parent
         } else {
             let o = DerivationPath.Origin.fingerprint(Wally.fingerprint(for: key))
-            self.parent = DerivationPath(steps: steps, origin: o, depth: Int(key.depth))
+            newParent = DerivationPath(steps: steps, origin: o, depth: Int(key.depth))
         }
-        self.children = children ?? .init()
-        self.parentFingerprint = deserialize(UInt32.self, Data(of: key.parent160))!
+        self.init(
+            isMaster: key.isMaster,
+            keyType: key.keyType,
+            keyData: keyData,
+            chainCode: Data(of: key.chain_code),
+            useInfo: UseInfo(asset: useInfo.asset, network: key.network!),
+            parent: parent ?? newParent,
+            children: children ?? .init(),
+            parentFingerprint: deserialize(UInt32.self, Data(of: key.parent160))!
+        )
     }
 
-    public init(base58: String, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil, overrideOriginFingerprint: UInt32? = nil) throws {
+    public convenience init(base58: String, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil, overrideOriginFingerprint: UInt32? = nil) throws {
         guard let key = Wally.hdKey(fromBase58: base58) else {
             throw Error.invalidBase58
         }
@@ -104,18 +126,16 @@ open class HDKey: CustomStringConvertible {
         } else {
             isMaster = key.isMaster
         }
-        self.isMaster = isMaster
-        self.keyType = key.keyType
+        let keyData: Data
         if key.isPrivate {
-            self.keyData = Data(of: key.priv_key)
+            keyData = Data(of: key.priv_key)
         } else {
-            self.keyData = Data(of: key.pub_key)
+            keyData = Data(of: key.pub_key)
         }
-        self.chainCode = Data(of: key.chain_code)
-        self.useInfo = UseInfo(asset: useInfo.asset, network: key.network!)
-
+        
+        let newParent: DerivationPath
         if let parent = parent {
-            self.parent = parent
+            newParent = parent
         } else {
             let steps: [DerivationStep]
             if key.child_num == 0 {
@@ -125,17 +145,27 @@ open class HDKey: CustomStringConvertible {
             }
             let originFingerprint = overrideOriginFingerprint ?? Wally.fingerprint(for: key)
             let o = DerivationPath.Origin.fingerprint(originFingerprint)
-            self.parent = DerivationPath(steps: steps, origin: o, depth: Int(key.depth))
+            newParent = DerivationPath(steps: steps, origin: o, depth: Int(key.depth))
         }
-        self.children = children ?? .init()
+        let parentFingerprint: UInt32?
         if isMaster {
-            self.parentFingerprint = nil
+            parentFingerprint = nil
         } else {
-            self.parentFingerprint = deserialize(UInt32.self, Data(of: key.parent160))!
+            parentFingerprint = deserialize(UInt32.self, Data(of: key.parent160))!
         }
+        self.init(
+            isMaster: isMaster,
+            keyType: key.keyType,
+            keyData: keyData,
+            chainCode: Data(of: key.chain_code),
+            useInfo: UseInfo(asset: useInfo.asset, network: key.network!),
+            parent: newParent,
+            children: children ?? .init(),
+            parentFingerprint: parentFingerprint
+        )
     }
     
-    public init(bip39Seed: BIP39.Seed, useInfo: UseInfo? = nil, children: DerivationPath? = nil) throws {
+    public convenience init(bip39Seed: BIP39.Seed, useInfo: UseInfo? = nil, parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
         let useInfo = useInfo ?? .init()
         guard let key = Wally.hdKey(bip39Seed: bip39Seed, network: useInfo.network) else {
             // From libwally-core docs:
@@ -143,36 +173,23 @@ open class HDKey: CustomStringConvertible {
             // and the caller should retry with new entropy.
             throw Error.invalidSeed
         }
-        self.isMaster = true
-        self.keyType = .private
-        self.keyData = Data(of: key.priv_key)
-        self.chainCode = Data(of: key.chain_code)
-        self.useInfo = useInfo
-        self.parent = DerivationPath(origin: .fingerprint(Wally.fingerprint(for: key)))
-        self.children = children ?? .init()
-        self.parentFingerprint = nil
+        self.init(
+            isMaster: true,
+            keyType: .private,
+            keyData: Data(of: key.priv_key),
+            chainCode: Data(of: key.chain_code),
+            useInfo: useInfo,
+            parent: parent ?? DerivationPath(origin: .fingerprint(Wally.fingerprint(for: key))),
+            children: children ?? .init(),
+            parentFingerprint: nil
+        )
     }
     
-    public init(seed: Seed, useInfo: UseInfo = .init(), origin: DerivationPath? = nil, children: DerivationPath? = nil) throws {
-        let bip39Seed = BIP39.Seed(bip39: seed.bip39)
-        guard let key = Wally.hdKey(bip39Seed: bip39Seed, network: useInfo.network) else {
-            // From libwally-core docs:
-            // The entropy passed in may produce an invalid key. If this happens, WALLY_ERROR will be returned
-            // and the caller should retry with new entropy.
-            throw Error.invalidSeed
-        }
-        
-        self.isMaster = true
-        self.keyType = .private
-        self.keyData = Data(of: key.priv_key)
-        self.chainCode = Data(of: key.chain_code)
-        self.useInfo = UseInfo(asset: useInfo.asset, network: useInfo.network)
-        self.parent = origin ?? .init()
-        self.children = children ?? .init()
-        self.parentFingerprint = origin?.originFingerprint
+    public convenience init(seed: Seed, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
+        try self.init(bip39Seed: BIP39.Seed(bip39: seed.bip39), useInfo: useInfo, parent: parent, children: children)
     }
 
-    public init(parent: HDKey, derivedKeyType: KeyType? = nil, childDerivation: DerivationStep, wildcardChildNum: UInt32? = nil) throws {
+    public convenience init(parent: HDKey, derivedKeyType: KeyType? = nil, childDerivation: DerivationStep, wildcardChildNum: UInt32? = nil) throws {
         let derivedKeyType = derivedKeyType ?? parent.keyType
         
         guard parent.keyType == .private || derivedKeyType == .public else {
@@ -181,40 +198,40 @@ open class HDKey: CustomStringConvertible {
         guard parent.isDerivable else {
             throw Error.cannotDeriveFromNonDerivable
         }
-        
-        self.isMaster = false
-        
+                
         guard let childNum = childDerivation.rawValue(wildcardChildNum: wildcardChildNum) else {
             throw Error.cannotDeriveInspecificStep
         }
         guard let derivedKey = Wally.key(from: parent.wallyExtKey, childNum: childNum, isPrivate: derivedKeyType.isPrivate) else {
             throw Error.unknownDerivationError
         }
-        
-        self.keyType = derivedKeyType
-        self.keyData = derivedKeyType == .private ? Data(of: derivedKey.priv_key) : Data(of: derivedKey.pub_key)
-        self.chainCode = Data(of: derivedKey.chain_code)
-        self.useInfo = parent.useInfo
-        
-        self.parentFingerprint = parent.keyFingerprint
+                
         let origin: DerivationPath
         let parentOrigin = parent.parent
         var steps = parentOrigin.steps
         steps.append(childDerivation)
-        let sourceFingerprint = parentOrigin.originFingerprint ?? parentFingerprint
-        let o: DerivationPath.Origin? = sourceFingerprint != nil ? .fingerprint(sourceFingerprint!) : nil
+        let sourceFingerprint = parentOrigin.originFingerprint ?? parent.keyFingerprint
         let depth: Int
         if let parentDepth = parentOrigin.depth {
             depth = parentDepth + 1
         } else {
             depth = 1
         }
-        origin = DerivationPath(steps: steps, origin: o, depth: depth)
-        self.parent = origin
-        self.children = .init()
+        origin = DerivationPath(steps: steps, origin: .fingerprint(sourceFingerprint), depth: depth)
+        self.init(
+            isMaster: false,
+            keyType: derivedKeyType,
+            keyData: derivedKeyType == .private ? Data(of: derivedKey.priv_key) : Data(of: derivedKey.pub_key),
+            chainCode: Data(of: derivedKey.chain_code),
+            useInfo: parent.useInfo,
+            parent: origin,
+            children: .init(),
+            parentFingerprint: parent.keyFingerprint
+        )
     }
     
-    public init(parent: HDKey, derivedKeyType: KeyType? = nil, childDerivationPath: DerivationPath, isDerivable: Bool = true, wildcardChildNum: UInt32? = nil, privateKeyProvider: PrivateKeyProvider? = nil, children: DerivationPath? = nil) throws {
+    //#error("Continue converting to convenience initializers")
+    public convenience init(parent: HDKey, derivedKeyType: KeyType? = nil, childDerivationPath: DerivationPath, isDerivable: Bool = true, wildcardChildNum: UInt32? = nil, privateKeyProvider: PrivateKeyProvider? = nil, children: DerivationPath? = nil) throws {
         let derivedKeyType = derivedKeyType ?? parent.keyType
         
         guard parent.isDerivable else {
@@ -251,15 +268,17 @@ open class HDKey: CustomStringConvertible {
             derivedKey = try HDKey(parent: derivedKey, derivedKeyType: parent.keyType, childDerivation: step, wildcardChildNum: wildcardChildNum)
         }
         derivedKey = try HDKey(key: derivedKey, derivedKeyType: derivedKeyType)
-        self.isMaster = false
-        self.keyType = derivedKeyType
-        self.keyData = derivedKey.keyData
-        self.chainCode = isDerivable ? derivedKey.chainCode : nil
-        self.useInfo = parent.useInfo
-        self.parentFingerprint = derivedKey.parentFingerprint
-        self.parent = derivedKey.parent
-        self.children = children ?? derivedKey.children
-    }
+        self.init(
+            isMaster: false,
+            keyType: derivedKeyType,
+            keyData: derivedKey.keyData,
+            chainCode: isDerivable ? derivedKey.chainCode : nil,
+            useInfo: parent.useInfo,
+            parent: derivedKey.parent,
+            children: children ?? derivedKey.children,
+            parentFingerprint: derivedKey.parentFingerprint
+        )
+ }
     
     public var isPrivate: Bool {
         keyType.isPrivate

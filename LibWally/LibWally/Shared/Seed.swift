@@ -17,6 +17,11 @@ open class Seed {
         self.data = data
     }
     
+    // Copy constructor
+    public init(_ seed: Seed) {
+        self.data = seed.data
+    }
+    
     public convenience init() {
         self.init(data: SecureRandomNumberGenerator.shared.data(count: 16))!
     }
