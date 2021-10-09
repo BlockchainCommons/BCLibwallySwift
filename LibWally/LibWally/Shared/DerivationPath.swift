@@ -79,20 +79,21 @@ public struct DerivationPath : Equatable {
     
     public init?(string: String, requireFixed: Bool = false) {
         var components = string.split(separator: "/")
-        guard !components.isEmpty else {
-            return nil
-        }
         
         let origin: Origin?
-        let o = String(components.first!)
-        if o == "m" {
-            origin = .master
-            components.removeFirst()
-        } else if let data = Data(hex: o), data.count == 4 {
-            origin = .fingerprint(deserialize(UInt32.self, data)!)
-            components.removeFirst()
-        } else {
+        if components.isEmpty {
             origin = nil
+        } else {
+            let o = String(components.first!)
+            if o == "m" {
+                origin = .master
+                components.removeFirst()
+            } else if let data = Data(hex: o), data.count == 4 {
+                origin = .fingerprint(deserialize(UInt32.self, data)!)
+                components.removeFirst()
+            } else {
+                origin = nil
+            }
         }
         
         var steps: [DerivationStep] = []
@@ -106,7 +107,7 @@ public struct DerivationPath : Equatable {
             return nil
         }
         
-        guard !requireFixed || steps.allSatisfy({ !$0.isFixed }) else {
+        guard !requireFixed || steps.allSatisfy({ $0.isFixed }) else {
             return nil
         }
         

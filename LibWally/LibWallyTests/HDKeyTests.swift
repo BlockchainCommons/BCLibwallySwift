@@ -12,6 +12,15 @@ import WolfBase
 class HDKeyTests: XCTestCase {
     let bip39Seed = BIP39.Seed(hex: "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04")!
     
+    func testDerivationPath() {
+        let path1 = DerivationPath(string: "44'/60'/0'/0/0", requireFixed: true)
+        XCTAssertEqual(path1†, "44'/60'/0'/0/0")
+        let path2 = DerivationPath(string: "44'/60'/0'/0/*", requireFixed: true)
+        XCTAssertNil(path2)
+        let path3 = DerivationPath(string: "", requireFixed: true)
+        XCTAssertEqual(path3†, "")
+    }
+    
     func testSeedToHDKey() throws {
         let hdKey = try HDKey(bip39Seed: bip39Seed)
         XCTAssertEqual(hdKey.base58PrivateKey†, "xprv9s21ZrQH143K3h3fDYiay8mocZ3afhfULfb5GX8kCBdno77K4HiA15Tg23wpbeF1pLfs1c5SPmYHrEpTuuRhxMwvKDwqdKiGJS9XFKzUsAF")
