@@ -9,7 +9,7 @@ import Foundation
 @_implementationOnly import WolfBase
 @_implementationOnly import CryptoSwift
 
-open class HDKey: CustomStringConvertible {
+open class HDKey {
     public let isMaster: Bool
     public let keyType: KeyType
     public let keyData: Data
@@ -30,14 +30,14 @@ open class HDKey: CustomStringConvertible {
         case unknownDerivationError
     }
 
-    public init(isMaster: Bool, keyType: KeyType, keyData: Data, chainCode: Data?, useInfo: UseInfo, parent: DerivationPath, children: DerivationPath, parentFingerprint: UInt32?) {
+    public init(isMaster: Bool, keyType: KeyType, keyData: Data, chainCode: Data?, useInfo: UseInfo, parent: DerivationPath?, children: DerivationPath?, parentFingerprint: UInt32?) {
         self.isMaster = isMaster
         self.keyType = keyType
         self.keyData = keyData
         self.chainCode = chainCode
         self.useInfo = useInfo
-        self.parent = parent
-        self.children = children
+        self.parent = parent ?? .init()
+        self.children = children ?? .init()
         self.parentFingerprint = parentFingerprint
     }
 
@@ -83,7 +83,7 @@ open class HDKey: CustomStringConvertible {
         )
     }
     
-    public convenience init(wallyExtKey key: WallyExtKey, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
+    public convenience init(wallyExtKey key: WallyExtKey, useInfo: UseInfo? = nil, parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
         let keyData: Data
         if key.isPrivate {
             keyData = Data(of: key.priv_key)
@@ -104,6 +104,9 @@ open class HDKey: CustomStringConvertible {
             let o = DerivationPath.Origin.fingerprint(Wally.fingerprint(for: key))
             newParent = DerivationPath(steps: steps, origin: o, depth: Int(key.depth))
         }
+        
+        let useInfo = useInfo ?? .init()
+        
         self.init(
             isMaster: key.isMaster,
             keyType: key.keyType,
@@ -111,12 +114,12 @@ open class HDKey: CustomStringConvertible {
             chainCode: Data(of: key.chain_code),
             useInfo: UseInfo(asset: useInfo.asset, network: key.network!),
             parent: parent ?? newParent,
-            children: children ?? .init(),
+            children: children,
             parentFingerprint: deserialize(UInt32.self, Data(of: key.parent160))!
         )
     }
 
-    public convenience init(base58: String, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil, overrideOriginFingerprint: UInt32? = nil) throws {
+    public convenience init(base58: String, useInfo: UseInfo? = nil, parent: DerivationPath? = nil, children: DerivationPath? = nil, overrideOriginFingerprint: UInt32? = nil) throws {
         guard let key = Wally.hdKey(fromBase58: base58) else {
             throw Error.invalidBase58
         }
@@ -153,6 +156,7 @@ open class HDKey: CustomStringConvertible {
         } else {
             parentFingerprint = deserialize(UInt32.self, Data(of: key.parent160))!
         }
+        let useInfo = useInfo ?? .init()
         self.init(
             isMaster: isMaster,
             keyType: key.keyType,
@@ -160,7 +164,7 @@ open class HDKey: CustomStringConvertible {
             chainCode: Data(of: key.chain_code),
             useInfo: UseInfo(asset: useInfo.asset, network: key.network!),
             parent: newParent,
-            children: children ?? .init(),
+            children: children,
             parentFingerprint: parentFingerprint
         )
     }
@@ -180,12 +184,12 @@ open class HDKey: CustomStringConvertible {
             chainCode: Data(of: key.chain_code),
             useInfo: useInfo,
             parent: parent ?? DerivationPath(origin: .fingerprint(Wally.fingerprint(for: key))),
-            children: children ?? .init(),
+            children: children,
             parentFingerprint: nil
         )
     }
     
-    public convenience init(seed: Seed, useInfo: UseInfo = .init(), parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
+    public convenience init(seed: Seed, useInfo: UseInfo? = nil, parent: DerivationPath? = nil, children: DerivationPath? = nil) throws {
         try self.init(bip39Seed: BIP39.Seed(bip39: seed.bip39), useInfo: useInfo, parent: parent, children: children)
     }
 
@@ -225,7 +229,7 @@ open class HDKey: CustomStringConvertible {
             chainCode: Data(of: derivedKey.chain_code),
             useInfo: parent.useInfo,
             parent: origin,
-            children: .init(),
+            children: nil,
             parentFingerprint: parent.keyFingerprint
         )
     }
@@ -383,10 +387,6 @@ open class HDKey: CustomStringConvertible {
         
         k.checkValid()
         return k
-    }
-
-    public var description: String {
-        base58
     }
 
     public func description(withParent: Bool = false, withChildren: Bool = false) -> String {

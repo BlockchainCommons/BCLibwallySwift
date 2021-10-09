@@ -7,6 +7,7 @@
 
 import Foundation
 
+@frozen
 public enum KeyType: Identifiable, CaseIterable {
     case `private`
     case `public`
