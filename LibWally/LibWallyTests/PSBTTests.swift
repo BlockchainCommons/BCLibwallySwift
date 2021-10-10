@@ -271,5 +271,129 @@ class PSBTTests: XCTestCase {
         XCTAssertEqual(psbt.fee, 181)
     }
 
+    func test1() {
+        let alice = NamedSeed("Alice", Seed(hex: "82f32c855d3d542256180810797e0073")!)
+        let bob = NamedSeed("Bob", Seed(hex: "187a5973c64d359c836eba466a44db7b")!)
+        
+        let seeds = [alice, bob]
+        
+        print(seeds)
+        
+        // A PSBT that can be fully signed by Alice or Bob (1 of 2).
+        let psbt1of2 = PSBT(base64: "cHNidP8BAIkCAAAAAQPwB5cTkHMnKTqvqrrLPS1eLOAftT5vFpGcmc/xOXbNAAAAAAD9////Aqk7AQAAAAAAIgAgvrSaYkbuN5hy0mVXVgDRa+5KruKkRvab01aabj0wgA7oAwAAAAAAACIAIPET3raA+LQKJEoBaMJuHbq+/sVlZ7wAKqhYrhBRqF7GAAAAAAABAStQQAEAAAAAACIAIGppYhdefSa0Tt20ryHx+9D6hYu1x22rAREe77meFBePAQVHUSECBea9jkSoCw14R3q/7TwiVNGLcj0FC+ifMpXQe3Xw3pUhA1NZQ82ujgajfnWaDcwQwQQnqdA2pJnhnnoAfY7hN9Y/Uq4iBgIF5r2ORKgLDXhHer/tPCJU0YtyPQUL6J8yldB7dfDelRxVAWsvMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgYDU1lDza6OBqN+dZoNzBDBBCep0DakmeGeegB9juE31j8c3lhO/TAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAABAUdRIQJ97wKVQ/jja6DUlf6gkEjHukxkcTmIRp4Q6MZnI/DOZiED9+crp4WXakT0kPqDtpDXzEHRdMmm1sNthOQfj/n86klSriICAn3vApVD+ONroNSV/qCQSMe6TGRxOYhGnhDoxmcj8M5mHFUBay8wAACAAQAAgAAAAIACAACAAQAAAAIAAAAiAgP35yunhZdqRPSQ+oO2kNfMQdF0yabWw22E5B+P+fzqSRzeWE79MAAAgAEAAIAAAACAAgAAgAEAAAACAAAAAAA=")!
+        
+        // A PSBT that must be signed by Alice and Bob (2 of 2).
+        let psbt2of2 = PSBT(base64: "cHNidP8BAH0CAAAAAVDiIuDv/6eKF/3KA2FyMzrLVV5pk3G2NEhF73B5cHZCAAAAAAD9////AroQAQAAAAAAIgAgEJHB5dt2HT9eYRRt+DRB1VesE3u4PQnVjxslEzH30RQQJwAAAAAAABYAFP+dpWfmLzDqhlT6HV+9R774474TAAAAAAABASuAOAEAAAAAACIAIOqI/uwvV9W/A0OzXJIq/7ez8/Djlu5044ADEcHKoxeJAQVHUiECBea9jkSoCw14R3q/7TwiVNGLcj0FC+ifMpXQe3Xw3pUhAwxRX5TBJXgf73IHRs8KO3ogIAPLIGg4F5krQxtG4s23Uq4iBgIF5r2ORKgLDXhHer/tPCJU0YtyPQUL6J8yldB7dfDelRxVAWsvMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgYDDFFflMEleB/vcgdGzwo7eiAgA8sgaDgXmStDG0bizbccp+jQbjAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAABAUdSIQIotmH/B/ZiUBfIrNaQfgfTQYH8pMLZyaqeuXwhI6KUNSEC5LHB9GmJkMT3B59mRaTvNJqjEfxARIb5j/xjUYVKa89SriICAii2Yf8H9mJQF8is1pB+B9NBgfykwtnJqp65fCEjopQ1HFUBay8wAACAAQAAgAAAAIACAACAAQAAAAMAAAAiAgLkscH0aYmQxPcHn2ZFpO80mqMR/EBEhvmP/GNRhUprzxyn6NBuMAAAgAEAAIAAAACAAgAAgAEAAAADAAAAAAA=")!
+
+        func printPSBT(_ psbt: PSBT, inputSignersByIndex: [Int: Set<NamedSeed>], outputSignersByIndex: [Int: Set<NamedSeed>], network: Network) {
+            print("IN: \(psbt.totalIn†)")
+            print("OUT: \(psbt.totalOut†)")
+            print("FEE: \(psbt.fee†)")
+            print("\nINPUTS")
+
+            for (index, input) in psbt.inputs.enumerated() {
+                print("INPUT #\(index + 1)")
+                print(input)
+                if let signersForInput = inputSignersByIndex[index] {
+                    print("Can sign with: \(signersForInput.map({ $0.name }).sorted().joined(separator: ", "))")
+                } else {
+                    print("No known signers for this input.")
+                }
+            }
+
+            print("\nOUTPUTS")
+            for (index, output) in psbt.outputs.enumerated() {
+                print("OUTPUT #\(index + 1)")
+                print(output)
+                print("Amount: \(output.amount)")
+                print("Address: \(output.address(network: network))")
+                if let signersForOutput = outputSignersByIndex[index] {
+                    print("Can sign with: \(signersForOutput.map({ $0.name }).sorted().joined(separator: ", "))")
+                } else {
+                    print("No known signers for this output.")
+                }
+            }
+            
+            print("-----")
+        }
+        
+        let psbt = psbt2of2
+        let network = Network.mainnet
+
+        
+        func findInputSignersByIndex(psbt: PSBT, seeds: [NamedSeed]) -> [Int: Set<NamedSeed>] {
+            var result: [Int: Set<NamedSeed>] = [:]
+            for(index, input) in psbt.inputs.enumerated() {
+                for seed in seeds {
+                    if input.canSign(with: seed.masterKey) {
+                        result.add(to: index, seed)
+                    }
+                }
+            }
+            return result
+        }
+        
+        func findOutputSignersByIndex(psbt: PSBT, seeds: [NamedSeed]) -> [Int: Set<NamedSeed>] {
+            var result: [Int: Set<NamedSeed>] = [:]
+            for(index, output) in psbt.outputs.enumerated() {
+                for seed in seeds {
+                    for origin in output.origins {
+                        let key = try! HDKey(parent: seed.masterKey, childDerivationPath: origin.value).ecPublicKey
+                        if origin.key == key {
+                            result.add(to: index, seed)
+                        }
+                    }
+                }
+            }
+            return result
+        }
+
+        let inputSignersByIndex = findInputSignersByIndex(psbt: psbt, seeds: seeds)
+        let outputSignersByIndex = findOutputSignersByIndex(psbt: psbt, seeds: seeds)
+
+        printPSBT(psbt, inputSignersByIndex: inputSignersByIndex, outputSignersByIndex: outputSignersByIndex, network: network)
+        let signers = inputSignersByIndex.values.reduce(into: Set<NamedSeed>(), {
+            $0.formUnion($1)
+        })
+        var signedPSBT = psbt
+        for signer in signers {
+            signedPSBT = signedPSBT.signed(with: signer.masterKey)!
+        }
+        
+        printPSBT(signedPSBT, inputSignersByIndex: inputSignersByIndex, outputSignersByIndex: outputSignersByIndex, network: network)
+    }
 }
 
+struct NamedSeed: CustomStringConvertible, Hashable {
+    let name: String
+    let account: Account
+
+    var seed: Seed {
+        account.seed!
+    }
+    
+    var masterKey: HDKey {
+        account.masterKey!
+    }
+    
+    var masterKeyFingerprint: UInt32 {
+        masterKey.keyFingerprint
+    }
+    
+    init(_ name: String, _ seed: Seed) {
+        self.account = Account(seed: seed, useInfo: .init(), account: 0)
+        self.name = name
+    }
+    
+    var description: String {
+        "Seed(\(name) \(seed.hex) \(masterKey.keyFingerprintData.hex)"
+    }
+    
+    static func == (lhs: NamedSeed, rhs: NamedSeed) -> Bool {
+        return lhs.seed.data == rhs.seed.data
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(seed.data)
+    }
+}

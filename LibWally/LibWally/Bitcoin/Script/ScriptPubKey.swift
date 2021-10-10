@@ -70,6 +70,6 @@ extension ScriptPubKey: CustomStringConvertible {
         } else {
             typeString = "unknown"
         }
-        return "\(typeString):\(script.description)"
+        return "\(typeString):[\(script.description)]"
     }
 }

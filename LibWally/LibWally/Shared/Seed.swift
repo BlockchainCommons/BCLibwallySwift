@@ -17,6 +17,13 @@ open class Seed {
         self.data = data
     }
     
+    public convenience init?(hex: String) {
+        guard let data = hex.hexData else {
+            return nil
+        }
+        self.init(data: data)
+    }
+    
     // Copy constructor
     public init(_ seed: Seed) {
         self.data = seed.data

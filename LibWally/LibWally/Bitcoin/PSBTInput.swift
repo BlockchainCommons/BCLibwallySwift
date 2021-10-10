@@ -86,6 +86,12 @@ public struct PSBTInput {
 
 extension PSBTInput: CustomStringConvertible {
     public var description: String {
-        "PSBTInput(origins: \(origins), signatures: \(signatures), witnessScript: \((witnessScript?.hex)†), isSegwit: \(isSegwit), amount: \(amount†))"
+        let asm: String?
+        if let witnessScript = witnessScript {
+            asm = "[\(Script(witnessScript).asm†)]"
+        } else {
+            asm = nil
+        }
+        return "PSBTInput(origins: \(origins), signatures: \(signatures), witnessScript: \(asm†), isSegwit: \(isSegwit), amount: \(amount†))"
     }
 }

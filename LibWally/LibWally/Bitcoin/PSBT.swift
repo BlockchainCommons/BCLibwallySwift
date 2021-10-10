@@ -107,19 +107,30 @@ public struct PSBT : Equatable {
         precondition(_psbt.pointee.tx != nil)
         return Transaction(tx: _psbt.pointee.tx!)
     }
-
-    public var fee: Satoshi? {
-        guard let valueOut = self.transaction.totalOut else {
-            return nil
-        }
-        let tally = inputs.reduce(into: Satoshi(0)) { (total, input) in
+    
+    public var totalIn: Satoshi? {
+        let result = inputs.reduce(into: Satoshi(0)) { (total, input) in
             guard input.isSegwit, let amount = input.amount else {
                 return
             }
             total += amount
         }
-        precondition(tally >= valueOut)
-        return tally - valueOut
+        return result
+    }
+    
+    public var totalOut: Satoshi? {
+        self.transaction.totalOut
+    }
+
+    public var fee: Satoshi? {
+        guard
+            let valueOut = totalOut,
+            let valueIn = totalIn,
+            valueIn >= valueOut
+        else {
+            return nil
+        }
+        return valueIn - valueOut
     }
 
     public func finalizedTransaction() -> Transaction? {
