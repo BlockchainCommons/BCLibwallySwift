@@ -71,3 +71,12 @@ extension ScriptOperation: CustomStringConvertible {
         }
     }
 }
+
+extension ScriptOperation {
+    public var intValue: Int? {
+        guard case let .op(op) = self else {
+            return nil
+        }
+        return op.intValue
+    }
+}

@@ -149,7 +149,7 @@ public struct PSBT : Equatable {
         for input in self.inputs {
             for origin in input.signableOrigins(with: hdKey) {
                 if
-                    let childKey = try? HDKey(parent: hdKey, childDerivationPath: origin.value),
+                    let childKey = try? HDKey(parent: hdKey, childDerivationPath: origin.path),
                     let privKey = childKey.ecPrivateKey,
                     privKey.public == origin.key,
                     let signedPSBT = psbt.signed(with: privKey)
@@ -163,6 +163,25 @@ public struct PSBT : Equatable {
         }
         return psbt
     }
+    
+    public func signed<SignerType: PSBTSigner>(with signer: SignerType) -> PSBT? {
+        signed(with: signer.masterKey)
+    }
+    
+    public func signed<SignerType: PSBTSigner>(with inputSigning: [(PSBTInput, [PSBTSigningStatus<SignerType>])]) -> PSBT? {
+        var signedPSBT = self
+        for (_, signingStatuses) in inputSigning {
+            for signingStatus in signingStatuses {
+                if
+                    !signingStatus.isSigned,
+                    let signer = signingStatus.knownSigner
+                {
+                    signedPSBT = signedPSBT.signed(with: signer)!
+                }
+            }
+        }
+        return signedPSBT
+    }
 
     public func finalized() -> PSBT? {
         guard let psbt = Wally.finalized(psbt: _psbt) else {
@@ -175,5 +194,17 @@ public struct PSBT : Equatable {
 extension PSBT: CustomStringConvertible {
     public var description: String {
         base64
+    }
+}
+
+extension PSBT {
+    public func inputSigning<SignerType: PSBTSigner>(signers: [SignerType]) -> [(PSBTInput, [PSBTSigningStatus<SignerType>])] {
+        let statuses = inputs.map { $0.signingStatus(signers: signers) }
+        return Array(zip(inputs, statuses))
+    }
+    
+    public func outputSigning<SignerType: PSBTSigner>(signers: [SignerType]) -> [(PSBTOutput, [PSBTSigningStatus<SignerType>])] {
+        let statuses = outputs.map { $0.signingStatus(signers: signers) }
+        return Array(zip(outputs, statuses))
     }
 }

@@ -30,6 +30,9 @@
 		03A5611B256A802900181CB8 /* ScriptSig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611A256A802900181CB8 /* ScriptSig.swift */; };
 		03A5611F256A805E00181CB8 /* Witness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03A5611E256A805E00181CB8 /* Witness.swift */; };
 		7931116E2712B4F300FFEAAA /* FormatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7931116D2712B4F300FFEAAA /* FormatTests.swift */; };
+		793111702713FCA800FFEAAA /* PSBTSigningOrigin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7931116F2713FCA800FFEAAA /* PSBTSigningOrigin.swift */; };
+		79311172271400D600FFEAAA /* PSBTSigner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79311171271400D600FFEAAA /* PSBTSigner.swift */; };
+		793111742714012300FFEAAA /* PSBTSigningStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793111732714012300FFEAAA /* PSBTSigningStatus.swift */; };
 		793CFCAF270C152B005792A1 /* HDKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793CFCAE270C152A005792A1 /* HDKey.swift */; };
 		793CFCB1270C155B005792A1 /* KeyType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 793CFCB0270C155B005792A1 /* KeyType.swift */; };
 		795F8C2526F1E70F009D90FB /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 795F8C2426F1E70F009D90FB /* CryptoSwift */; };
@@ -129,6 +132,9 @@
 		03A5611A256A802900181CB8 /* ScriptSig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptSig.swift; sourceTree = "<group>"; };
 		03A5611E256A805E00181CB8 /* Witness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Witness.swift; sourceTree = "<group>"; };
 		7931116D2712B4F300FFEAAA /* FormatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormatTests.swift; sourceTree = "<group>"; };
+		7931116F2713FCA800FFEAAA /* PSBTSigningOrigin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSBTSigningOrigin.swift; sourceTree = "<group>"; };
+		79311171271400D600FFEAAA /* PSBTSigner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSBTSigner.swift; sourceTree = "<group>"; };
+		793111732714012300FFEAAA /* PSBTSigningStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PSBTSigningStatus.swift; sourceTree = "<group>"; };
 		793CFCAE270C152A005792A1 /* HDKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDKey.swift; sourceTree = "<group>"; };
 		793CFCB0270C155B005792A1 /* KeyType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyType.swift; sourceTree = "<group>"; };
 		795F8C2726F1E739009D90FB /* Ethereum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ethereum.swift; sourceTree = "<group>"; };
@@ -300,6 +306,9 @@
 				030A63F72503702700A1D27E /* PSBT.swift */,
 				03A56110256A397600181CB8 /* PSBTInput.swift */,
 				03A56114256A399700181CB8 /* PSBTOutput.swift */,
+				7931116F2713FCA800FFEAAA /* PSBTSigningOrigin.swift */,
+				79311171271400D600FFEAAA /* PSBTSigner.swift */,
+				793111732714012300FFEAAA /* PSBTSigningStatus.swift */,
 				798FDDFC26EADBD600677B33 /* VarInt.swift */,
 				79B02BF926E59E1200950779 /* Script */,
 				79865C4C26E068C300897441 /* Descriptors */,
@@ -519,6 +528,7 @@
 				79EC702526D75B2200A3D4E9 /* WallyUtils.swift in Sources */,
 				795F8C4426F5A03F009D90FB /* DataExtensions.swift in Sources */,
 				030A63FE2503702700A1D27E /* PSBT.swift in Sources */,
+				793111742714012300FFEAAA /* PSBTSigningStatus.swift in Sources */,
 				79C7CE1526E1FBF100C5CD75 /* ParseTransaction.swift in Sources */,
 				79B44F53270AF4A3008FED77 /* ChildIndexSpec.swift in Sources */,
 				793CFCB1270C155B005792A1 /* KeyType.swift in Sources */,
@@ -545,7 +555,9 @@
 				03A5610525691F1600181CB8 /* TxOutput.swift in Sources */,
 				795F8C4A26F5B966009D90FB /* BitcoinAccountExtensions.swift in Sources */,
 				793CFCAF270C152B005792A1 /* HDKey.swift in Sources */,
+				793111702713FCA800FFEAAA /* PSBTSigningOrigin.swift in Sources */,
 				03A5611F256A805E00181CB8 /* Witness.swift in Sources */,
+				79311172271400D600FFEAAA /* PSBTSigner.swift in Sources */,
 				796FE5D826D7764C00DDB32A /* UseInfo.swift in Sources */,
 				030A63FF2503702700A1D27E /* BIP39.swift in Sources */,
 				79865C5026E068EB00897441 /* DescriptorToken.swift in Sources */,

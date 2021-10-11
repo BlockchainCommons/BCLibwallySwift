@@ -9,7 +9,7 @@ import Foundation
 
 public struct PSBTOutput {
     public let txOutput: TxOutput
-    public let origins: [ECCompressedPublicKey: DerivationPath]
+    public let origins: [PSBTSigningOrigin]
 
     public func address(network: Network) -> String {
         txOutput.address(network: network)
@@ -21,9 +21,9 @@ public struct PSBTOutput {
 
     init(wallyPSBTOutput: WallyPSBTOutput, wallyTxOutput: wally_tx_output) {
         if wallyPSBTOutput.keypaths.num_items > 0 {
-            self.origins = DerivationPath.getOrigins(keypaths: wallyPSBTOutput.keypaths)
+            self.origins = getOrigins(keypaths: wallyPSBTOutput.keypaths)
         } else {
-            self.origins = [:]
+            self.origins = []
         }
         let scriptPubKey: ScriptPubKey
         if let scriptPubKeyBytes = wallyPSBTOutput.witness_script {
@@ -98,7 +98,7 @@ public struct PSBTOutput {
         }
 
         // Skip key deriviation root
-        let keyPath = inputs[0].origins.first!.value
+        let keyPath = inputs[0].origins.first!.path
         if keyPath.steps.count < 2 {
             return false
         }
@@ -116,7 +116,7 @@ public struct PSBTOutput {
             }
 
             for origin in origins {
-                if !(PSBTOutput.commonOriginChecks(originPath: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
+                if !(PSBTOutput.commonOriginChecks(originPath: origin.path, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
                     return false
                 }
             }
@@ -129,14 +129,14 @@ public struct PSBTOutput {
 
         var changeIndex: ChildIndex? = nil
         for origin in origins {
-            if !(PSBTOutput.commonOriginChecks(originPath: origin.value, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
+            if !(PSBTOutput.commonOriginChecks(originPath: origin.path, rootPathLength:keyPathRootLength, pubKey: origin.key, signer: signer, cosigners: cosigners)) {
                 return false
             }
             // Check that the output index is reasonable
             // When combined with the above constraints, change "hijacked" to an extreme index can
             // be covered by importing keys using Bitcoin Core's maximum range [0,999999].
             // This needs less than 1 GB of RAM, but is fairly slow.
-            let step = origin.value.steps.reversed()[0]
+            let step = origin.path.steps.reversed()[0]
             if !step.isHardened {
                 guard case let .index(i) = step.childIndexSpec else {
                     return false
@@ -156,7 +156,7 @@ public struct PSBTOutput {
         // Check scriptPubKey
         switch self.txOutput.scriptPubKey.type {
         case .multi:
-            let expectedScriptPubKey = ScriptPubKey(multisig: Array(origins.keys), threshold: threshold)
+            let expectedScriptPubKey = ScriptPubKey(multisig: Array(origins.map({ $0.key })), threshold: threshold)
             if self.txOutput.scriptPubKey != expectedScriptPubKey {
                 return false
             }
@@ -164,5 +164,21 @@ public struct PSBTOutput {
             return false
         }
         return true
+    }
+}
+
+extension PSBTOutput {
+    public func signingStatus<SignerType: PSBTSigner>(origin: PSBTSigningOrigin, signers: [SignerType]) -> PSBTSigningStatus<SignerType> {
+        if let signer = signers.first(where: {
+            try! HDKey(parent: $0.masterKey, childDerivationPath: origin.path).ecPublicKey == origin.key
+        }) {
+            return PSBTSigningStatus(origin: origin, isSigned: false, knownSigner: signer)
+        } else {
+            return PSBTSigningStatus(origin: origin, isSigned: false, knownSigner: nil)
+        }
+    }
+    
+    public func signingStatus<SignerType: PSBTSigner>(signers: [SignerType]) -> [PSBTSigningStatus<SignerType>] {
+        origins.map { signingStatus(origin: $0, signers: signers) }
     }
 }

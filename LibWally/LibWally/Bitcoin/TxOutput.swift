@@ -28,3 +28,9 @@ public struct TxOutput {
         }
     }
 }
+
+extension TxOutput: CustomStringConvertible {
+    public var description: String {
+        "TxOutput(scriptPubKey: \(scriptPubKey), amount: \(amount.btcFormat))"
+    }
+}

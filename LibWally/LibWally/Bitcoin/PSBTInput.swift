@@ -9,38 +9,27 @@ import Foundation
 @_implementationOnly import WolfBase
 
 public struct PSBTInput {
-    public let origins: [ECCompressedPublicKey: DerivationPath]
+    public let origins: [PSBTSigningOrigin]
     public let signatures: [ECCompressedPublicKey: Data]
-    public let witnessScript: Data?
+    public let witnessScript: ScriptPubKey?
     public let isSegwit: Bool
     public let amount: Satoshi?
 
-    private static func getSignatures(signatures: wally_map) -> [ECCompressedPublicKey: Data] {
-        var result: [ECCompressedPublicKey: Data] = [:]
-        for i in 0 ..< signatures.num_items {
-            let item = signatures.items[i]
-            let pubKey = ECCompressedPublicKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))!
-            let sig = Data(bytes: item.value, count: Int(item.value_len))
-            result[pubKey] = sig
-        }
-        return result
-    }
-
     init(wallyInput: WallyPSBTInput) {
         if wallyInput.keypaths.num_items > 0 {
-            self.origins = DerivationPath.getOrigins(keypaths: wallyInput.keypaths)
+            self.origins = getOrigins(keypaths: wallyInput.keypaths)
         } else {
-            self.origins = [:]
+            self.origins = []
         }
 
         if(wallyInput.signatures.num_items > 0) {
-            self.signatures = Self.getSignatures(signatures: wallyInput.signatures)
+            self.signatures = getSignatures(signatures: wallyInput.signatures)
         } else {
             self.signatures = [:]
         }
 
         if let witnessScript = wallyInput.witness_script {
-            self.witnessScript = Data(bytes: witnessScript, count: wallyInput.witness_script_len)
+            self.witnessScript = ScriptPubKey(Script(Data(bytes: witnessScript, count: wallyInput.witness_script_len)))
         } else {
             self.witnessScript = nil
         }
@@ -55,43 +44,91 @@ public struct PSBTInput {
     }
 
     // Can we provide at least one signature, assuming we have the private key?
-    public func signableOrigins(with hdKey: HDKey) -> [ECCompressedPublicKey: DerivationPath] {
-        var result: [ECCompressedPublicKey: DerivationPath] = [:]
+    public func signableOrigins(with masterKey: HDKey) -> [PSBTSigningOrigin] {
+        origins.filter {
+            $0.canSign(with: masterKey)
+        }
+    }
+
+    public func canSign(with masterKey: HDKey) -> Bool {
+        !signableOrigins(with: masterKey).isEmpty
+    }
+
+    // Can we provide at least one signature, assuming we have the private key?
+    public func originsSigned(by masterKey: HDKey) -> [PSBTSigningOrigin] {
+        guard let masterKeyFingerprint = masterKey.originFingerprint else {
+            return []
+        }
+
+        var result: [PSBTSigningOrigin] = []
         for origin in origins {
-            guard let masterKeyFingerprint = hdKey.originFingerprint else {
-                break
-            }
-            let path = origin.value
-            guard
-                let pathOrigin = path.origin,
-                case .fingerprint(let originFingerprint) = pathOrigin
-            else {
-                continue
-            }
-            if masterKeyFingerprint == originFingerprint {
-                if let childKey = try? HDKey(parent: hdKey, childDerivationPath: path) {
-                    if childKey.ecPublicKey == origin.key {
-                        result[origin.key] = origin.value
-                    }
-                }
+            let path = origin.path
+            if
+                case .fingerprint(let originFingerprint) = path.origin,
+                masterKeyFingerprint == originFingerprint,
+                let childKey = try? HDKey(parent: masterKey, childDerivationPath: path).ecPublicKey,
+                signatures.keys.contains(childKey)
+            {
+                result.append(origin)
             }
         }
         return result
     }
+    
+    public func isSigned(by masterKey: HDKey) -> Bool {
+        !originsSigned(by: masterKey).isEmpty
+    }
 
-    public func canSign(with hdKey: HDKey) -> Bool {
-        !signableOrigins(with: hdKey).isEmpty
+    public func address(network: Network) -> String? {
+        guard let scriptPubKey = witnessScript else {
+            return nil
+        }
+        return Bitcoin.Address(scriptPubKey: scriptPubKey, network: network)!.description
     }
 }
 
 extension PSBTInput: CustomStringConvertible {
     public var description: String {
-        let asm: String?
-        if let witnessScript = witnessScript {
-            asm = "[\(Script(witnessScript).asm†)]"
-        } else {
-            asm = nil
+        "PSBTInput(origins: \(origins), signatures: \(signatures), witnessScript: \(witnessScript†), isSegwit: \(isSegwit), amount: \((amount?.btcFormat)†))"
+    }
+}
+
+func getOrigins(keypaths: wally_map) -> [PSBTSigningOrigin] {
+    var result: [PSBTSigningOrigin] = []
+    for i in 0..<keypaths.num_items {
+        // TOOD: simplify after https://github.com/ElementsProject/libwally-core/issues/241
+        let item: wally_map_item = keypaths.items[i]
+
+        let pubKey = ECCompressedPublicKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))!
+        let fingerprintData = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
+        let fingerprint = deserialize(UInt32.self, fingerprintData)!
+        let keyPath = Data(bytes: item.value + Int(BIP32_KEY_FINGERPRINT_LEN), count: Int(item.value_len) - Int(BIP32_KEY_FINGERPRINT_LEN))
+
+        var components: [UInt32] = []
+        for j in 0..<keyPath.count / 4 {
+            let data = keyPath.subdata(in: (j * 4)..<((j + 1) * 4)).withUnsafeBytes{ $0.load(as: UInt32.self) }
+            components.append(data)
         }
-        return "PSBTInput(origins: \(origins), signatures: \(signatures), witnessScript: \(asm†), isSegwit: \(isSegwit), amount: \(amount†))"
+        let path = DerivationPath(rawPath: components, origin: .fingerprint(fingerprint))!
+        result.append(PSBTSigningOrigin(key: pubKey, path: path))
+    }
+    return result
+}
+
+func getSignatures(signatures: wally_map) -> [ECCompressedPublicKey: Data] {
+    var result: [ECCompressedPublicKey: Data] = [:]
+    for i in 0 ..< signatures.num_items {
+        let item = signatures.items[i]
+        let pubKey = ECCompressedPublicKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))!
+        let sig = Data(bytes: item.value, count: Int(item.value_len))
+        result[pubKey] = sig
+    }
+    return result
+}
+
+extension PSBTInput {
+    public func signingStatus<SignerType: PSBTSigner>(signers: [SignerType]) -> [PSBTSigningStatus<SignerType>] {
+        let signatures = Set(signatures.map({ $0.key }))
+        return origins.map { $0.signingStatus(seeds: signers, signatures: signatures) }
     }
 }

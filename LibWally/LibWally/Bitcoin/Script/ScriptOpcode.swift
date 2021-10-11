@@ -166,6 +166,15 @@ extension ScriptOpcode {
     }
 }
 
+extension ScriptOpcode {
+    public var intValue: Int? {
+        guard (0x51...0x60).contains(rawValue) else {
+            return nil
+        }
+        return Int(rawValue - 0x50)
+    }
+}
+
 extension ScriptOpcode: CustomStringConvertible {
     public var description: String {
         name†

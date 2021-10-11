@@ -60,6 +60,20 @@ public struct ScriptPubKey : Equatable {
     public var asm: String? {
         script.asm
     }
+    
+    public var multisigInfo: (Int, Int)? {
+        guard
+            type == .multi,
+            let operations = script.operations,
+            let n = operations[0].intValue,
+            let m = operations[operations.count - 2].intValue,
+            n <= m
+        else {
+            return nil
+        }
+        
+        return (n, m)
+    }
 }
 
 extension ScriptPubKey: CustomStringConvertible {

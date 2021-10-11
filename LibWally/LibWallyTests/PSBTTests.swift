@@ -159,20 +159,20 @@ class PSBTTests: XCTestCase {
         XCTAssertEqual(psbt.inputs.count, 2)
         let inOrigins0 = psbt.inputs[0].origins
         XCTAssertEqual(inOrigins0.count, 2)
-        XCTAssertEqual(inOrigins0[pubKey0], expectedOrigin0)
-        XCTAssertEqual(inOrigins0[pubKey1], expectedOrigin1)
+        XCTAssertEqual(inOrigins0.first(where: {$0.key == pubKey0})!.path, expectedOrigin0)
+        XCTAssertEqual(inOrigins0.first(where: {$0.key == pubKey1})!.path, expectedOrigin1)
         let inOrigins1 = psbt.inputs[1].origins
         XCTAssertEqual(inOrigins1.count, 2)
-        XCTAssertEqual(inOrigins1[pubKey3], expectedOrigin3)
-        XCTAssertEqual(inOrigins1[pubKey2], expectedOrigin2)
+        XCTAssertEqual(inOrigins1.first(where: {$0.key == pubKey3})!.path, expectedOrigin3)
+        XCTAssertEqual(inOrigins1.first(where: {$0.key == pubKey2})!.path, expectedOrigin2)
         // Check outputs
         XCTAssertEqual(psbt.outputs.count, 2)
         let outOrigins0 = psbt.outputs[0].origins
         XCTAssertEqual(outOrigins0.count, 1)
-        XCTAssertEqual(outOrigins0[pubKey4], expectedOrigin4)
+        XCTAssertEqual(outOrigins0.first(where: {$0.key == pubKey4})!.path, expectedOrigin4)
         let outOrigins1 = psbt.outputs[1].origins
         XCTAssertEqual(outOrigins1.count, 1)
-        XCTAssertEqual(outOrigins1[pubKey5], expectedOrigin5)
+        XCTAssertEqual(outOrigins1.first(where: {$0.key == pubKey5})!.path, expectedOrigin5)
     }
    
     func testCanSign() throws {
@@ -271,96 +271,105 @@ class PSBTTests: XCTestCase {
         XCTAssertEqual(psbt.fee, 181)
     }
 
-    func test1() {
-        let alice = NamedSeed("Alice", Seed(hex: "82f32c855d3d542256180810797e0073")!)
-        let bob = NamedSeed("Bob", Seed(hex: "187a5973c64d359c836eba466a44db7b")!)
-        
-        let seeds = [alice, bob]
-        
-        print(seeds)
-        
-        // A PSBT that can be fully signed by Alice or Bob (1 of 2).
-        let psbt1of2 = PSBT(base64: "cHNidP8BAIkCAAAAAQPwB5cTkHMnKTqvqrrLPS1eLOAftT5vFpGcmc/xOXbNAAAAAAD9////Aqk7AQAAAAAAIgAgvrSaYkbuN5hy0mVXVgDRa+5KruKkRvab01aabj0wgA7oAwAAAAAAACIAIPET3raA+LQKJEoBaMJuHbq+/sVlZ7wAKqhYrhBRqF7GAAAAAAABAStQQAEAAAAAACIAIGppYhdefSa0Tt20ryHx+9D6hYu1x22rAREe77meFBePAQVHUSECBea9jkSoCw14R3q/7TwiVNGLcj0FC+ifMpXQe3Xw3pUhA1NZQ82ujgajfnWaDcwQwQQnqdA2pJnhnnoAfY7hN9Y/Uq4iBgIF5r2ORKgLDXhHer/tPCJU0YtyPQUL6J8yldB7dfDelRxVAWsvMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgYDU1lDza6OBqN+dZoNzBDBBCep0DakmeGeegB9juE31j8c3lhO/TAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAABAUdRIQJ97wKVQ/jja6DUlf6gkEjHukxkcTmIRp4Q6MZnI/DOZiED9+crp4WXakT0kPqDtpDXzEHRdMmm1sNthOQfj/n86klSriICAn3vApVD+ONroNSV/qCQSMe6TGRxOYhGnhDoxmcj8M5mHFUBay8wAACAAQAAgAAAAIACAACAAQAAAAIAAAAiAgP35yunhZdqRPSQ+oO2kNfMQdF0yabWw22E5B+P+fzqSRzeWE79MAAAgAEAAIAAAACAAgAAgAEAAAACAAAAAAA=")!
-        
-        // A PSBT that must be signed by Alice and Bob (2 of 2).
-        let psbt2of2 = PSBT(base64: "cHNidP8BAH0CAAAAAVDiIuDv/6eKF/3KA2FyMzrLVV5pk3G2NEhF73B5cHZCAAAAAAD9////AroQAQAAAAAAIgAgEJHB5dt2HT9eYRRt+DRB1VesE3u4PQnVjxslEzH30RQQJwAAAAAAABYAFP+dpWfmLzDqhlT6HV+9R774474TAAAAAAABASuAOAEAAAAAACIAIOqI/uwvV9W/A0OzXJIq/7ez8/Djlu5044ADEcHKoxeJAQVHUiECBea9jkSoCw14R3q/7TwiVNGLcj0FC+ifMpXQe3Xw3pUhAwxRX5TBJXgf73IHRs8KO3ogIAPLIGg4F5krQxtG4s23Uq4iBgIF5r2ORKgLDXhHer/tPCJU0YtyPQUL6J8yldB7dfDelRxVAWsvMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgYDDFFflMEleB/vcgdGzwo7eiAgA8sgaDgXmStDG0bizbccp+jQbjAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAABAUdSIQIotmH/B/ZiUBfIrNaQfgfTQYH8pMLZyaqeuXwhI6KUNSEC5LHB9GmJkMT3B59mRaTvNJqjEfxARIb5j/xjUYVKa89SriICAii2Yf8H9mJQF8is1pB+B9NBgfykwtnJqp65fCEjopQ1HFUBay8wAACAAQAAgAAAAIACAACAAQAAAAMAAAAiAgLkscH0aYmQxPcHn2ZFpO80mqMR/EBEhvmP/GNRhUprzxyn6NBuMAAAgAEAAIAAAACAAgAAgAEAAAADAAAAAAA=")!
+    func testPSBTSession() {
+        func printPSBT(_ psbt: PSBT, inputSigning: [(PSBTInput, [PSBTSigningStatus<NamedSeed>])], outputSigning: [(PSBTOutput, [PSBTSigningStatus<NamedSeed>])], network: Network) {
+            print("\n===== PSBT")
 
-        func printPSBT(_ psbt: PSBT, inputSignersByIndex: [Int: Set<NamedSeed>], outputSignersByIndex: [Int: Set<NamedSeed>], network: Network) {
-            print("IN: \(psbt.totalIn†)")
-            print("OUT: \(psbt.totalOut†)")
-            print("FEE: \(psbt.fee†)")
-            print("\nINPUTS")
+            print("TOTAL IN: BTC \((psbt.totalIn?.btcFormat)†)")
+            print("TOTAL OUT: BTC \((psbt.totalOut?.btcFormat)†)")
+            print("MINING FEE: BTC \((psbt.fee?.btcFormat)†)")
+            print("\n=== INPUTS")
 
-            for (index, input) in psbt.inputs.enumerated() {
-                print("INPUT #\(index + 1)")
-                print(input)
-                if let signersForInput = inputSignersByIndex[index] {
-                    print("Can sign with: \(signersForInput.map({ $0.name }).sorted().joined(separator: ", "))")
-                } else {
-                    print("No known signers for this input.")
+            for (index, info) in inputSigning.enumerated() {
+                let (input, signingStatuses) = info
+                print("--- INPUT #\(index + 1)")
+                //print(input)
+                if let amount = input.amount?.btcFormat {
+                    print("Amount: BTC \(amount)")
+                }
+                if let address = input.address(network: network) {
+                    print("From Address: \(address)")
+                }
+                if let (n, m) = input.witnessScript?.multisigInfo {
+                    print("Multisig \(n) of \(m)")
+                }
+                for status in signingStatuses {
+                    print(status.statusString)
                 }
             }
 
-            print("\nOUTPUTS")
-            for (index, output) in psbt.outputs.enumerated() {
-                print("OUTPUT #\(index + 1)")
-                print(output)
-                print("Amount: \(output.amount)")
-                print("Address: \(output.address(network: network))")
-                if let signersForOutput = outputSignersByIndex[index] {
-                    print("Can sign with: \(signersForOutput.map({ $0.name }).sorted().joined(separator: ", "))")
-                } else {
-                    print("No known signers for this output.")
+            print("\n=== OUTPUTS")
+            for (index, info) in outputSigning.enumerated() {
+                let (output, signingStatuses) = info
+                print("--- OUTPUT #\(index + 1)")
+                //print(output)
+                print("Amount: BTC \(output.amount.btcFormat)")
+                print("To Address: \(output.address(network: network))")
+                if let (n, m) = output.txOutput.scriptPubKey.multisigInfo {
+                    print("Multisig \(n) of \(m)")
+                }
+                for status in signingStatuses {
+                    print(status.statusString)
                 }
             }
             
             print("-----")
         }
         
-        let psbt = psbt2of2
-        let network = Network.mainnet
 
-        
-        func findInputSignersByIndex(psbt: PSBT, seeds: [NamedSeed]) -> [Int: Set<NamedSeed>] {
-            var result: [Int: Set<NamedSeed>] = [:]
-            for(index, input) in psbt.inputs.enumerated() {
-                for seed in seeds {
-                    if input.canSign(with: seed.masterKey) {
-                        result.add(to: index, seed)
-                    }
-                }
+        func psbtSession(_ psbt: PSBT, seeds: [NamedSeed], network: Network) {
+            let inputSigning = psbt.inputSigning(signers: seeds)
+            let outputSigning = psbt.outputSigning(signers: seeds)
+
+            print("\n======= BEFORE SIGNING")
+            printPSBT(psbt, inputSigning: inputSigning, outputSigning: outputSigning, network: network)
+            
+            guard let signedPSBT = psbt.signed(with: inputSigning) else {
+                print("\n======= UNABLE TO SIGN PSBT")
+                return
             }
-            return result
+            
+            print("\n======= AFTER SIGNING")
+            let updatedInputSigning = signedPSBT.inputSigning(signers: seeds)
+            printPSBT(signedPSBT, inputSigning: updatedInputSigning, outputSigning: outputSigning, network: network)
         }
         
-        func findOutputSignersByIndex(psbt: PSBT, seeds: [NamedSeed]) -> [Int: Set<NamedSeed>] {
-            var result: [Int: Set<NamedSeed>] = [:]
-            for(index, output) in psbt.outputs.enumerated() {
-                for seed in seeds {
-                    for origin in output.origins {
-                        let key = try! HDKey(parent: seed.masterKey, childDerivationPath: origin.value).ecPublicKey
-                        if origin.key == key {
-                            result.add(to: index, seed)
-                        }
-                    }
-                }
-            }
-            return result
-        }
+        let alice = NamedSeed("Alice", Seed(hex: "82f32c855d3d542256180810797e0073")!)
+        let bob = NamedSeed("Bob", Seed(hex: "187a5973c64d359c836eba466a44db7b")!)
 
-        let inputSignersByIndex = findInputSignersByIndex(psbt: psbt, seeds: seeds)
-        let outputSignersByIndex = findOutputSignersByIndex(psbt: psbt, seeds: seeds)
+        print(alice)
+        print(bob)
 
-        printPSBT(psbt, inputSignersByIndex: inputSignersByIndex, outputSignersByIndex: outputSignersByIndex, network: network)
-        let signers = inputSignersByIndex.values.reduce(into: Set<NamedSeed>(), {
-            $0.formUnion($1)
-        })
-        var signedPSBT = psbt
-        for signer in signers {
-            signedPSBT = signedPSBT.signed(with: signer.masterKey)!
-        }
+        let seeds = [alice, bob]
         
-        printPSBT(signedPSBT, inputSignersByIndex: inputSignersByIndex, outputSignersByIndex: outputSignersByIndex, network: network)
+        let network = Network.testnet
+
+        print("\n========= TEST 1")
+        
+        // A PSBT that can be fully signed by Alice or Bob (1 of 2).
+        let psbt1of2 = PSBT(base64: "cHNidP8BAIkCAAAAAQPwB5cTkHMnKTqvqrrLPS1eLOAftT5vFpGcmc/xOXbNAAAAAAD9////Aqk7AQAAAAAAIgAgvrSaYkbuN5hy0mVXVgDRa+5KruKkRvab01aabj0wgA7oAwAAAAAAACIAIPET3raA+LQKJEoBaMJuHbq+/sVlZ7wAKqhYrhBRqF7GAAAAAAABAStQQAEAAAAAACIAIGppYhdefSa0Tt20ryHx+9D6hYu1x22rAREe77meFBePAQVHUSECBea9jkSoCw14R3q/7TwiVNGLcj0FC+ifMpXQe3Xw3pUhA1NZQ82ujgajfnWaDcwQwQQnqdA2pJnhnnoAfY7hN9Y/Uq4iBgIF5r2ORKgLDXhHer/tPCJU0YtyPQUL6J8yldB7dfDelRxVAWsvMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgYDU1lDza6OBqN+dZoNzBDBBCep0DakmeGeegB9juE31j8c3lhO/TAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAABAUdRIQJ97wKVQ/jja6DUlf6gkEjHukxkcTmIRp4Q6MZnI/DOZiED9+crp4WXakT0kPqDtpDXzEHRdMmm1sNthOQfj/n86klSriICAn3vApVD+ONroNSV/qCQSMe6TGRxOYhGnhDoxmcj8M5mHFUBay8wAACAAQAAgAAAAIACAACAAQAAAAIAAAAiAgP35yunhZdqRPSQ+oO2kNfMQdF0yabWw22E5B+P+fzqSRzeWE79MAAAgAEAAIAAAACAAgAAgAEAAAACAAAAAAA=")!
+        psbtSession(psbt1of2, seeds: seeds, network: network)
+        
+        print("\n========= TEST 2")
+
+        // A PSBT that must be signed by Alice and Bob (2 of 2).
+        let psbt2of2 = PSBT(base64: "cHNidP8BAH0CAAAAAVDiIuDv/6eKF/3KA2FyMzrLVV5pk3G2NEhF73B5cHZCAAAAAAD9////AroQAQAAAAAAIgAgEJHB5dt2HT9eYRRt+DRB1VesE3u4PQnVjxslEzH30RQQJwAAAAAAABYAFP+dpWfmLzDqhlT6HV+9R774474TAAAAAAABASuAOAEAAAAAACIAIOqI/uwvV9W/A0OzXJIq/7ez8/Djlu5044ADEcHKoxeJAQVHUiECBea9jkSoCw14R3q/7TwiVNGLcj0FC+ifMpXQe3Xw3pUhAwxRX5TBJXgf73IHRs8KO3ogIAPLIGg4F5krQxtG4s23Uq4iBgIF5r2ORKgLDXhHer/tPCJU0YtyPQUL6J8yldB7dfDelRxVAWsvMAAAgAEAAIAAAACAAgAAgAAAAAABAAAAIgYDDFFflMEleB/vcgdGzwo7eiAgA8sgaDgXmStDG0bizbccp+jQbjAAAIABAACAAAAAgAIAAIAAAAAAAQAAAAABAUdSIQIotmH/B/ZiUBfIrNaQfgfTQYH8pMLZyaqeuXwhI6KUNSEC5LHB9GmJkMT3B59mRaTvNJqjEfxARIb5j/xjUYVKa89SriICAii2Yf8H9mJQF8is1pB+B9NBgfykwtnJqp65fCEjopQ1HFUBay8wAACAAQAAgAAAAIACAACAAQAAAAMAAAAiAgLkscH0aYmQxPcHn2ZFpO80mqMR/EBEhvmP/GNRhUprzxyn6NBuMAAAgAEAAIAAAACAAgAAgAEAAAADAAAAAAA=")!
+        psbtSession(psbt2of2, seeds: seeds, network: network)
+    }
+}
+
+extension PSBTSigningStatus where SignerType == NamedSeed {
+    var statusString: String {
+        switch status {
+        case .isSignedBy(let seed):
+            return "Signed by: \(seed.name) \(origin.path)"
+        case .isSignedByUnknown:
+            return "Signed by unknown: \(origin.path)"
+        case .canBeSignedBy(let seed):
+            return "To be signed by: \(seed.name) \(origin.path)"
+        case .noKnownSigner:
+            return "No known signer for: \(origin.path)"
+        }
     }
 }
 
@@ -386,7 +395,7 @@ struct NamedSeed: CustomStringConvertible, Hashable {
     }
     
     var description: String {
-        "Seed(\(name) \(seed.hex) \(masterKey.keyFingerprintData.hex)"
+        "Seed(\(name) \(seed.hex) \(masterKeyFingerprint.hex)"
     }
     
     static func == (lhs: NamedSeed, rhs: NamedSeed) -> Bool {
@@ -396,4 +405,7 @@ struct NamedSeed: CustomStringConvertible, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(seed.data)
     }
+}
+
+extension NamedSeed: PSBTSigner {
 }

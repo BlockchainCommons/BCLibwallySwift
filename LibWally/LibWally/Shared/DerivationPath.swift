@@ -189,29 +189,6 @@ extension DerivationPath: CustomStringConvertible {
 }
 
 extension DerivationPath {
-    static func getOrigins(keypaths: wally_map) -> [ECCompressedPublicKey: DerivationPath] {
-        var result: [ECCompressedPublicKey: DerivationPath] = [:]
-        for i in 0..<keypaths.num_items {
-            // TOOD: simplify after https://github.com/ElementsProject/libwally-core/issues/241
-            let item: wally_map_item = keypaths.items[i]
-
-            let pubKey = ECCompressedPublicKey(Data(bytes: item.key, count: Int(EC_PUBLIC_KEY_LEN)))!
-            let fingerprintData = Data(bytes: item.value, count: Int(BIP32_KEY_FINGERPRINT_LEN))
-            let fingerprint = deserialize(UInt32.self, fingerprintData)!
-            let keyPath = Data(bytes: item.value + Int(BIP32_KEY_FINGERPRINT_LEN), count: Int(item.value_len) - Int(BIP32_KEY_FINGERPRINT_LEN))
-
-            var components: [UInt32] = []
-            for j in 0..<keyPath.count / 4 {
-                let data = keyPath.subdata(in: (j * 4)..<((j + 1) * 4)).withUnsafeBytes{ $0.load(as: UInt32.self) }
-                components.append(data)
-            }
-            result[pubKey] = DerivationPath(rawPath: components, origin: .fingerprint(fingerprint))!
-        }
-        return result
-    }
-}
-
-extension DerivationPath {
     public static func + (lhs: DerivationPath, rhs: DerivationPath) -> DerivationPath {
         DerivationPath(steps: lhs.steps + rhs.steps, origin: lhs.origin)
     }
