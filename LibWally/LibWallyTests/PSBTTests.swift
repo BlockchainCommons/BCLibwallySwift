@@ -285,6 +285,9 @@ class PSBTTests: XCTestCase {
         func printPSBT(_ psbt: PSBT, inputSigning: [(PSBTInput, [PSBTSigningStatus<NamedSeed>])], outputSigning: [(PSBTOutput, [PSBTSigningStatus<NamedSeed>])], network: Network) {
             print("\n===== PSBT")
 
+            print("TOTAL SENT: BTC \((psbt.totalSent?.btcFormat)†)")
+            print("TOTAL CHANGE: BTC \((psbt.totalChange?.btcFormat)†)")
+            print()
             print("TOTAL IN: BTC \((psbt.totalIn?.btcFormat)†)")
             print("TOTAL OUT: BTC \((psbt.totalOut?.btcFormat)†)")
             print("MINING FEE: BTC \((psbt.fee?.btcFormat)†)")

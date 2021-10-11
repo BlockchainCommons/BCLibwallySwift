@@ -132,6 +132,22 @@ public struct PSBT : Equatable {
         }
         return valueIn - valueOut
     }
+    
+    public var totalChange: Satoshi? {
+        outputs.reduce(into: Satoshi(0)) { (total, output) in
+            if output.isChange {
+                total += output.amount
+            }
+        }
+    }
+    
+    public var totalSent: Satoshi? {
+        outputs.reduce(into: Satoshi(0)) { (total, output) in
+            if !output.isChange {
+                total += output.amount
+            }
+        }
+    }
 
     public func finalizedTransaction() -> Transaction? {
         Wally.finalizedTransaction(psbt: _psbt)
