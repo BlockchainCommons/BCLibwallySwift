@@ -238,16 +238,22 @@ class PSBTTests: XCTestCase {
         var psbt = PSBT(base64: multiUnsignedPSBTWithChange)!
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
-        
+        XCTAssertTrue(psbt.outputs[0].isChange)
+        XCTAssertFalse(psbt.outputs[1].isChange)
+
         // Test maximum permitted change index
         psbt = PSBT(base64: changeIndex999999)!
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
+        XCTAssertTrue(psbt.outputs[0].isChange)
+        XCTAssertFalse(psbt.outputs[1].isChange)
 
         // Test out of bounds change index
         psbt = PSBT(base64: changeIndex1000000)!
         XCTAssertFalse(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
+        XCTAssertFalse(psbt.outputs[0].isChange)
+        XCTAssertFalse(psbt.outputs[1].isChange)
     }
     
     func testIsChangeWithNeuteredCosignerKey() throws {
@@ -256,6 +262,8 @@ class PSBTTests: XCTestCase {
         let psbt = PSBT(base64: multiUnsignedPSBTWithChange)!
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
+        XCTAssertTrue(psbt.outputs[0].isChange)
+        XCTAssertFalse(psbt.outputs[1].isChange)
     }
     
     func testIsChangeWithNeuteredAllKeys() throws {
@@ -264,6 +272,8 @@ class PSBTTests: XCTestCase {
         let psbt = PSBT(base64: multiUnsignedPSBTWithChange)!
         XCTAssertTrue(psbt.outputs[0].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
         XCTAssertFalse(psbt.outputs[1].isChange(signer: us, inputs: psbt.inputs, cosigners: [cosigner], threshold: 2))
+        XCTAssertTrue(psbt.outputs[0].isChange)
+        XCTAssertFalse(psbt.outputs[1].isChange)
     }
     
     func testGetTransactionFee() {
@@ -303,7 +313,7 @@ class PSBTTests: XCTestCase {
                 let (output, signingStatuses) = info
                 print("--- OUTPUT #\(index + 1)")
                 //print(output)
-                print("Amount: BTC \(output.amount.btcFormat)")
+                print("Amount: BTC \(output.amount.btcFormat) \(output.isChange ? "CHANGE" : "")")
                 print("To Address: \(output.address(network: network))")
                 if let (n, m) = output.txOutput.scriptPubKey.multisigInfo {
                     print("Multisig \(n) of \(m)")
@@ -366,9 +376,9 @@ extension PSBTSigningStatus where SignerType == NamedSeed {
         case .isSignedByUnknown:
             return "Signed by unknown: \(origin.path)"
         case .canBeSignedBy(let seed):
-            return "To be signed by: \(seed.name) \(origin.path)"
+            return "To be signed by: \(seed.name) \(origin.path) \(origin.isChange ? "CHANGE" : "")"
         case .noKnownSigner:
-            return "No known signer for: \(origin.path)"
+            return "No known signer for: \(origin.path) \(origin.isChange ? "CHANGE" : "")"
         }
     }
 }
@@ -395,7 +405,7 @@ struct NamedSeed: CustomStringConvertible, Hashable {
     }
     
     var description: String {
-        "Seed(\(name) \(seed.hex) \(masterKeyFingerprint.hex)"
+        "Seed(\(name) \(seed.hex) \(masterKeyFingerprint.hex))"
     }
     
     static func == (lhs: NamedSeed, rhs: NamedSeed) -> Bool {

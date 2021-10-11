@@ -83,6 +83,10 @@ public struct PSBTOutput {
 
         return true
     }
+    
+    public var isChange: Bool {
+        !origins.isEmpty && origins.allSatisfy { $0.isChange }
+    }
 
     public func isChange(signer: HDKey, inputs:[PSBTInput], cosigners: [HDKey], threshold: UInt) -> Bool {
         // Transaction must have at least one input

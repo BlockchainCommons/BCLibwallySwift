@@ -30,6 +30,10 @@ public struct PSBTSigningOrigin: CustomStringConvertible {
     public func canSign(with masterKey: HDKey) -> Bool {
         key == childKey(for: masterKey)
     }
+    
+    public var isChange: Bool {
+        path.isChange
+    }
 }
 
 extension PSBTSigningOrigin {

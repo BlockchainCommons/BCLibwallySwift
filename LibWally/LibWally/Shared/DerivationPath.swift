@@ -176,6 +176,46 @@ public struct DerivationPath : Equatable {
     }
 }
 
+extension DerivationPath {
+    public var isBIP44: Bool {
+        steps.count == 5 &&
+        steps.first! == DerivationStep(44, isHardened: true)
+    }
+    
+    public var isBIP48: Bool {
+        steps.count == 6 &&
+        steps.first == DerivationStep(48, isHardened: true)
+    }
+    
+    public var isBIP44Change: Bool {
+        guard isBIP44,
+           steps[3] == 1,
+           !steps[4].isHardened,
+           case let .index(i) = steps[4].childIndexSpec,
+           i <= 999999
+        else {
+            return false
+        }
+        return true
+    }
+    
+    public var isBIP48Change: Bool {
+        guard isBIP48,
+           steps[4] == 1,
+           !steps[5].isHardened,
+           case let .index(i) = steps[5].childIndexSpec,
+           i <= 999999
+        else {
+            return false
+        }
+        return true
+    }
+    
+    public var isChange: Bool {
+        isBIP44Change || isBIP48Change
+    }
+}
+
 extension DerivationPath: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: DerivationStep...) {
         self.init(steps: elements)
