@@ -282,7 +282,7 @@ class PSBTTests: XCTestCase {
     }
 
     func testPSBTSession() {
-        func printPSBT(_ psbt: PSBT, inputSigning: [(PSBTInput, [PSBTSigningStatus<NamedSeed>])], outputSigning: [(PSBTOutput, [PSBTSigningStatus<NamedSeed>])], network: Network) {
+        func printPSBT(_ psbt: PSBT, inputSigning: [PSBTInputSigning<NamedSeed>], outputSigning: [PSBTOutputSigning<NamedSeed>], network: Network) {
             print("\n===== PSBT")
 
             print("TOTAL SENT: BTC \((psbt.totalSent?.btcFormat)†)")
@@ -294,7 +294,8 @@ class PSBTTests: XCTestCase {
             print("\n=== INPUTS")
 
             for (index, info) in inputSigning.enumerated() {
-                let (input, signingStatuses) = info
+                let input = info.input
+                let signingStatuses = info.statuses
                 print("--- INPUT #\(index + 1)")
                 //print(input)
                 if let amount = input.amount?.btcFormat {
@@ -313,7 +314,8 @@ class PSBTTests: XCTestCase {
 
             print("\n=== OUTPUTS")
             for (index, info) in outputSigning.enumerated() {
-                let (output, signingStatuses) = info
+                let output = info.output
+                let signingStatuses = info.statuses
                 print("--- OUTPUT #\(index + 1)")
                 //print(output)
                 print("Amount: BTC \(output.amount.btcFormat) \(output.isChange ? "CHANGE" : "")")

@@ -184,10 +184,10 @@ public struct PSBT : Equatable {
         signed(with: signer.masterKey)
     }
     
-    public func signed<SignerType: PSBTSigner>(with inputSigning: [(PSBTInput, [PSBTSigningStatus<SignerType>])]) -> PSBT? {
+    public func signed<SignerType: PSBTSigner>(with inputSigning: [PSBTInputSigning<SignerType>]) -> PSBT? {
         var signedPSBT = self
-        for (_, signingStatuses) in inputSigning {
-            for signingStatus in signingStatuses {
+        for info in inputSigning {
+            for signingStatus in info.statuses {
                 if
                     !signingStatus.isSigned,
                     let signer = signingStatus.knownSigner
@@ -213,14 +213,24 @@ extension PSBT: CustomStringConvertible {
     }
 }
 
+public struct PSBTInputSigning<SignerType: PSBTSigner>: Identifiable {
+    public let id: UUID = UUID()
+    public let input: PSBTInput
+    public let statuses: [PSBTSigningStatus<SignerType>]
+}
+
+public struct PSBTOutputSigning<SignerType: PSBTSigner>: Identifiable {
+    public let id: UUID = UUID()
+    public let output: PSBTOutput
+    public let statuses: [PSBTSigningStatus<SignerType>]
+}
+
 extension PSBT {
-    public func inputSigning<SignerType: PSBTSigner>(signers: [SignerType]) -> [(PSBTInput, [PSBTSigningStatus<SignerType>])] {
-        let statuses = inputs.map { $0.signingStatus(signers: signers) }
-        return Array(zip(inputs, statuses))
+    public func inputSigning<SignerType: PSBTSigner>(signers: [SignerType]) -> [PSBTInputSigning<SignerType>] {
+        inputs.map { PSBTInputSigning(input: $0, statuses: $0.signingStatus(signers: signers)) }
     }
     
-    public func outputSigning<SignerType: PSBTSigner>(signers: [SignerType]) -> [(PSBTOutput, [PSBTSigningStatus<SignerType>])] {
-        let statuses = outputs.map { $0.signingStatus(signers: signers) }
-        return Array(zip(outputs, statuses))
+    public func outputSigning<SignerType: PSBTSigner>(signers: [SignerType]) -> [PSBTOutputSigning<SignerType>] {
+        outputs.map { PSBTOutputSigning(output: $0, statuses: $0.signingStatus(signers: signers)) }
     }
 }
