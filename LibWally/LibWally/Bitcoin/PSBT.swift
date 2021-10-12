@@ -233,4 +233,22 @@ extension PSBT {
     public func outputSigning<SignerType: PSBTSigner>(signers: [SignerType]) -> [PSBTOutputSigning<SignerType>] {
         outputs.map { PSBTOutputSigning(output: $0, statuses: $0.signingStatus(signers: signers)) }
     }
+    
+    public static func countOfSignableInputs<SignerType: PSBTSigner>(for signings: [PSBTInputSigning<SignerType>]) -> Int {
+        signings.reduce(into: 0) { total, signing in
+            if signing.statuses.contains(where: { $0.canBeSigned }) {
+                total += 1
+            }
+        }
+    }
+    
+    public static func countOfUniqueSigners<SignerType: PSBTSigner>(for signings: [PSBTInputSigning<SignerType>]) -> Int {
+        signings.reduce(into: Set<SignerType>()) { signers, signing in
+            signing.statuses.forEach { status in
+                if status.canBeSigned {
+                    signers.insert(status.knownSigner!)
+                }
+            }
+        }.count
+    }
 }

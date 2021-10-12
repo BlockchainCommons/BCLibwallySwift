@@ -8,8 +8,8 @@
 import Foundation
 
 public struct PSBTSigningOrigin: CustomStringConvertible {
-    let key: ECCompressedPublicKey
-    let path: DerivationPath
+    public let key: ECCompressedPublicKey
+    public let path: DerivationPath
     
     public var description: String {
         "PSBTSigningOrigin(key: \(key), path: \(path))"

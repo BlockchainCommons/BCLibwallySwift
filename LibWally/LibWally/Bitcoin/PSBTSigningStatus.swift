@@ -7,7 +7,8 @@
 
 import Foundation
 
-public struct PSBTSigningStatus<SignerType: PSBTSigner> {
+public struct PSBTSigningStatus<SignerType: PSBTSigner>: Identifiable {
+    public let id = UUID()
     public let origin: PSBTSigningOrigin
     public let isSigned: Bool
     public let knownSigner: SignerType?
@@ -33,5 +34,9 @@ public struct PSBTSigningStatus<SignerType: PSBTSigner> {
                 return .noKnownSigner
             }
         }
+    }
+    
+    public var canBeSigned: Bool {
+        isSigned == false && knownSigner != nil
     }
 }
