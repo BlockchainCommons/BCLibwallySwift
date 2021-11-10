@@ -192,7 +192,9 @@ public struct PSBT : Equatable {
                     !signingStatus.isSigned,
                     let signer = signingStatus.knownSigner
                 {
-                    signedPSBT = signedPSBT.signed(with: signer)!
+                    if let psbt = signedPSBT.signed(with: signer) {
+                        signedPSBT = psbt
+                    }
                 }
             }
         }
@@ -204,6 +206,10 @@ public struct PSBT : Equatable {
             return nil
         }
         return PSBT(ownedPSBT: psbt)
+    }
+    
+    public var isFullySigned: Bool {
+        inputs.allSatisfy { $0.isFullySigned }
     }
 }
 

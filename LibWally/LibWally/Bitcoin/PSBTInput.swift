@@ -85,6 +85,13 @@ public struct PSBTInput {
         }
         return Bitcoin.Address(scriptPubKey: scriptPubKey, network: network)!.description
     }
+    
+    public var isFullySigned: Bool {
+        let signatureKeys: Set<ECCompressedPublicKey> = Set(signatures.keys)
+        return origins.allSatisfy { origin in
+            signatureKeys.contains(origin.key)
+        }
+    }
 }
 
 extension PSBTInput: CustomStringConvertible {
