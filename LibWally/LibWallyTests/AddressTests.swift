@@ -61,6 +61,11 @@ class AddressTests: XCTestCase {
         XCTAssertEqual(address.scriptPubKey, ScriptPubKey(hex: "0014bef5a2f9a56a94aab12459f72ad9cf8cf19c7bbe"))
     }
     
+    func testParseTaprootAddress() {
+        let address = Bitcoin.Address(string: "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0")!
+        XCTAssertEqual(address.scriptPubKey, ScriptPubKey(hex: "512079be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"))
+    }
+
     func testParseWIF() {
         // https://en.bitcoin.it/wiki/Wallet_import_format
         let wif = "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ"

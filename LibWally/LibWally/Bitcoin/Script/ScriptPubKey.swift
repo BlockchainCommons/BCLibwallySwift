@@ -18,6 +18,7 @@ public struct ScriptPubKey : Equatable {
         case wpkh       // P2WPKH (native SegWit)
         case wsh        // P2WSH (native SegWit script)
         case multi      // MultiSig
+        case tr         // Taproot
     }
 
     public var type: ScriptType? {

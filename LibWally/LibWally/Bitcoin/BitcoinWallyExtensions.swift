@@ -205,6 +205,8 @@ extension Wally {
             return .wsh
         case WALLY_SCRIPT_TYPE_MULTISIG:
             return .multi
+        case WALLY_SCRIPT_TYPE_P2TR:
+            return .tr
         default:
             precondition(output == WALLY_SCRIPT_TYPE_UNKNOWN)
             return nil

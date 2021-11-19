@@ -52,6 +52,13 @@ class ScriptTests: XCTestCase {
 
         checkScriptPubKeyAsm(scriptPubKey, "OP_RETURN 636861726c6579206c6f766573206865696469")
     }
+    
+    func testDetectScriptPubKeyTypeTaproot() {
+        let scriptPubKey = ScriptPubKey(hex: "5120d352c1c66dbc5623136f174130a5f4a965261657c18bd1f021c2902c9e8571fd")!
+        XCTAssertEqual(scriptPubKey.type, .tr)
+
+        checkScriptPubKeyAsm(scriptPubKey, "OP_1 d352c1c66dbc5623136f174130a5f4a965261657c18bd1f021c2902c9e8571fd")
+    }
 
     func testScriptSigP2PKH() {
         let pubKey = ECCompressedPublicKey(hex: "03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c")!

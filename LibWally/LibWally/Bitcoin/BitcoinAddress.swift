@@ -59,7 +59,7 @@ extension Bitcoin {
             switch scriptPubKey.type {
             case .pkh, .sh:
                 self.string = Wally.address(from: scriptPubKey, network: network)
-            case .wpkh, .wsh:
+            case .wpkh, .wsh, .tr:
                 self.string = Wally.segwitAddress(scriptPubKey: scriptPubKey, network: network)
             case .multi:
                 self.string = Wally.segwitAddress(script: scriptPubKey.witnessProgram, network: network)
